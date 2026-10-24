@@ -1,0 +1,185 @@
+/* BORDER */
+.b-bottom-gray-light {
+    border-bottom: 1px solid #c0c8d1;
+}
+
+
+/* semua sisi */
+.b {
+    border: 1px solid black;
+}
+
+.b-none {
+    border: none;
+}
+
+/* border width */
+.bw-1 {
+    border-width: 1px;
+}
+
+.bw-2 {
+    border-width: 2px;
+}
+
+.bw-4 {
+    border-width: 4px;
+}
+
+.bw-8 {
+    border-width: 8px;
+}
+
+/* border style */
+.b-solid {
+    border-style: solid;
+}
+
+.b-dashed {
+    border-style: dashed;
+}
+
+.b-dotted {
+    border-style: dotted;
+}
+
+.b-double {
+    border-style: double;
+}
+
+.b-groove {
+    border-style: groove;
+}
+
+.b-ridge {
+    border-style: ridge;
+}
+
+.b-inset {
+    border-style: inset;
+}
+
+.b-outset {
+    border-style: outset;
+}
+
+.b-none {
+    border-style: none;
+}
+
+/* border color */
+.b-black {
+    border-color: black;
+}
+
+.b-red {
+    border-color: red;
+}
+
+.b-blue {
+    border-color: blue;
+}
+
+.b-green {
+    border-color: green;
+}
+
+.b-transparent {
+    border-color: transparent;
+}
+
+/* border sisi spesifik */
+.b-top {
+    border-top: 1px solid black;
+}
+
+.b-right {
+    border-right: 1px solid black;
+}
+
+.b-bottom {
+    border-bottom: 1px solid black;
+}
+
+.b-left {
+    border-left: 1px solid black;
+}
+
+/* border width untuk sisi tertentu */
+.b-top-2 {
+    border-top-width: 2px;
+}
+
+.b-right-2 {
+    border-right-width: 2px;
+}
+
+.b-bottom-2 {
+    border-bottom-width: 2px;
+}
+
+.b-left-2 {
+    border-left-width: 2px;
+}
+
+/* border style untuk sisi tertentu */
+.b-top-dashed {
+    border-top-style: dashed;
+}
+
+.b-right-dotted {
+    border-right-style: dotted;
+}
+
+.b-bottom-double {
+    border-bottom-style: double;
+}
+
+.b-left-groove {
+    border-left-style: groove;
+}
+
+/* border radius */
+.rad-5 {
+    border-radius: 5px;
+}
+
+.rad-10 {
+    border-radius: 10px;
+}
+
+.rad-20 {
+    border-radius: 20px;
+}
+
+.rad-full {
+    border-radius: 9999px;
+}
+
+/* Membuat elemen menjadi lingkaran */
+
+/* border collapse (hanya untuk tabel) */
+.b-collapse {
+    border-collapse: collapse;
+}
+
+.b-separate {
+    border-collapse: separate;
+}
+
+/* border spacing (hanya utnuk tabel) */
+.b-spacing-0 {
+    border-spacing: 0;
+}
+
+.b-spacing-2 {
+    border-spacing: 2px;
+}
+
+.b-spacing-5 {
+    border-spacing: 5px;
+}
+
+.b-spacing-10 {
+    border-spacing: 10px;
+}

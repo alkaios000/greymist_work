@@ -1,0 +1,281 @@
+/* Parent aside */
+.content-menu-3 {
+  width: 250px;
+  background-color: rgba(255,255,255,0.95);
+  padding: 8px;
+  box-sizing: border-box;
+  border-right: 1px solid rgba(0,0,0,0.1);
+  height: 100%;
+  /* display: flex; */
+  flex-direction: column;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  gap: 8px;
+}
+
+/* NAV KATEGORI */
+
+.gm-nav-btn {
+  flex: 1 1 48%;
+  padding: 4px 6px;
+  border-radius: 5px;
+  border: none;
+  background-color: rgba(0,0,0,0.05);
+  cursor: pointer;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.2s;
+}
+
+.gm-nav-btn.active,
+.gm-nav-btn:hover {
+  background-color: rgba(0,0,0,0.15);
+  font-weight: 600;
+}
+
+/* TEMPLATE FLEX SCROLLABLE */
+.gm-template-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: scroll;
+  height: 520px;
+}
+
+.gm-template-group {
+  /* display: none; default hidden */
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  /* gap: 8px; */
+  overflow-y: scroll;
+}
+
+.gm-template-group::-webkit-scrollbar {
+  display: none;
+}
+
+abbr {
+  border: none;
+  border-radius: 5px;
+}
+.gm-drop-hover {
+  outline: 2px dashed #0078ff;
+  /* outline-offset: 3px; */
+  transition: outline 0.1s ease;
+}
+
+.gm-drop-indicator {
+  pointer-events: none;
+}
+.gm-drop-live-indicator {
+  transition: top 0.1s ease, left 0.1s ease, width 0.1s ease;
+}
+
+.gm-object-dropable {
+  /* background: #f6f6f6; */
+  /* border: 1px solid #ccc; */
+  border-bottom: 0.5px solid lightgray;
+  /* border-radius: 6px; */
+  padding: 10px 10px;
+  cursor: grab;
+  user-select: none;
+  width: 100%;
+  transition: 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gm-object-dropable:hover {
+  background: #d9ebff;
+  /* padding-left: 2em; */
+  transition: 0.2s ease-in-out;
+  font-weight: 800;
+}
+.gm-template-object-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+}
+.gm-tag-info, .gm-add-object {
+  background: white;
+  color: rgb(75, 75, 75);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid grey;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+  font-size: 1em;
+}
+
+.gm-tag-info:hover, .gm-add-object:hover {
+  color: white;
+  background:rgb(85, 138, 206);
+  transition: 0.2s ease-in-out;
+}
+
+.gm-nav {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+
+.gm-nav-btn.active {
+  background: #7eb0e9;
+  color: #fff;
+}
+
+.gm-template-search {
+  width: 100%;
+  padding: 6px 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+
+/* TEMPLATE OBJECT FLEX */
+
+
+.gm-template.object:hover {
+  background-color: rgba(0,0,0,0.08);
+}
+
+.gm-template.object:active {
+  cursor: grabbing;
+  transform: scale(0.96);
+}
+
+/* LABEL TEMPLATE */
+.gm-template-label {
+  font-weight: 500;
+  color: #333;
+  text-align: center;
+  font-size: 11px;
+}
+
+/* Tombol preview (mata) */
+.gm-template-preview {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  border: none;
+  background-color: rgba(0,0,0,0.6);
+  color: #fff;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.gm-template-preview:hover {
+  background-color: rgba(0,0,0,0.8);
+}
+
+/* Drag ghost */
+.gm-template.dragging {
+  opacity: 0.5;
+}
+
+/* Scrollbar minimal */
+.gm-template-container::-webkit-scrollbar {
+  width: 5px;
+}
+
+.gm-template-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+
+.gm-template-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+/* MODAL OVERLAY */
+.gm-modal {
+  display: none; /* default hidden */
+  position: fixed; /* selalu di viewport */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 9999; /* di atas semua */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Popup info */
+.gm-popup-info {
+  position: absolute; /* mutlak di body */
+  background-color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.2);
+  font-size: 12px;
+  color: #333;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  display: none;
+  z-index: 99999; /* pastikan di atas semua elemen */
+  pointer-events: auto;
+  white-space: normal;
+}
+
+
+
+.gm-template-search:focus {
+  outline: none;
+  border-color: #0078d4;
+  box-shadow: 0 0 4px rgba(0,120,212,0.3);
+}
+
+
+/* object define */
+.gm-object {
+  /* transition: all 0.2s ease; animasi smooth saat resize dan warna */
+  overflow: visible;
+}
+
+.gm-object.drag-preview {
+  opacity: 0.5;
+  transform: scale(1.05);
+}
+
+.gm-object.dropping {
+  animation: dropEffect 0.2s ease-out forwards;
+}
+
+@keyframes dropEffect {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+
+
+/* handler object */
+
+.gm-handler .gm-handle i {
+  color: #006dcc !important;
+  opacity: 0.6;
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  text-align: center;
+  line-height: 14px;
+}
+.gm-size-label {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  pointer-events: none;
+  transition: opacity 0.08s ease;
+}

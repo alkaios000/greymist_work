@@ -1,0 +1,71 @@
+/* DISPLAY */
+
+/* Menghilangkan elemen */
+.d-n {
+    display: none !important;
+}
+
+/* Elemen tampil sebagai blok */
+.d-b {
+    display: block;
+}
+
+/* Elemen inline dengan properti blok */
+.d-ib {
+    display: inline-block;
+}
+
+/* Elemen tampil dalam satu baris */
+.d-i {
+    display: inline;
+}
+
+/* Menggunakan flexbox */
+.d-f {
+    display: flex;
+}
+
+/* Flexbox dalam satu baris */
+.d-if {
+    display: inline-flex;
+}
+
+/* Menggunakan grid */
+.d-g {
+    display: grid;
+}
+
+/* Grid dalam satu baris */
+.d-ig {
+    display: inline-grid;
+}
+
+/* Elemen seperti tabel */
+.d-t {
+    display: table;
+}
+
+/* Tabel dalam satu baris */
+.d-it {
+    display: inline-table;
+}
+
+/* Elemen berperilaku seperti sel tabel */
+.d-tc {
+    display: table-cell;
+}
+
+/* Elemen berperilaku seperti baris tabel */
+.d-tr {
+    display: table-row;
+}
+
+/* Grup baris tabel */
+.d-tg {
+    display: table-row-group;
+}
+
+/* Grup kolom tabel */
+.d-tcg {
+    display: table-column-group;
+}

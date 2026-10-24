@@ -1,0 +1,7 @@
+/* OBJECT POSITION */
+
+.op-t { object-position: top; }          /* Posisi di atas */
+.op-b { object-position: bottom; }       /* Posisi di bawah */
+.op-l { object-position: left; }         /* Posisi di kiri */
+.op-r { object-position: right; }        /* Posisi di kanan */
+.op-c { object-position: center; }       /* Posisi di tengah (default) */

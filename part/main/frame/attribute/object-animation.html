@@ -1,0 +1,134 @@
+<style>
+.gm-anim-panel {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    /* Mengikuti layout attribute yang tidak ada background putih statis, 
+       melainkan menyatu dengan parentnya */
+    padding: 0;
+}
+.gm-anim-grid {
+    flex: 1.5;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+    overflow-y: auto;
+    max-height: 250px;
+}
+.gm-anim-box {
+    width: 65px;
+    height: 65px;
+    background: #f0f0f0;
+    border: 1px solid #d8d8d8;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+}
+.gm-anim-inner {
+    font-size: 0.85em;
+    font-weight: 500;
+    text-align: center;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    animation-duration: 1s;
+    animation-fill-mode: both;
+}
+.gm-anim-box:hover {
+    box-shadow: 0 0 2px rgba(94, 148, 189, 0.8);
+    background: #e8f0fe;
+}
+.gm-anim-box.active {
+    border-color: #0078ff;
+    background: #e8f0fe;
+    box-shadow: 0 0 2px rgba(156, 202, 255, 0.35);
+}
+.gm-anim-box.active .gm-anim-inner {
+    color: #0078ff;
+}
+
+.gm-anim-settings {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    /* border-left: 1px solid #d8d8d8; */
+    padding-left: 10px;
+    min-width: 200px;
+}
+.gm-anim-preview-btn {
+    width: 100%;
+    padding: 6px;
+    background: #fff;
+    color: #333;
+    border: 0.5px solid #d6d6d6;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 500;
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    transition: 0.15s ease;
+    box-shadow: 0 0 1px #eee;
+}
+.gm-anim-preview-btn:hover {
+    box-shadow: 0 0 2px rgba(94, 148, 189, 0.8);
+    border-color: #0078ff;
+    color: #0078ff;
+}
+.gm-anim-loop-hover {
+    animation-iteration-count: infinite !important;
+}
+</style>
+
+<div class="gm-anim-panel">
+    <!-- Kiri: Grid Thumbnail -->
+    <div class="gm-anim-grid gm-menu-section" id="gm-anim-grid" style="border-top: none; flex: 2; padding: 10px;">
+        <div class="gm-anim-box active" data-anim=""><div class="gm-anim-inner">None</div></div>
+        <div class="gm-anim-box" data-anim="gm-anim-fade-in"><div class="gm-anim-inner">Fade In</div></div>
+        <div class="gm-anim-box" data-anim="gm-anim-slide-up"><div class="gm-anim-inner">Slide Up</div></div>
+        <div class="gm-anim-box" data-anim="gm-anim-slide-down"><div class="gm-anim-inner">Slide Down</div></div>
+        <div class="gm-anim-box" data-anim="gm-anim-slide-left"><div class="gm-anim-inner">Slide Left</div></div>
+        <div class="gm-anim-box" data-anim="gm-anim-slide-right"><div class="gm-anim-inner">Slide Right</div></div>
+        <div class="gm-anim-box" data-anim="gm-anim-zoom-in"><div class="gm-anim-inner">Zoom In</div></div>
+        <div class="gm-anim-box" data-anim="gm-anim-bounce-in"><div class="gm-anim-inner">Bounce In</div></div>
+    </div>
+    
+    <!-- Kanan: Pengaturan (Menggunakan struktur menu attribute) -->
+    <div class="gm-anim-settings gm-menu-section" style="border-top: none; padding-top: 10px;">
+        <div class="gm-menu-title">Pengaturan Animasi</div>
+        
+        <div class="gm-menu-row gm-row-pair">
+            <div>
+                <label>Durasi (s)</label>
+                <input type="number" id="gm-anim-duration" step="0.1" min="0.1" value="1">
+            </div>
+            <div>
+                <label>Delay (s)</label>
+                <input type="number" id="gm-anim-delay" step="0.1" min="0" value="0">
+            </div>
+        </div>
+
+        <div class="gm-menu-row">
+            <label>Mode Pengulangan</label>
+            <select id="gm-anim-loop">
+                <option value="1">1 Kali</option>
+                <option value="infinite">Looping (Terus Menerus)</option>
+            </select>
+        </div>
+
+        <div class="gm-menu-row" style="margin-top: auto;">
+            <button id="gm-anim-play-btn" class="gm-anim-preview-btn"><i class="fa-solid fa-play"></i> Mainkan Preview</button>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,519 @@
+<div class="gm-menu-section gm-content-box-menu">
+    <div class="gm-menu-title">Border</div>
+
+    <!-- BORDER SHORTHAND -->
+    <div class="gm-menu-row">
+        <label for="gm-border">Border</label>
+        <input type="text" id="gm-border" placeholder="-">
+        <script>
+            (function () {
+                const borderInput = document.getElementById("gm-border");
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // Baca border shorthand dari active object
+                function getActiveBorder() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const style = getComputedStyle(first);
+                    let val = first.style.border || style.border || "";
+
+                    // Multi-select: cek apakah semua sama
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const b = el.style.border || getComputedStyle(el).border;
+                            return b === val;
+                        });
+                        if (!same) val = "";
+                    }
+
+                    return val;
+                }
+
+                // Apply border shorthand ke semua active object
+                function applyBorder(val) {
+                    getActiveObjects().forEach(el => {
+                        el.style.border = val;
+                    });
+                    updateUI();
+                }
+
+                // Update input UI
+                function updateUI() {
+                    if (document.activeElement === borderInput) return;
+                    borderInput.value = getActiveBorder();
+                }
+
+                // ========================
+                // EVENT
+                // ========================
+                borderInput.addEventListener("keydown", e => {
+                    if (e.key !== "Enter") return;
+                    applyBorder(borderInput.value.trim());
+                });
+
+                // Observer / selection-change
+                
+                
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                // init
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- SINGLE BORDER -->
+    <div class="gm-menu-row gm-row-pair">
+        <div class="gm-menu-row">
+            <label for="gm-border-top">Top</label>
+            <input type="text" id="gm-border-top" placeholder="-">
+        </div>
+        <div class="gm-menu-row">
+            <label for="gm-border-right">Right</label>
+            <input type="text" id="gm-border-right" placeholder="-">
+        </div>
+        <div class="gm-menu-row">
+            <label for="gm-border-bottom">Bottom</label>
+            <input type="text" id="gm-border-bottom" placeholder="-">
+        </div>
+        <div class="gm-menu-row">
+            <label for="gm-border-left">Left</label>
+            <input type="text" id="gm-border-left" placeholder="-">
+        </div>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                const borderShorthand = document.getElementById("gm-border");
+                const borders = {
+                    top: document.getElementById("gm-border-top"),
+                    right: document.getElementById("gm-border-right"),
+                    bottom: document.getElementById("gm-border-bottom"),
+                    left: document.getElementById("gm-border-left")
+                };
+
+                // ==============================
+                // Parsing shorthand CSS ke sisi individual
+                // ==============================
+                function parseBorderShorthand(str) {
+                    str = str.trim();
+                    if (!str) return { top: "", right: "", bottom: "", left: "" };
+
+                    // Gunakan style temporary element untuk parsing
+                    const temp = document.createElement("div");
+                    temp.style.border = str;
+                    document.body.appendChild(temp);
+
+                    const obj = {
+                        top: temp.style.borderTop || "",
+                        right: temp.style.borderRight || "",
+                        bottom: temp.style.borderBottom || "",
+                        left: temp.style.borderLeft || ""
+                    };
+
+                    document.body.removeChild(temp);
+                    return obj;
+                }
+
+                // Build shorthand dari sisi individual
+                function buildBorderShorthand(obj) {
+                    const { top, right, bottom, left } = obj;
+                    if (!top && !right && !bottom && !left) return "";
+                    if (top === right && top === bottom && top === left) return top;
+                    if (top === bottom && right === left) return `${top} ${right}`;
+                    if (right === left) return `${top} ${right} ${bottom}`;
+                    return `${top} ${right} ${bottom} ${left}`;
+                }
+
+                // ==============================
+                // Get active border
+                // ==============================
+                function getActiveBorder() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return { top: "", right: "", bottom: "", left: "" };
+
+                    const first = actives[0];
+                    const style = getComputedStyle(first);
+
+                    const obj = {
+                        top: first.style.borderTop || style.borderTop,
+                        right: first.style.borderRight || style.borderRight,
+                        bottom: first.style.borderBottom || style.borderBottom,
+                        left: first.style.borderLeft || style.borderLeft
+                    };
+
+                    // Multi-select: cek apakah semua sama
+                    if (actives.length > 1) {
+                        ["top", "right", "bottom", "left"].forEach(side => {
+                            const same = [...actives].every(el => {
+                                const val = el.style["border" + capitalize(side)] || getComputedStyle(el)["border" + capitalize(side)];
+                                return val === obj[side];
+                            });
+                            if (!same) obj[side] = "";
+                        });
+                    }
+
+                    return obj;
+                }
+
+                function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+                // ==============================
+                // Apply border ke active objects
+                // ==============================
+                function applyBorder(obj) {
+                    getActiveObjects().forEach(el => {
+                        if (obj.top !== undefined) el.style.borderTop = obj.top;
+                        if (obj.right !== undefined) el.style.borderRight = obj.right;
+                        if (obj.bottom !== undefined) el.style.borderBottom = obj.bottom;
+                        if (obj.left !== undefined) el.style.borderLeft = obj.left;
+                    });
+                    updateUI();
+                }
+
+                // ==============================
+                // Update inputs UI
+                // ==============================
+                function updateUI() {
+                    const obj = getActiveBorder();
+                    if (document.activeElement !== borders.top) borders.top.value = obj.top;
+                    if (document.activeElement !== borders.right) borders.right.value = obj.right;
+                    if (document.activeElement !== borders.bottom) borders.bottom.value = obj.bottom;
+                    if (document.activeElement !== borders.left) borders.left.value = obj.left;
+                    if (document.activeElement !== borderShorthand) borderShorthand.value = buildBorderShorthand(obj);
+                }
+
+                // ==============================
+                // EVENTS
+                // ==============================
+                borderShorthand.addEventListener("keydown", e => {
+                    if (e.key !== "Enter") return;
+                    const parsed = parseBorderShorthand(borderShorthand.value);
+                    applyBorder(parsed);
+                });
+
+                Object.entries(borders).forEach(([side, input]) => {
+                    input.addEventListener("keydown", e => {
+                        if (e.key !== "Enter") return;
+                        const obj = getActiveBorder();
+                        obj[side] = input.value;
+                        applyBorder(obj);
+                    });
+                });
+
+                // ==============================
+                // OBSERVERS
+                // ==============================
+                
+                
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                // init
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- border width -->
+    <!-- <div class="gm-menu-row">
+        <label for="gm-border-width">Border width</label>
+        <input type="text" id="gm-border-width" placeholder="-">
+    </div> -->
+
+    <!-- border style -->
+    <!-- <div class="gm-menu-row">
+        <label for="gm-border-style">Border style</label>
+        <input type="text" id="gm-border-style" placeholder="-">
+    </div> -->
+
+    <!-- border color -->
+    <!-- <div class="gm-menu-row">
+        <div class="gm-menu-row">
+            <label>Border color</label>
+            <div class="gm-color-field gm-row-pair gm-menu-row">
+                <input type="color" class="gm-border-color" data-style="color" value="#000000">
+                <input type="text" class="gm-border-color-input" data-style="color"
+                    placeholder="#000 / rgba() / linear-gradient() / var(--primary)">
+            </div>
+            <div class="gm-color-variable gm-menu-row">
+                <span class="gm-border-color-token" data-value="var(--primary)"> <input type="color"
+                        class="gm-border-color-token-var" id="" value="#0000">--primary</span>
+                <span class="gm-border-color-token gm-border-add-token">+ variable</span>
+            </div>
+        </div>
+    </div> -->
+
+    <!-- BORDER RADIUS -->
+    <div class="gm-menu-row">
+        <label for="gm-border-radius">Border radius</label>
+        <input type="text" id="gm-border-radius" placeholder="-">
+        <script>
+            (function () {
+                const input = document.getElementById("gm-border-radius");
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function parseBorderRadius(str) {
+                    const parts = str.trim().split(/\s+/);
+                    let tl, tr, br, bl;
+                    if (parts.length === 1) tl = tr = br = bl = parts[0];
+                    else if (parts.length === 2) tl = br = parts[0], tr = bl = parts[1];
+                    else if (parts.length === 3) tl = parts[0], tr = bl = parts[1], br = parts[2];
+                    else if (parts.length >= 4) [tl, tr, br, bl] = parts;
+                    return { tl, tr, br, bl };
+                }
+
+                function buildBorderRadius(obj) {
+                    const { tl, tr, br, bl } = obj;
+                    if (!tl && !tr && !br && !bl) return "";
+                    if (tl === tr && tl === br && tl === bl) return tl;
+                    if (tl === br && tr === bl) return `${tl} ${tr}`;
+                    if (tr === bl) return `${tl} ${tr} ${br}`;
+                    return `${tl} ${tr} ${br} ${bl}`;
+                }
+
+                function getActiveBorderRadius() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return { tl: "", tr: "", br: "", bl: "" };
+
+                    const first = actives[0];
+                    const style = getComputedStyle(first);
+                    const obj = {
+                        tl: first.style.borderTopLeftRadius || style.borderTopLeftRadius,
+                        tr: first.style.borderTopRightRadius || style.borderTopRightRadius,
+                        br: first.style.borderBottomRightRadius || style.borderBottomRightRadius,
+                        bl: first.style.borderBottomLeftRadius || style.borderBottomLeftRadius
+                    };
+
+                    // multi-select: cek apakah sama
+                    if (actives.length > 1) {
+                        ["tl", "tr", "br", "bl"].forEach(prop => {
+                            const same = [...actives].every(el => {
+                                const val = el.style[camelToCss(prop)] || getComputedStyle(el)[camelToCss(prop)];
+                                return val === obj[prop];
+                            });
+                            if (!same) obj[prop] = "";
+                        });
+                    }
+                    return obj;
+                }
+
+                function camelToCss(str) {
+                    // convert tl → borderTopLeftRadius
+                    switch (str) {
+                        case "tl": return "borderTopLeftRadius";
+                        case "tr": return "borderTopRightRadius";
+                        case "br": return "borderBottomRightRadius";
+                        case "bl": return "borderBottomLeftRadius";
+                    }
+                }
+
+                function applyBorderRadius(obj) {
+                    getActiveObjects().forEach(el => {
+                        if (obj.tl !== undefined) el.style.borderTopLeftRadius = obj.tl;
+                        if (obj.tr !== undefined) el.style.borderTopRightRadius = obj.tr;
+                        if (obj.br !== undefined) el.style.borderBottomRightRadius = obj.br;
+                        if (obj.bl !== undefined) el.style.borderBottomLeftRadius = obj.bl;
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === input) return;
+                    const obj = getActiveBorderRadius();
+                    input.value = buildBorderRadius(obj);
+                }
+
+                // ======================
+                // EVENTS
+                // ======================
+                input.addEventListener("keydown", e => {
+                    if (e.key !== "Enter") return;
+                    const parsed = parseBorderRadius(input.value);
+                    applyBorderRadius(parsed);
+                });
+
+                // ======================
+                // OBSERVER
+                // ======================
+                
+                
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                // init
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- SINGLE BORDER RADIUS -->
+    <div class="gm-menu-row gm-row-pair">
+        <div class="gm-menu-row">
+            <label for="gm-border-radius-top">Top</label>
+            <input type="text" id="gm-border-radius-top" placeholder="-">
+        </div>
+        <div class="gm-menu-row">
+            <label for="gm-border-radius-right">Right</label>
+            <input type="text" id="gm-border-radius-right" placeholder="-">
+        </div>
+        <div class="gm-menu-row">
+            <label for="gm-border-radius-bottom">Bottom</label>
+            <input type="text" id="gm-border-radius-bottom" placeholder="-">
+        </div>
+        <div class="gm-menu-row">
+            <label for="gm-border-radius-left">Left</label>
+            <input type="text" id="gm-border-radius-left" placeholder="-">
+        </div>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                const borderRadiusShorthand = document.getElementById("gm-border-radius");
+                const borderRadiusSingle = {
+                    top: document.getElementById("gm-border-radius-top"),
+                    right: document.getElementById("gm-border-radius-right"),
+                    bottom: document.getElementById("gm-border-radius-bottom"),
+                    left: document.getElementById("gm-border-radius-left")
+                };
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // ======================
+                // Parsing & build
+                // ======================
+                function parseBorderRadius(str) {
+                    const parts = str.trim().split(/\s+/);
+                    let tl, tr, br, bl;
+                    if (parts.length === 1) tl = tr = br = bl = parts[0];
+                    else if (parts.length === 2) tl = br = parts[0], tr = bl = parts[1];
+                    else if (parts.length === 3) tl = parts[0], tr = bl = parts[1], br = parts[2];
+                    else if (parts.length >= 4) [tl, tr, br, bl] = parts;
+                    return { tl, tr, br, bl };
+                }
+
+                function buildBorderRadius(obj) {
+                    const { tl, tr, br, bl } = obj;
+                    if (!tl && !tr && !br && !bl) return "";
+                    if (tl === tr && tl === br && tl === bl) return tl;
+                    if (tl === br && tr === bl) return `${tl} ${tr}`;
+                    if (tr === bl) return `${tl} ${tr} ${br}`;
+                    return `${tl} ${tr} ${br} ${bl}`;
+                }
+
+                function getActiveBorderRadius() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return { tl: "", tr: "", br: "", bl: "" };
+
+                    const first = actives[0];
+                    const style = getComputedStyle(first);
+                    const obj = {
+                        tl: first.style.borderTopLeftRadius || style.borderTopLeftRadius,
+                        tr: first.style.borderTopRightRadius || style.borderTopRightRadius,
+                        br: first.style.borderBottomRightRadius || style.borderBottomRightRadius,
+                        bl: first.style.borderBottomLeftRadius || style.borderBottomLeftRadius
+                    };
+
+                    // multi-select: cek apakah semua sama
+                    if (actives.length > 1) {
+                        ["tl", "tr", "br", "bl"].forEach(prop => {
+                            const same = [...actives].every(el => {
+                                const val = el.style[camelToCss(prop)] || getComputedStyle(el)[camelToCss(prop)];
+                                return val === obj[prop];
+                            });
+                            if (!same) obj[prop] = "";
+                        });
+                    }
+
+                    return obj;
+                }
+
+                function camelToCss(str) {
+                    switch (str) {
+                        case "tl": return "borderTopLeftRadius";
+                        case "tr": return "borderTopRightRadius";
+                        case "br": return "borderBottomRightRadius";
+                        case "bl": return "borderBottomLeftRadius";
+                    }
+                }
+
+                // ======================
+                // Apply ke object aktif
+                // ======================
+                function applyBorderRadius(obj) {
+                    getActiveObjects().forEach(el => {
+                        if (obj.tl !== undefined) el.style.borderTopLeftRadius = obj.tl;
+                        if (obj.tr !== undefined) el.style.borderTopRightRadius = obj.tr;
+                        if (obj.br !== undefined) el.style.borderBottomRightRadius = obj.br;
+                        if (obj.bl !== undefined) el.style.borderBottomLeftRadius = obj.bl;
+                    });
+                    updateUI();
+                }
+
+                // ======================
+                // Update UI
+                // ======================
+                function updateUI() {
+                    const obj = getActiveBorderRadius();
+                    
+                    if (document.activeElement !== borderRadiusShorthand) borderRadiusShorthand.value = buildBorderRadius(obj);
+                    if (document.activeElement !== borderRadiusSingle.top) borderRadiusSingle.top.value = obj.tl;
+                    if (document.activeElement !== borderRadiusSingle.right) borderRadiusSingle.right.value = obj.tr;
+                    if (document.activeElement !== borderRadiusSingle.bottom) borderRadiusSingle.bottom.value = obj.br;
+                    if (document.activeElement !== borderRadiusSingle.left) borderRadiusSingle.left.value = obj.bl;
+                }
+
+                // ======================
+                // Events
+                // ======================
+                borderRadiusShorthand.addEventListener("keydown", e => {
+                    if (e.key !== "Enter") return;
+                    const parsed = parseBorderRadius(borderRadiusShorthand.value);
+                    applyBorderRadius(parsed);
+                });
+
+                Object.entries(borderRadiusSingle).forEach(([side, input]) => {
+                    input.addEventListener("keydown", e => {
+                        if (e.key !== "Enter") return;
+                        const obj = getActiveBorderRadius();
+                        switch (side) {
+                            case "top": obj.tl = input.value; break;
+                            case "right": obj.tr = input.value; break;
+                            case "bottom": obj.br = input.value; break;
+                            case "left": obj.bl = input.value; break;
+                        }
+                        applyBorderRadius(obj);
+                    });
+                });
+
+                // ======================
+                // Observers
+                // ======================
+                
+                
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                // init
+                updateUI();
+            })();
+        </script>
+    </div>
+</div>

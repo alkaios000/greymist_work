@@ -1,0 +1,97 @@
+<style>
+    .gm-display-image {
+        padding: 10px;
+    }
+    .gm-assets-upload-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 15px 10px;
+        text-align: center;
+        background: #f8f9fa;
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        color: #4a5568;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+        margin-bottom: 15px;
+        font-size: 13px;
+    }
+    .gm-assets-upload-btn:hover {
+        background: #ebf8ff;
+        border-color: #3182ce;
+        color: #2b6cb0;
+    }
+    .gm-image-uploaded-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .gm-image-uploaded-container > .gm-image-wrapper {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        overflow: hidden;
+    }
+    .gm-image-uploaded-container > .gm-image-wrapper:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        z-index: 10;
+    }
+    .gm-image-uploaded-container > .gm-image-wrapper > img {
+        width: 100%;
+        aspect-ratio: 1/1;
+        object-fit: cover;
+        cursor: grab;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .gm-image-uploaded-container .gm-image-title {
+        font-size: 11px;
+        padding: 5px;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #4a5568;
+        cursor: text;
+        border: none;
+        background: transparent;
+        outline: none;
+        width: 100%;
+    }
+    .gm-image-uploaded-container .gm-image-title:focus {
+        background: #ebf8ff;
+    }
+</style>
+
+<div class="gm-display gm-display-image" id="gm-display-image">
+    <div class="gm-list-head-menu" style="margin-bottom: 15px; display: flex; align-items: center;">
+        <i class="gm-back-to-assets fas fa-angle-left" style="cursor: pointer; font-size: 16px; width: 24px;"></i>
+        <span style="font-weight: 600; font-size: 14px;">Image Assets</span>
+    </div>
+    
+    <!-- Bulk Upload Assets -->
+    <label class="gm-assets-upload-btn">
+        <i class="fas fa-cloud-upload-alt" style="font-size: 20px;"></i>
+        Pilih Gambar dari Komputer
+        <input type="file" class="gm-assets-image" multiple accept="image/*" style="display: none;" />
+    </label>
+
+    <div class="gm-image-uploaded-container">
+        <!-- Gambar hasil upload akan masuk ke sini -->
+    </div>
+    
+    <div class="gm-image-list" id="gm-image-list" style="display: none;">
+        <!-- Container lama yang disembunyikan jika ada skrip yang membutuhkannya -->
+        <img src="" alt="" class="gm-object-dropable" draggable="true" data-type="img">
+    </div>
+</div>

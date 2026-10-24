@@ -1,0 +1,415 @@
+<div class="gm-display gm-display-icon" id="gm-display-icon" style="width: 100%;">
+    <!-- HEADER -->
+    <div class="gm-list-head-menu gm-icon-head-menu">
+        <i class="gm-back-to-assets fas fa-angle-left"></i>
+        <div class="gm-icon-search-wrap">
+            <input type="text" id="gm-icon-search" placeholder="Search icon..." />
+            <button id="gm-icon-filter-toggle" title="Filters"><i class="fas fa-sliders-h"></i></button>
+        </div>
+    </div>
+
+    <!-- SIDEBAR / FILTER -->
+    <div class="gm-icon-panel">
+        <div class="gm-icon-sidebar">
+            <div class="gm-active-filter-chip" id="gm-active-filter-chip" style="display: none;">
+                <span id="gm-active-filter-text">Solid</span>
+                <i class="fas fa-times" id="gm-clear-filter"></i>
+            </div>
+
+            <div class="gm-icon-filter" id="gm-icon-filter" style="display: none;">
+                <button data-cat="all" class="active">All</button>
+                <button data-cat="solid">Solid</button>
+                <button data-cat="regular">Regular</button>
+                <button data-cat="brands">Brands</button>
+                <button data-cat="duotone">Duotone</button>
+                <button data-cat="light">Light</button>
+                <button data-cat="thin">Thin</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BODY -->
+    <div class="gm-icon-body">
+        <!-- ICON LIST / GRID -->
+        <div class="gm-icon-list" id="gm-icon-list">
+            <!-- icon items -->
+        </div>
+    </div>
+</div>
+
+<style>
+    .gm-icon-head-menu {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+        width: 100%;
+        box-sizing: border-box;
+        padding-right: 24px;
+    }
+
+    .gm-back-to-assets {
+        font-size: 16px;
+        cursor: pointer;
+        color: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px;
+        transition: color 0.2s;
+    }
+
+    .gm-back-to-assets:hover {
+        color: #3182ce;
+    }
+
+    /* SEARCH WRAPPER */
+    .gm-icon-search-wrap {
+        display: flex;
+        flex: 1;
+        gap: 6px;
+        width: 100%;
+    }
+
+    #gm-icon-search {
+        flex: 1;
+        padding: 6px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 12px;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+        width: 100%;
+    }
+
+    #gm-icon-search:focus {
+        border-color: #3182ce;
+    }
+
+    #gm-icon-filter-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        width: 32px;
+        cursor: pointer;
+        color: #4a5568;
+        transition: all 0.2s;
+    }
+
+    #gm-icon-filter-toggle:hover,
+    #gm-icon-filter-toggle.active {
+        background: #edf2f7;
+        color: #3182ce;
+    }
+
+    /* ACTIVE FILTER CHIP */
+    .gm-active-filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #ebf8ff;
+        color: #3182ce;
+        border: 1px solid #bee3f8;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    #gm-clear-filter {
+        cursor: pointer;
+        font-size: 12px;
+    }
+
+    #gm-clear-filter:hover {
+        color: #2b6cb0;
+    }
+
+    /* FILTER BUTTONS */
+    .gm-icon-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 16px;
+        padding: 8px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+    }
+
+    .gm-icon-filter button {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 4px 10px;
+        font-size: 11px;
+        color: #4a5568;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+    }
+
+    .gm-icon-filter button:hover {
+        background: #edf2f7;
+    }
+
+    .gm-icon-filter button.active {
+        background: #3182ce;
+        color: white;
+        border-color: #3182ce;
+    }
+
+    /* ICON LIST GRID */
+    .gm-icon-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+        gap: 8px;
+        width: 100%;
+        box-sizing: border-box;
+        padding-right: 8px;
+    }
+
+    /* ICON ITEM */
+    .gm-icon-list .gm-object-dropable {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: #4a5568;
+        padding: 8px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        cursor: grab;
+        background: #fff;
+        transition: all 0.2s;
+        aspect-ratio: 1;
+        /* Biar kotak sempurna */
+        box-sizing: border-box;
+    }
+
+    .gm-icon-list .gm-object-dropable:hover {
+        border-color: #3182ce;
+        color: #3182ce;
+        background: #ebf8ff;
+        transform: scale(1.05);
+    }
+
+    .gm-icon-list .gm-object-dropable:active {
+        cursor: grabbing;
+    }
+</style>
+
+<script>
+    (() => {
+        /* ======================================================
+           CONFIG
+           ====================================================== */
+        const ICON_JSON_PATH = "assets/JSON/icons.json";
+        const ITEMS_PER_PAGE = 60;
+
+        const list = document.getElementById("gm-icon-list");
+        const searchInput = document.getElementById("gm-icon-search");
+        const filterBtns = document.querySelectorAll(".gm-icon-filter button");
+
+        if (!list) return;
+
+        let icons = [];
+        let filteredIcons = [];
+        let page = 0;
+        let activeCategory = "all";
+
+        /* ======================================================
+           LOAD ICON JSON
+           ====================================================== */
+        fetch(ICON_JSON_PATH)
+            .then(r => r.json())
+            .then(data => {
+                icons = data;
+                applyFilter();
+            });
+
+        /* ======================================================
+           FILTER + SEARCH
+           ====================================================== */
+        function applyFilter() {
+            page = 0;
+            list.innerHTML = "";
+
+            const keyword = searchInput.value.trim().toLowerCase();
+
+            filteredIcons = icons.filter(icon => {
+                const matchSearch =
+                    !keyword || icon.name.toLowerCase().includes(keyword);
+
+                const matchCategory =
+                    activeCategory === "all" ||
+                    icon.category === activeCategory;
+
+                return matchSearch && matchCategory;
+            });
+
+            renderPage();
+        }
+
+        /* ======================================================
+           RENDER ICON PAGE
+           ====================================================== */
+        function renderPage() {
+            const start = page * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE;
+
+            filteredIcons.slice(start, end).forEach(icon => {
+                const item = document.createElement("div");
+                item.className = "gm-object-dropable";
+                item.draggable = true;
+
+                item.dataset.type = "i";
+                item.dataset.iconClass = `fa-${icon.category} fa-${icon.name}`;
+                item.innerHTML = `<i class="${item.dataset.iconClass}"></i>`;
+
+                /* DRAG START */
+                item.addEventListener("dragstart", e => {
+                    e.dataTransfer.setData(
+                        "application/gm-object",
+                        JSON.stringify({
+                            type: "i",
+                            iconClass: item.dataset.iconClass
+                        })
+                    );
+
+                    const preview = createDragPreview(item.dataset.iconClass);
+                    e.dataTransfer.setDragImage(preview, 12, 12);
+                    setTimeout(() => preview.remove(), 0);
+                });
+
+                list.appendChild(item);
+            });
+
+            page++;
+            observeLastItem();
+        }
+
+        /* ======================================================
+           INFINITE SCROLL
+           ====================================================== */
+        function observeLastItem() {
+            const items = list.querySelectorAll(".gm-object-dropable");
+            const last = items[items.length - 1];
+            if (!last) return;
+
+            const io = new IntersectionObserver(entries => {
+                if (entries[0].isIntersecting) {
+                    io.disconnect();
+                    renderPage();
+                }
+            });
+
+            io.observe(last);
+        }
+
+        /* ======================================================
+           SEARCH INPUT
+           ====================================================== */
+        searchInput.addEventListener("input", applyFilter);
+
+        /* ======================================================
+           FILTER UI LOGIC
+           ====================================================== */
+        const filterToggleBtn = document.getElementById("gm-icon-filter-toggle");
+        const filterPanel = document.getElementById("gm-icon-filter");
+        const activeChip = document.getElementById("gm-active-filter-chip");
+        const activeChipText = document.getElementById("gm-active-filter-text");
+        const clearFilterBtn = document.getElementById("gm-clear-filter");
+
+        filterToggleBtn.addEventListener("click", () => {
+            const isHidden = filterPanel.style.display === "none";
+            filterPanel.style.display = isHidden ? "flex" : "none";
+            filterToggleBtn.classList.toggle("active", isHidden);
+        });
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener("click", () => {
+                filterBtns.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                activeCategory = btn.dataset.cat;
+
+                // Update chip
+                if (activeCategory === "all") {
+                    activeChip.style.display = "none";
+                } else {
+                    activeChip.style.display = "inline-flex";
+                    activeChipText.textContent = btn.textContent;
+                }
+
+                // Sembunyikan panel filter
+                filterPanel.style.display = "none";
+                filterToggleBtn.classList.remove("active");
+
+                applyFilter();
+            });
+        });
+
+        clearFilterBtn.addEventListener("click", () => {
+            const allBtn = document.querySelector('.gm-icon-filter button[data-cat="all"]');
+            if (allBtn) allBtn.click();
+        });
+
+        /* ======================================================
+           DRAG PREVIEW
+           ====================================================== */
+        function createDragPreview(iconClass) {
+            const preview = document.createElement("div");
+            preview.style.position = "fixed";
+            preview.style.top = "-1000px";
+            preview.style.left = "-1000px";
+            preview.style.pointerEvents = "none";
+            preview.style.fontSize = "24px";
+            preview.style.opacity = "0.85";
+            preview.style.color = "#222";
+            preview.innerHTML = `<i class="${iconClass}"></i>`;
+            document.body.appendChild(preview);
+            return preview;
+        }
+
+        /* ======================================================
+           DROP ICON → GM OBJECT
+           ====================================================== */
+        document.addEventListener(
+            "drop",
+            e => {
+                const raw = e.dataTransfer.getData("application/gm-object");
+                if (!raw) return;
+
+                const data = JSON.parse(raw);
+                if (data.type !== "i") return;
+
+                const target = e.target.closest(".gm-object, .gm-object-core");
+                if (!target) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+
+                const iEl = document.createElement("i");
+                iEl.classList.add("gm-object");
+
+                data.iconClass.split(/\s+/).forEach(cls => iEl.classList.add(cls));
+
+                iEl.style.fontSize = "2em";
+                iEl.style.padding = "2px";
+                iEl.style.width = "fit-content";
+                iEl.style.height = "fit-content";
+
+                target.appendChild(iEl);
+            },
+            true
+        );
+
+        document.addEventListener("dragover", e => e.preventDefault());
+    })();
+</script>

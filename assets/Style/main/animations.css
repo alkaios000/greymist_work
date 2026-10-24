@@ -1,0 +1,76 @@
+/* ==================================
+   GREYMIST ANIMATIONS
+================================== */
+.gm-anim-base {
+    animation-duration: var(--gm-anim-duration, 1s);
+    animation-delay: var(--gm-anim-delay, 0s);
+    animation-fill-mode: both;
+}
+
+/* 1. Fade In */
+@keyframes gmFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+.gm-anim-fade-in {
+    animation-name: gmFadeIn;
+}
+
+/* 2. Slide Up */
+@keyframes gmSlideUp {
+    from { opacity: 0; transform: translateY(50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.gm-anim-slide-up {
+    animation-name: gmSlideUp;
+}
+
+/* 3. Slide Down */
+@keyframes gmSlideDown {
+    from { opacity: 0; transform: translateY(-50px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.gm-anim-slide-down {
+    animation-name: gmSlideDown;
+}
+
+/* 4. Slide Left */
+@keyframes gmSlideLeft {
+    from { opacity: 0; transform: translateX(50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.gm-anim-slide-left {
+    animation-name: gmSlideLeft;
+}
+
+/* 5. Slide Right */
+@keyframes gmSlideRight {
+    from { opacity: 0; transform: translateX(-50px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.gm-anim-slide-right {
+    animation-name: gmSlideRight;
+}
+
+/* 6. Zoom In */
+@keyframes gmZoomIn {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
+}
+.gm-anim-zoom-in {
+    animation-name: gmZoomIn;
+}
+
+/* 7. Bounce In */
+@keyframes gmBounceIn {
+    0%, 20%, 40%, 60%, 80%, 100% { animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1); }
+    0% { opacity: 0; transform: scale3d(0.3, 0.3, 0.3); }
+    20% { transform: scale3d(1.1, 1.1, 1.1); }
+    40% { transform: scale3d(0.9, 0.9, 0.9); }
+    60% { opacity: 1; transform: scale3d(1.03, 1.03, 1.03); }
+    80% { transform: scale3d(0.97, 0.97, 0.97); }
+    100% { opacity: 1; transform: scale3d(1, 1, 1); }
+}
+.gm-anim-bounce-in {
+    animation-name: gmBounceIn;
+}

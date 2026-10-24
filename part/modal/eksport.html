@@ -1,0 +1,1528 @@
+<style>
+    /* ========== EXPORT MODAL STYLES - WHITE THEME ========== */
+    .gm-export-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 9999999999;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .gm-export-modal.gm-show-modal {
+        display: flex !important;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .gm-export-container {
+        width: 90%;
+        max-width: 1300px;
+        height: 85vh;
+        max-height: 800px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Header */
+    .gm-export-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background: white;
+        border-bottom: 1px solid #e9edf2;
+    }
+
+    .gm-export-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .gm-export-title i {
+        color: #f59e0b;
+        margin-right: 0.5rem;
+    }
+
+    .gm-close-export {
+        cursor: pointer;
+        font-size: 1.2rem;
+        color: #94a3b8;
+        transition: color 0.2s;
+    }
+
+    .gm-close-export:hover {
+        color: #ef4444;
+    }
+
+    /* Toolbar */
+    .gm-export-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        background: #f8fafc;
+        border-bottom: 1px solid #e9edf2;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .gm-export-options {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .gm-radio-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #f1f5f9;
+        border-radius: 12px;
+        padding: 0.25rem;
+    }
+
+    .gm-radio-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 1rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+
+    .gm-radio-group label.active {
+        background: white;
+        color: #f59e0b;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .gm-radio-group input[type="radio"] {
+        display: none;
+    }
+
+    .gm-action-buttons {
+        display: flex;
+        gap: 0.8rem;
+        align-items: center;
+    }
+
+    .gm-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.4rem 1rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #475569;
+    }
+
+    .gm-btn:hover {
+        background: #f8fafc;
+        transform: translateY(-1px);
+    }
+
+    .gm-btn-download-all {
+        background: #f59e0b;
+        border-color: #f59e0b;
+        color: white;
+    }
+
+    .gm-btn-download-all:hover {
+        background: #d97706;
+    }
+
+    .gm-btn-refresh {
+        background: #f1f5f9;
+        border-color: #e2e8f0;
+        color: #475569;
+    }
+
+    .gm-btn-refresh:hover {
+        background: #e2e8f0;
+    }
+
+    /* Frames Section */
+    .gm-frames-section {
+        padding: 0.75rem 1.5rem;
+        background: white;
+        border-bottom: 1px solid #e9edf2;
+    }
+
+    .gm-frames-label {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .gm-frames-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .gm-frame-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 1rem;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #475569;
+    }
+
+    .gm-frame-tag:hover {
+        background: #e2e8f0;
+    }
+
+    .gm-frame-tag.active {
+        background: #fef3c7;
+        border-color: #f59e0b;
+        color: #b45309;
+    }
+
+    .gm-frame-tag i {
+        font-size: 0.7rem;
+    }
+
+    /* Code Panel */
+    .gm-code-panel {
+        flex: 1;
+        padding: 1rem;
+        background: #f8fafc;
+        overflow: auto;
+        min-height: 0;
+    }
+
+    .gm-code-split {
+        display: flex;
+        gap: 1rem;
+        height: 100%;
+    }
+
+    .gm-code-html,
+    .gm-code-css {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: #1e1e2e;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #313244;
+    }
+
+    .gm-code-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.6rem 1rem;
+        background: #181825;
+        border-bottom: 1px solid #313244;
+    }
+
+    .gm-code-header span {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #cdd6f4;
+    }
+
+    .gm-code-header span i {
+        margin-right: 0.3rem;
+    }
+
+    .gm-header-actions {
+        display: flex;
+        gap: 0.3rem;
+    }
+
+    .gm-icon-btn {
+        background: none;
+        border: none;
+        color: #6c7086;
+        cursor: pointer;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        transition: all 0.2s;
+    }
+
+    .gm-icon-btn:hover {
+        background: #313244;
+        color: #cdd6f4;
+    }
+
+    .gm-code-content {
+        flex: 1;
+        overflow: auto;
+        padding: 1rem;
+    }
+
+    .gm-code-content pre {
+        margin: 0;
+        font-family: 'Fira Code', 'Monaco', monospace;
+        font-size: 0.7rem;
+        line-height: 1.5;
+        color: #cdd6f4;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    /* Syntax Highlighting */
+    .gm-code-content .tag-name {
+        color: #f38ba8;
+    }
+
+    .gm-code-content .attr-name {
+        color: #a6e3a1;
+    }
+
+    .gm-code-content .attr-value {
+        color: #f9e2af;
+    }
+
+    .gm-code-content .comment {
+        color: #6c7086;
+        font-style: italic;
+    }
+
+    .gm-code-content .selector {
+        color: #cba6f7;
+    }
+
+    .gm-code-content .property {
+        color: #89b4fa;
+    }
+
+    .gm-code-content .value {
+        color: #a6e3a1;
+    }
+
+    /* Single Panel */
+    .gm-code-single {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #1e1e2e;
+        border-radius: 12px;
+        border: 1px solid #313244;
+        overflow: hidden;
+    }
+
+    /* Fullscreen Modal */
+    .gm-fullscreen-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #1e1e2e;
+        z-index: 10000000000;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .gm-fullscreen-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        background: #181825;
+        border-bottom: 1px solid #313244;
+    }
+
+    .gm-fullscreen-header h4 {
+        font-size: 0.9rem;
+        color: #cdd6f4;
+    }
+
+    .gm-fullscreen-content {
+        flex: 1;
+        overflow: auto;
+        padding: 1.5rem;
+    }
+
+    .gm-fullscreen-content pre {
+        margin: 0;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.8rem;
+        line-height: 1.6;
+        color: #cdd6f4;
+        white-space: pre-wrap;
+    }
+
+    /* Toast */
+    .gm-toast {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #22c55e;
+        color: white;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        z-index: 10000000000;
+        animation: slideInRight 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .gm-code-split {
+            flex-direction: column;
+        }
+
+        .gm-export-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .gm-action-buttons {
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+<!-- Export Modal -->
+<section class="gm-export-modal" id="gmExportModal">
+    <div class="gm-export-container">
+        <div class="gm-export-header">
+            <div class="gm-export-title">
+                <i class="fas fa-code"></i>
+                <span id="gmExportProjectTitle">Export Project</span>
+            </div>
+            <i class="fas fa-times gm-close-export" id="gmCloseExport"></i>
+        </div>
+
+        <div class="gm-export-toolbar">
+            <div class="gm-export-options">
+                <div class="gm-radio-group" id="gmRadioGroup">
+                    <label class="active" data-mode="separated">
+                        <i class="fas fa-columns"></i> Separated
+                        <input type="radio" name="gm_export_mode" value="separated" checked>
+                    </label>
+                    <label data-mode="integrated">
+                        <i class="fas fa-code-branch"></i> Integrated
+                        <input type="radio" name="gm_export_mode" value="integrated">
+                    </label>
+                </div>
+            </div>
+            <div class="gm-action-buttons">
+                <button class="gm-btn gm-btn-refresh" id="gmRefreshBtn" title="Refresh data">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button class="gm-btn gm-btn-download-all" id="gmDownloadAllBtn">
+                    <i class="fas fa-download"></i> Download All
+                </button>
+            </div>
+        </div>
+
+        <div class="gm-frames-section">
+            <div class="gm-frames-label">
+                <i class="fas fa-layer-group"></i> FRAMES
+            </div>
+            <div class="gm-frames-list" id="gmFramesList">
+                <div style="padding: 0.3rem 0; color: #94a3b8; font-size: 0.7rem;">Loading frames...</div>
+            </div>
+        </div>
+
+        <div class="gm-code-panel" id="gmCodePanel">
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                <i class="fas fa-code" style="font-size: 2rem; margin-right: 0.5rem;"></i>
+                <span>Select a frame to view code</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+    (function () {
+        // DOM Elements
+        const exportModal = document.getElementById('gmExportModal');
+        const closeExportBtn = document.getElementById('gmCloseExport');
+        const refreshBtn = document.getElementById('gmRefreshBtn');
+        const exportProjectTitle = document.getElementById('gmExportProjectTitle');
+        const framesList = document.getElementById('gmFramesList');
+        const codePanel = document.getElementById('gmCodePanel');
+        const radioGroup = document.getElementById('gmRadioGroup');
+        const downloadAllBtn = document.getElementById('gmDownloadAllBtn');
+
+        let currentSelectedIndex = null;
+        let currentExportMode = 'separated';
+        let currentHtmlCode = '';
+        let currentCssCode = '';
+        let framesData = [];
+
+        // HTML Head Content
+        let headContent = `    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Atugatran/FontAwesome6Pro@latest/css/all.min.css">
+    <link rel="stylesheet" href="assets/fontawesome-free-6.7.2-web/css/all.min.css">`;
+
+        // Auto-detect fonts from main document
+        const fontLinks = document.querySelectorAll('link[href*="fonts.googleapis.com"], link[href*="fonts.gstatic.com"], style');
+        fontLinks.forEach(el => {
+            if (el.tagName === 'LINK') {
+                headContent += `\n    ${el.outerHTML}`;
+            } else if (el.tagName === 'STYLE' && el.textContent.includes('@import url') && el.textContent.includes('fonts.googleapis.com')) {
+                headContent += `\n    <style>${el.textContent}</style>`;
+            }
+        });
+
+        // CSS Reset default
+        const defaultCSS = `* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Open Sans', sans-serif;
+}
+
+.gm-object {
+  transition: 0.3s ease-in-out;
+}`;
+
+        // Atribut yang akan dihapus
+        const removeAttrs = [
+            'data-frame', 'data-type', 'data-gm-dropable', 'data-gm-droppable',
+            'data-id', 'data-gm-ready', 'draggable', 'data-gm-color',
+            'data-gm-mode', 'data-gm-gradient', 'contenteditable',
+            'data-gm-resizing', 'data-gm-selected', 'data-gm-object-id',
+            'data-gm-parent', 'data-gm-x', 'data-gm-y', 'data-gm-width', 'data-gm-height',
+            'data-gm', 'data-gm-object', 'data-gm-type'
+        ];
+
+        // Class yang akan dihapus
+        function shouldRemoveClass(className) {
+            // PERLINDUNGAN: Jangan hapus class animasi
+            if (className === 'gm-anim-base' || (className.startsWith('gm-anim-') && !className.includes('done'))) {
+                return false;
+            }
+
+            return className.startsWith('gm-') ||
+                className.startsWith('object') ||
+                className.includes('clone') ||
+                className === 'ui-resizable' ||
+                className === 'ui-draggable' ||
+                className === 'ui-selectable';
+        }
+
+        // Font Awesome class pattern
+        function isFontAwesomeClass(className) {
+            const faPatterns = ['fa-', 'fas', 'far', 'fal', 'fab', 'fa-solid', 'fa-regular', 'fa-light', 'fa-thin', 'fa-duotone'];
+            return faPatterns.some(pattern => className === pattern || className.startsWith(pattern));
+        }
+
+        // Generate selector
+        function generateSelector(element, parentSelector = '', siblingIndex = 0) {
+            if (element.dataset.gmId) {
+                return `[data-gm-id="${element.dataset.gmId}"]`;
+            }
+
+            const validClasses = [];
+            element.classList.forEach(cls => {
+                if (!shouldRemoveClass(cls) && !isFontAwesomeClass(cls)) {
+                    validClasses.push(cls);
+                }
+            });
+
+            if (validClasses.length > 0) {
+                return `.${validClasses.join('.')}`;
+            }
+
+            if (element.id && !removeAttrs.includes(element.id)) {
+                return `#${element.id}`;
+            }
+
+            const tagName = element.tagName.toLowerCase();
+
+            if (tagName === 'i' || tagName === 'svg') {
+                return tagName;
+            }
+
+            let positionSelector = '';
+            const parent = element.parentElement;
+
+            if (parent) {
+                const siblings = Array.from(parent.children);
+                const elementIndex = siblings.indexOf(element);
+                const onlyChild = siblings.length === 1;
+
+                if (onlyChild) {
+                    positionSelector = ':only-child';
+                } else {
+                    positionSelector = `:nth-child(${elementIndex + 1})`;
+                }
+            }
+
+            if (parentSelector) {
+                return `${parentSelector} > ${tagName}${positionSelector}`;
+            }
+
+            return tagName;
+        }
+
+        // ========== EKSTRAK BACKGROUND IMAGE ==========
+        function extractBackgroundImages(cssString) {
+            const urls = [];
+            const regex = /url\((['"]?)(.*?)\1\)/gi;
+            let match;
+            while ((match = regex.exec(cssString)) !== null) {
+                let url = match[2].trim();
+                if (url && !url.startsWith('data:') && !url.startsWith('#')) {
+                    urls.push(url);
+                }
+            }
+            return [...new Set(urls)];
+        }
+
+        // ========== EKSTRAK HTML IMAGE ==========
+        function extractHtmlImages(htmlString) {
+            const urls = [];
+            const regex = /<img[^>]+src=(['"])(.*?)\1/gi;
+            let match;
+            while ((match = regex.exec(htmlString)) !== null) {
+                let url = match[2].trim();
+                if (url && !url.startsWith('data:') && !url.startsWith('#')) {
+                    urls.push(url);
+                }
+            }
+            return [...new Set(urls)];
+        }
+
+        // ========== DOWNLOAD IMAGE (PERBAIKAN UNTUK SPASI) ==========
+        async function downloadImage(url) {
+            try {
+                let fullUrl = url;
+
+                if (!url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('//')) {
+                    // Base URL yang benar termasuk folder project
+                    const base = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/') + '/';
+
+                    let cleanUrl = url;
+                    if (cleanUrl.startsWith('./')) cleanUrl = cleanUrl.substring(2);
+                    if (cleanUrl.startsWith('/')) cleanUrl = cleanUrl.substring(1);
+
+                    // Decode dulu untuk menghilangkan encoding ganda, lalu encode ulang dengan benar
+                    let decodedUrl = decodeURIComponent(cleanUrl);
+                    // Encode URL untuk handle spasi dan karakter khusus
+                    fullUrl = base + encodeURI(decodedUrl);
+                } else if (url.startsWith('//')) {
+                    fullUrl = 'https:' + url;
+                } else {
+                    fullUrl = encodeURI(url);
+                }
+
+                console.log('Fetching image from:', fullUrl);
+
+                const response = await fetch(fullUrl);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const blob = await response.blob();
+
+                // Ekstrak path relatif - sanitasi nama file (ganti spasi dengan underscore)
+                let relativePath = '';
+                let originalFileName = url.split('/').pop().split('?')[0];
+
+                // Sanitasi nama file: ganti spasi dengan underscore, hapus karakter aneh
+                let safeFileName = originalFileName.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '');
+
+                const imgMatch = url.match(/assets\/img\/(.+)/);
+                if (imgMatch) {
+                    let originalRelativePath = imgMatch[1];
+                    // Sanitasi setiap bagian path
+                    const pathParts = originalRelativePath.split('/');
+                    const sanitizedParts = pathParts.map(part => part.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, ''));
+                    relativePath = sanitizedParts.join('/');
+                    safeFileName = relativePath;
+                }
+
+                let ext = blob.type.split('/')[1] || 'png';
+                if (ext.includes('svg')) ext = 'svg';
+                if (ext === 'jpeg') ext = 'jpg';
+
+                if (!safeFileName || !safeFileName.includes('.')) {
+                    safeFileName = `image_${Date.now()}_${Math.random().toString(36).substr(2, 6)}.${ext}`;
+                }
+
+                return {
+                    blob,
+                    name: safeFileName,
+                    relativePath: relativePath,
+                    originalUrl: url,
+                    originalFileName: originalFileName
+                };
+            } catch (error) {
+                console.warn('Failed to download image:', url, error);
+                return null;
+            }
+        }
+        // ========== EKSTRAK INLINE STYLE ==========
+        function extractInlineStylesFromHTMLString(htmlString) {
+            if (!htmlString) return {};
+
+            const container = document.createElement('div');
+            container.innerHTML = htmlString;
+
+            const allStyles = {};
+
+            function processElement(element, parentSelector = '', siblingIndex = 0) {
+                Array.from(element.attributes).forEach(attr => {
+                    if (attr.name.startsWith('data-') || removeAttrs.includes(attr.name)) {
+                        element.removeAttribute(attr.name);
+                    }
+                });
+
+                const classesToRemove = [];
+                element.classList.forEach(cls => {
+                    if (shouldRemoveClass(cls)) {
+                        classesToRemove.push(cls);
+                    }
+                });
+                classesToRemove.forEach(cls => element.classList.remove(cls));
+
+                const inlineStyle = element.getAttribute('style');
+                const styleProperties = [];
+
+                if (inlineStyle && inlineStyle.trim()) {
+                    const styles = inlineStyle.split(';').filter(s => s.trim());
+                    styles.forEach(style => {
+                        let [prop, value] = style.split(':').map(s => s.trim());
+                        if (prop && value && !removeAttrs.includes(prop)) {
+                            styleProperties.push(`  ${prop}: ${value};`);
+                        }
+                    });
+                }
+
+                const selector = generateSelector(element, parentSelector, siblingIndex);
+
+                if (styleProperties.length > 0) {
+                    if (!allStyles[selector]) {
+                        allStyles[selector] = [];
+                    }
+                    allStyles[selector] = [...new Set([...allStyles[selector], ...styleProperties])];
+                }
+
+                element.removeAttribute('style');
+
+                Array.from(element.children).forEach((child, idx) => {
+                    processElement(child, selector, idx);
+                });
+            }
+
+            Array.from(container.children).forEach((child, idx) => {
+                processElement(child, '', idx);
+            });
+
+            return allStyles;
+        }
+
+        // ========== FORMAT HTML ==========
+        function formatHTML(element, level = 0) {
+            const indent = '  '.repeat(level);
+            const tagName = element.tagName.toLowerCase();
+
+            let attrs = '';
+            const keepDataAttrs = [
+                'data-hover', 'data-action-type', 'data-action-target',
+                'data-action-scroll-target', 'data-action-modal-title',
+                'data-action-modal-content', 'data-action-modal-image',
+                'data-action-modal-width', 'data-action-modal-bg',
+                'data-action-modal-color', 'data-gm-anim', 'data-gm-id'
+            ];
+
+            Array.from(element.attributes).forEach(attr => {
+                if ((!attr.name.startsWith('data-') || keepDataAttrs.includes(attr.name)) &&
+                    !removeAttrs.includes(attr.name) &&
+                    attr.name !== 'style') {
+                    if (attr.name === 'class') {
+                        const allClasses = attr.value.split(' ');
+                        const validClasses = [];
+                        const faClasses = [];
+
+                        allClasses.forEach(cls => {
+                            if (shouldRemoveClass(cls)) {
+                                // Skip
+                            } else if (isFontAwesomeClass(cls)) {
+                                faClasses.push(cls);
+                            } else {
+                                validClasses.push(cls);
+                            }
+                        });
+
+                        const keepClasses = [...validClasses, ...faClasses];
+                        if (keepClasses.length > 0) {
+                            attrs += ` class="${keepClasses.join(' ')}"`;
+                        }
+                    } else {
+                        attrs += ` ${attr.name}="${escapeHtml(attr.value)}"`;
+                    }
+                }
+            });
+
+            let childrenHtml = '';
+            Array.from(element.childNodes).forEach(child => {
+                if (child.nodeType === Node.ELEMENT_NODE) {
+                    childrenHtml += formatHTML(child, level + 1);
+                } else if (child.nodeType === Node.TEXT_NODE) {
+                    const text = child.textContent.trim();
+                    if (text) {
+                        childrenHtml += `${'  '.repeat(level + 1)}${text}\n`;
+                    }
+                }
+            });
+
+            if (childrenHtml.trim()) {
+                return `${indent}<${tagName}${attrs}>\n${childrenHtml}${indent}</${tagName}>\n`;
+            } else {
+                return `${indent}<${tagName}${attrs}></${tagName}>\n`;
+            }
+        }
+
+        // ========== PROSES FRAME CONTENT ==========
+        function processFrameContent(frameContent, safeName = 'frame') {
+            if (!frameContent) {
+                return { html: '<div>Empty content</div>\n', css: defaultCSS };
+            }
+
+            let content = frameContent;
+
+            if (typeof content === 'string') {
+                const trimmed = content.trim();
+                if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+                    try {
+                        const parsed = JSON.parse(content);
+                        if (parsed.html) content = parsed.html;
+                        if (parsed.content) content = parsed.content;
+                    } catch (e) { }
+                }
+            }
+
+            const allStyles = extractInlineStylesFromHTMLString(content);
+
+            let cssString = `${defaultCSS}\n\n/* ========== GENERATED STYLES ========== */\n\n`;
+            for (const selector in allStyles) {
+                cssString += `#frame_${safeName} ${selector} {\n${allStyles[selector].join('\n')}\n}\n\n`;
+            }
+
+            // Generate Responsive CSS for THIS frame specifically
+            if (window.gmBreakpoints && Array.isArray(window.gmBreakpoints)) {
+                const cleanContainer = document.createElement('div');
+                cleanContainer.innerHTML = content;
+                const objectMap = new Map();
+                cleanContainer.querySelectorAll('.gm-object').forEach(el => {
+                    if (el.dataset.gmId) objectMap.set(el.dataset.gmId, el);
+                });
+
+                // Min-width media queries (Ascending)
+                const minBp = [...window.gmBreakpoints].filter(b => b.type === 'min').sort((a, b) => a.widthValue - b.widthValue);
+                minBp.forEach(bp => {
+                    cssString += `\n@media (${bp.rule}) {\n`;
+                    objectMap.forEach((el, id) => {
+                        const bpStyle = el.getAttribute(`data-bp-${bp.id}`);
+                        if (bpStyle) cssString += `  #frame_${safeName} [data-gm-id="${id}"] { ${bpStyle} }\n`;
+                    });
+                    cssString += `}\n`;
+                });
+
+                // Max-width media queries (Descending)
+                const maxBp = [...window.gmBreakpoints].filter(b => b.type === 'max').sort((a, b) => b.widthValue - a.widthValue);
+                maxBp.forEach(bp => {
+                    cssString += `\n@media (${bp.rule}) {\n`;
+                    objectMap.forEach((el, id) => {
+                        const bpStyle = el.getAttribute(`data-bp-${bp.id}`);
+                        if (bpStyle) cssString += `  #frame_${safeName} [data-gm-id="${id}"] { ${bpStyle} }\n`;
+                    });
+                    cssString += `}\n`;
+                });
+            }
+
+            if (cssString === `${defaultCSS}\n\n/* ========== GENERATED STYLES ========== */\n\n`) {
+                cssString = `${defaultCSS}\n\n/* No inline styles found */`;
+            }
+
+            const cleanContainer = document.createElement('div');
+            cleanContainer.innerHTML = content;
+
+            function removeInlineStyles(el) {
+                el.removeAttribute('style');
+                Array.from(el.children).forEach(child => removeInlineStyles(child));
+            }
+            Array.from(cleanContainer.children).forEach(child => removeInlineStyles(child));
+
+            let htmlString = '';
+            Array.from(cleanContainer.children).forEach(child => {
+                htmlString += formatHTML(child, 0);
+            });
+
+            return {
+                html: htmlString.trim(),
+                css: cssString
+            };
+        }
+
+        // ========== PROCESS FRAME ==========
+        function processFrame(frame, safeName = 'frame') {
+            if (!frame || !frame.core_content) {
+                return { html: '<div>Empty content</div>\n', css: defaultCSS };
+            }
+            return processFrameContent(frame.core_content, safeName);
+        }
+
+        // ========== PROCESS ALL FRAMES ==========
+        function processAllFrames() {
+            const allResults = [];
+            framesData.forEach((frame, idx) => {
+                const safeName = (frame.frame_name || `frame_${idx + 1}`).replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                const { html, css } = processFrameContent(frame.core_content, safeName);
+                allResults.push({
+                    id: frame.frame_id,
+                    name: safeName,
+                    html: html,
+                    css: css
+                });
+            });
+            return allResults;
+        }
+
+        // ========== GENERATE SEPARATED HTML ==========
+        function generateSeparatedHTML(html, cssFilename, frameId) {
+            return `<!DOCTYPE html>
+<html lang="id">
+<head>${headContent}
+    <link rel="stylesheet" href="css/${cssFilename}">
+    <title>${escapeHtml(exportProjectTitle.textContent)} - ${frameId}</title>
+</head>
+<body id="frame_${frameId}">
+${html}
+${interactionJS}
+</body>
+</html>`;
+        }
+
+        // ========== GENERATE INTEGRATED CODE ==========
+        function generateIntegratedCode(combinedHtml, combinedCss, title) {
+            return `<!DOCTYPE html>
+<html lang="id">
+<head>${headContent}
+    <style>
+${combinedCss}
+    </style>
+    <title>${escapeHtml(title)}</title>
+</head>
+<body>
+${combinedHtml}
+${interactionJS}
+</body>
+</html>`;
+        }
+
+        // ========== INTERACTION ENGINE SCRIPT ==========
+        const interactionJS = `<script>
+document.addEventListener("DOMContentLoaded", () => {
+    document.addEventListener("pointerenter", e => {
+        const obj = e.target.closest("[data-hover]");
+        if (!obj || obj._gmHoverApplied) return;
+        obj._gmHoverBackup = obj.getAttribute("style") || "";
+        obj.setAttribute("style", (obj._gmHoverBackup ? obj._gmHoverBackup + ";" : "") + obj.dataset.hover);
+        obj._gmHoverApplied = true;
+    }, true);
+    document.addEventListener("pointerleave", e => {
+        const obj = e.target.closest("[data-hover]");
+        if (!obj || !obj._gmHoverApplied || obj.contains(e.relatedTarget)) return;
+        if (obj._gmHoverBackup) obj.setAttribute("style", obj._gmHoverBackup);
+        else obj.removeAttribute("style");
+        delete obj._gmHoverBackup;
+        delete obj._gmHoverApplied;
+    }, true);
+    document.addEventListener("click", e => {
+        const obj = e.target.closest("[data-action-type]");
+        if (!obj) return;
+        e.preventDefault();
+        const type = obj.getAttribute("data-action-type");
+        if (type === "goto") {
+            const targetId = obj.getAttribute("data-action-target");
+            if (targetId) {
+                const el = document.getElementById('frame_' + targetId) || document.getElementById(targetId);
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+                else window.location.href = 'frame_' + targetId + '.html';
+            }
+        } else if (type === "scroll") {
+            const scrollId = obj.getAttribute("data-action-scroll-target");
+            if (scrollId) {
+                let scrollEl = document.getElementById(scrollId) || document.querySelector("." + scrollId);
+                if(scrollEl) scrollEl.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        } else if (type === "modal") {
+            let existing = document.getElementById("gm-action-modal");
+            if(existing) existing.remove();
+            const title = obj.getAttribute("data-action-modal-title") || "Modal Title";
+            const content = obj.getAttribute("data-action-modal-content") || "Modal Content";
+            const image = obj.getAttribute("data-action-modal-image") || "";
+            const width = obj.getAttribute("data-action-modal-width") || "400px";
+            const bg = obj.getAttribute("data-action-modal-bg") || "#ffffff";
+            const color = obj.getAttribute("data-action-modal-color") || "#333333";
+            const overlay = document.createElement("div");
+            overlay.id = "gm-action-modal";
+            Object.assign(overlay.style, { position: "fixed", top: "0", left: "0", width: "100vw", height: "100vh", backgroundColor: "rgba(0,0,0,0.5)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: "999999" });
+            const modal = document.createElement("div");
+            Object.assign(modal.style, { width: width, backgroundColor: bg, color: color, padding: "20px", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", fontFamily: "inherit" });
+            const imageHtml = image ? '<img src="' + image + '" style="max-width: 100%; border-radius: 4px; margin-bottom: 15px; display: block;">' : "";
+            modal.innerHTML = '<h2 style="margin-top:0; margin-bottom: 15px;">' + title + '</h2>' + imageHtml + '<div style="margin-bottom: 20px; white-space: pre-wrap;">' + content + '</div><div style="text-align: right;"><button class="gm-close-modal" style="padding: 8px 16px; cursor: pointer; border: none; border-radius: 4px; background: #0078ff; color: white;">Close</button></div>';
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            overlay.querySelector(".gm-close-modal").addEventListener("click", () => overlay.remove());
+        }
+    });
+});
+</` + `script>`;
+
+        // ========== DOWNLOAD ALL ==========
+        async function downloadAll() {
+            // 1. SAFEGUARD: Pastikan semua elemen mendapatkan data-gm-id dan state tersinkronisasi
+            const originalBp = window.gmActiveBreakpoint || 'desktop';
+            if (window.switchBreakpoint) {
+                // Switch ke desktop agar Base CSS yang diekstrak adalah Desktop
+                window.switchBreakpoint('desktop');
+            } else if (window.syncCurrentBreakpoint) {
+                window.syncCurrentBreakpoint();
+            }
+
+            // 2. Update frame yang sedang aktif dengan DOM terbaru (sekarang dalam state Desktop)
+            if (window.gmActiveFrameId) {
+                const activeIndex = framesData.findIndex(f => f.frame_id == window.gmActiveFrameId);
+                if (activeIndex !== -1) {
+                    const framePreview = document.getElementById('gm-frame-preview');
+                    if (framePreview) {
+                        framesData[activeIndex].core_content = framePreview.innerHTML;
+                    }
+                }
+            }
+
+            // 3. Kembalikan ke breakpoint semula agar UI editor tidak berubah
+            if (window.switchBreakpoint && originalBp !== 'desktop') {
+                window.switchBreakpoint(originalBp);
+            }
+
+            const projectName = exportProjectTitle.textContent.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+            const zip = new JSZip();
+            let allFrames = processAllFrames();
+            const imageBlobs = new Map(); // relativePath -> blob
+            const imageInfoMap = new Map(); // relativePath -> {originalFileName, blob}
+
+            // BUILD ID TO SAFENAME MAP & REPLACE GOTO TARGETS IN HTML
+            const idToSafeNameMap = {};
+            for (const frame of allFrames) {
+                if (frame.id) {
+                    const safeName = frame.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    idToSafeNameMap[frame.id] = safeName;
+                }
+            }
+            for (const frame of allFrames) {
+                Object.entries(idToSafeNameMap).forEach(([id, safeName]) => {
+                    const regex = new RegExp(`data-action-target="${id}"`, 'g');
+                    frame.html = frame.html.replace(regex, `data-action-target="${safeName}"`);
+                });
+            }
+
+            // FETCH ANIMATIONS, TOKENS, & RESPONSIVE CSS
+            let extraCSS = `\n/* ========== GENERATED EXTRA STYLES ========== */\n`;
+
+            // 1. Animations
+            try {
+                const animResp = await fetch('assets/Style/main/animations.css');
+                if (animResp.ok) extraCSS += await animResp.text();
+            } catch (e) { console.warn('Failed to load animations.css for export'); }
+
+            // 2. Color Tokens
+            const colorStyle = document.getElementById('gm-color-tokens-style');
+            if (colorStyle && colorStyle.textContent) {
+                extraCSS += '\n' + colorStyle.textContent + '\n';
+            }
+
+            // 3. Responsive Breakpoints CSS (now generated per-frame, so we skip the global grab)
+            // The previous logic was flawed because it only grabbed the active frame's responsive CSS.
+
+            // 1. Kumpulkan semua URL gambar dari semua frame (background css + tag img HTML)
+            const allImageUrls = [];
+            for (const frame of allFrames) {
+                const cssUrls = extractBackgroundImages(frame.css);
+                const htmlUrls = extractHtmlImages(frame.html);
+                allImageUrls.push(...cssUrls, ...htmlUrls);
+            }
+
+            // 2. Download semua gambar unik
+            const uniqueUrls = [...new Set(allImageUrls)];
+            for (const url of uniqueUrls) {
+                const result = await downloadImage(url);
+                if (result && result.blob) {
+                    const key = result.relativePath || result.name;
+                    imageBlobs.set(key, result.blob);
+                    imageInfoMap.set(key, {
+                        originalFileName: result.originalFileName,
+                        relativePath: result.relativePath
+                    });
+                }
+            }
+
+            console.log('Images found:', imageBlobs.size, Array.from(imageBlobs.keys()));
+
+            // 3. Buat folder images dan isi dengan gambar
+            const imagesFolder = zip.folder('images');
+            for (const [relativePath, blob] of imageBlobs) {
+                if (relativePath.includes('/')) {
+                    const parts = relativePath.split('/');
+                    const filename = parts.pop();
+                    let currentFolder = imagesFolder;
+                    for (const part of parts) {
+                        currentFolder = currentFolder.folder(part);
+                    }
+                    currentFolder.file(filename, blob);
+                } else {
+                    imagesFolder.file(relativePath, blob);
+                }
+            }
+
+            if (currentExportMode === 'separated') {
+                const cssFolder = zip.folder('css');
+
+                for (const frame of allFrames) {
+                    const safeName = frame.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+                    let cssContent = frame.css + extraCSS;
+
+                    // Update path gambar di CSS
+                    for (const [relativePath, blob] of imageBlobs) {
+                        const info = imageInfoMap.get(relativePath);
+                        const originalFileName = info?.originalFileName || relativePath.split('/').pop();
+                        const safeFileName = relativePath.split('/').pop();
+
+                        // Escape untuk regex
+                        const escapedOriginal = originalFileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const escapedSafe = safeFileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+                        // Cari pattern url yang mengandung nama file (asli atau sudah disanitasi)
+                        const imageUrlPattern = new RegExp(`url\\(['"]?[^'"]*(${escapedOriginal}|${escapedSafe})['"]?\\)`, 'gi');
+                        const newPath = `url(../images/${relativePath})`;
+                        cssContent = cssContent.replace(imageUrlPattern, newPath);
+
+                        // Ganti img src di HTML
+                        const imgHtmlPattern = new RegExp(`src=(['"])[^'"]*(${escapedOriginal}|${escapedSafe})\\1`, 'gi');
+                        frame.html = frame.html.replace(imgHtmlPattern, `src=$1../images/${relativePath}$1`);
+                    }
+
+                    cssFolder.file(`${safeName}.css`, cssContent);
+                    const htmlContent = generateSeparatedHTML(frame.html, `${safeName}.css`, safeName);
+                    zip.file(`frame_${safeName}.html`, htmlContent);
+                }
+            } else {
+                // Integrated Mode: Gabungkan semua HTML dalam <section> dan semua CSS jadi satu file
+                let combinedHtml = '';
+                let combinedCss = defaultCSS + extraCSS;
+
+                for (const frame of allFrames) {
+                    const safeName = frame.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+                    // Hapus bagian defaultCSS dari frame CSS agar tidak duplikat berkali-kali
+                    let frameOnlyCss = frame.css.replace(defaultCSS, '');
+                    combinedCss += `\n/* === Frame: ${safeName} === */\n` + frameOnlyCss;
+
+                    // Bungkus dalam section untuk smooth scrolling (goto target)
+                    combinedHtml += `\n<section id="frame_${safeName}" style="position:relative; width: 100vw; height: 100vh; overflow: hidden; page-break-after: always;">\n${frame.html}\n</section>\n`;
+                }
+
+                // Update URL path gambar untuk versi terintegrasi
+                for (const [relativePath, blob] of imageBlobs) {
+                    const info = imageInfoMap.get(relativePath);
+                    const originalFileName = info?.originalFileName || relativePath.split('/').pop();
+                    const safeFileName = relativePath.split('/').pop();
+
+                    const escapedOriginal = originalFileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const escapedSafe = safeFileName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+                    const imageUrlPattern = new RegExp(`url\\(['"]?[^'"]*(${escapedOriginal}|${escapedSafe})['"]?\\)`, 'gi');
+                    const newPath = `url(images/${relativePath})`;
+                    combinedCss = combinedCss.replace(imageUrlPattern, newPath);
+
+                    // Ganti img src di HTML
+                    const imgHtmlPattern = new RegExp(`src=(['"])[^'"]*(${escapedOriginal}|${escapedSafe})\\1`, 'gi');
+                    combinedHtml = combinedHtml.replace(imgHtmlPattern, `src=$1images/${relativePath}$1`);
+                }
+
+                const integrated = generateIntegratedCode(combinedHtml, combinedCss, projectName);
+                zip.file(`index.html`, integrated);
+            }
+
+            const content = await zip.generateAsync({ type: "blob" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(content);
+            link.download = `${projectName}_export.zip`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast(`Downloaded ${allFrames.length} frames with ${imageBlobs.size} images!`);
+        }
+        // ========== DOWNLOAD SINGLE FILE ==========
+        function downloadFile(filename, content) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            URL.revokeObjectURL(link.href);
+            showToast(`${filename} downloaded!`);
+        }
+
+        // ========== SYNTAX HIGHLIGHTING ==========
+        function syntaxHighlightHTML(code) {
+            if (!code) return '';
+            let escaped = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            escaped = escaped.replace(/&lt;(\/?)(\w+)([^&]*?)&gt;/g, (match, slash, tagName, attrs) => {
+                let attrHtml = '';
+                if (attrs) {
+                    attrHtml = attrs.replace(/(\w+)=(["'])(.*?)\2/g, (attrMatch, attrName, quote, attrValue) => {
+                        return ` <span class="attr-name">${attrName}</span>=<span class="attr-value">${quote}${escapeHtml(attrValue)}${quote}</span>`;
+                    });
+                }
+                return `&lt;<span class="tag-name">${slash}${tagName}</span>${attrHtml}&gt;`;
+            });
+            escaped = escaped.replace(/&lt;!--(.*?)--&gt;/g, '<span class="comment">&lt;!--$1--&gt;</span>');
+            return escaped;
+        }
+
+        function syntaxHighlightCSS(code) {
+            if (!code) return '';
+            let escaped = escapeHtml(code);
+            escaped = escaped.replace(/^([^{]+)\{/gm, '<span class="selector">$1</span>{');
+            escaped = escaped.replace(/\s{2}([a-z-]+):\s([^;]+);/g, '  <span class="property">$1</span>: <span class="value">$2</span>;');
+            escaped = escaped.replace(/\/\*(.*?)\*\//g, '<span class="comment">/*$1*/</span>');
+            return escaped;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function (m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        // ========== RENDER CODE PANEL ==========
+        function renderCodePanel() {
+            if (currentSelectedIndex === null || !framesData[currentSelectedIndex]) {
+                codePanel.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8;">
+                <i class="fas fa-code" style="font-size: 2rem; margin-right: 0.5rem;"></i>
+                <span>Select a frame to view code</span>
+            </div>`;
+                return;
+            }
+
+            const frame = framesData[currentSelectedIndex];
+            const { html, css } = processFrame(frame);
+            currentHtmlCode = html;
+            currentCssCode = css;
+            const safeName = (frame.frame_name || 'frame').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+
+            if (currentExportMode === 'separated') {
+                const highlightedHtml = syntaxHighlightHTML(html);
+                const highlightedCss = syntaxHighlightCSS(css);
+
+                codePanel.innerHTML = `
+                <div class="gm-code-split">
+                    <div class="gm-code-html">
+                        <div class="gm-code-header">
+                            <span><i class="fab fa-html5"></i> HTML</span>
+                            <div class="gm-header-actions">
+                                <button class="gm-icon-btn gm-download-html" title="Download HTML"><i class="fas fa-download"></i></button>
+                                <button class="gm-icon-btn gm-copy-html" title="Copy"><i class="fas fa-copy"></i></button>
+                                <button class="gm-icon-btn gm-fullscreen-html" title="Fullscreen"><i class="fas fa-expand"></i></button>
+                            </div>
+                        </div>
+                        <div class="gm-code-content">
+                            <pre>${highlightedHtml}</pre>
+                        </div>
+                    </div>
+                    <div class="gm-code-css">
+                        <div class="gm-code-header">
+                            <span><i class="fab fa-css3-alt"></i> CSS</span>
+                            <div class="gm-header-actions">
+                                <button class="gm-icon-btn gm-download-css" title="Download CSS"><i class="fas fa-download"></i></button>
+                                <button class="gm-icon-btn gm-copy-css" title="Copy"><i class="fas fa-copy"></i></button>
+                                <button class="gm-icon-btn gm-fullscreen-css" title="Fullscreen"><i class="fas fa-expand"></i></button>
+                            </div>
+                        </div>
+                        <div class="gm-code-content">
+                            <pre>${highlightedCss}</pre>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+                document.querySelector('.gm-download-html')?.addEventListener('click', () => downloadFile(`${safeName}.html`, generateSeparatedHTML(html, `${safeName}.css`)));
+                document.querySelector('.gm-download-css')?.addEventListener('click', () => downloadFile(`${safeName}.css`, css));
+                document.querySelector('.gm-copy-html')?.addEventListener('click', () => copyToClipboard(html, 'HTML'));
+                document.querySelector('.gm-copy-css')?.addEventListener('click', () => copyToClipboard(css, 'CSS'));
+                document.querySelector('.gm-fullscreen-html')?.addEventListener('click', () => openFullscreen(html, 'HTML Code', 'html'));
+                document.querySelector('.gm-fullscreen-css')?.addEventListener('click', () => openFullscreen(css, 'CSS Code', 'css'));
+            } else {
+                const integrated = generateIntegratedCode(html, css, safeName);
+                const highlightedIntegrated = syntaxHighlightHTML(integrated);
+
+                codePanel.innerHTML = `
+                <div class="gm-code-single">
+                    <div class="gm-code-header">
+                        <span><i class="fas fa-code"></i> Integrated Code (HTML + CSS)</span>
+                        <div class="gm-header-actions">
+                            <button class="gm-icon-btn gm-download-integrated" title="Download"><i class="fas fa-download"></i></button>
+                            <button class="gm-icon-btn gm-copy-integrated" title="Copy"><i class="fas fa-copy"></i></button>
+                            <button class="gm-icon-btn gm-fullscreen-integrated" title="Fullscreen"><i class="fas fa-expand"></i></button>
+                        </div>
+                    </div>
+                    <div class="gm-code-content">
+                        <pre>${highlightedIntegrated}</pre>
+                    </div>
+                </div>
+            `;
+
+                document.querySelector('.gm-download-integrated')?.addEventListener('click', () => downloadFile(`${safeName}.html`, integrated));
+                document.querySelector('.gm-copy-integrated')?.addEventListener('click', () => copyToClipboard(integrated, 'Integrated Code'));
+                document.querySelector('.gm-fullscreen-integrated')?.addEventListener('click', () => openFullscreen(integrated, 'Integrated Code', 'html'));
+            }
+        }
+
+        // ========== REFRESH DATA ==========
+        function refreshData() {
+            loadDataRealtime();
+            showToast('Data refreshed!');
+        }
+
+        // ========== FULLSCREEN ==========
+        function openFullscreen(code, title, type) {
+            const fullscreenDiv = document.createElement('div');
+            fullscreenDiv.className = 'gm-fullscreen-modal';
+
+            let highlightedCode = '';
+            if (type === 'html') {
+                highlightedCode = syntaxHighlightHTML(code);
+            } else if (type === 'css') {
+                highlightedCode = syntaxHighlightCSS(code);
+            } else {
+                highlightedCode = syntaxHighlightHTML(code);
+            }
+
+            fullscreenDiv.innerHTML = `
+            <div class="gm-fullscreen-header">
+                <h4><i class="fas fa-code"></i> ${title}</h4>
+                <button class="gm-icon-btn" id="gmCloseFullscreen" style="background: #45475a; padding: 0.3rem 0.8rem;">
+                    <i class="fas fa-times"></i> Close
+                </button>
+            </div>
+            <div class="gm-fullscreen-content">
+                <pre>${highlightedCode}</pre>
+            </div>
+        `;
+
+            document.body.appendChild(fullscreenDiv);
+            document.body.style.overflow = 'hidden';
+
+            const closeBtn = fullscreenDiv.querySelector('#gmCloseFullscreen');
+            closeBtn.addEventListener('click', () => {
+                fullscreenDiv.remove();
+                document.body.style.overflow = '';
+            });
+
+            fullscreenDiv.addEventListener('click', (e) => {
+                if (e.target === fullscreenDiv) {
+                    fullscreenDiv.remove();
+                    document.body.style.overflow = '';
+                }
+            });
+        }
+
+        // ========== SELECT FRAME ==========
+        function selectFrame(index) {
+            currentSelectedIndex = index;
+
+            const tags = document.querySelectorAll('.gm-frame-tag');
+            tags.forEach((tag, i) => {
+                if (i === index) {
+                    tag.classList.add('active');
+                } else {
+                    tag.classList.remove('active');
+                }
+            });
+
+            renderCodePanel();
+        }
+
+        // ========== RENDER FRAMES LIST ==========
+        function renderFramesList() {
+            if (!framesList) return;
+
+            if (!framesData || framesData.length === 0) {
+                framesList.innerHTML = '<div style="padding: 0.3rem 0; color: #94a3b8; font-size: 0.7rem;">No frames available</div>';
+                return;
+            }
+
+            framesList.innerHTML = '';
+            framesData.forEach((frame, index) => {
+                const frameTag = document.createElement('div');
+                frameTag.className = 'gm-frame-tag';
+                frameTag.innerHTML = `
+                <i class="fas fa-file-alt"></i>
+                <span>${escapeHtml(frame.frame_name || 'Untitled Frame')}</span>
+            `;
+                frameTag.addEventListener('click', () => selectFrame(index));
+                framesList.appendChild(frameTag);
+            });
+
+            selectFrame(0);
+        }
+
+        // ========== RADIO GROUP ==========
+        function initRadioGroup() {
+            const labels = radioGroup.querySelectorAll('label');
+
+            labels.forEach(label => {
+                label.addEventListener('click', () => {
+                    const mode = label.getAttribute('data-mode');
+                    labels.forEach(l => l.classList.remove('active'));
+                    label.classList.add('active');
+
+                    currentExportMode = mode;
+                    if (currentSelectedIndex !== null) {
+                        renderCodePanel();
+                    }
+                });
+            });
+        }
+
+        // ========== HELPER FUNCTIONS ==========
+        function showToast(message) {
+            const existingToast = document.querySelector('.gm-toast');
+            if (existingToast) existingToast.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'gm-toast';
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        async function copyToClipboard(text, type) {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast(`${type} code copied!`);
+            } catch (err) {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast(`${type} code copied!`);
+            }
+        }
+
+        // ========== LOAD DATA REALTIME ==========
+        function loadDataRealtime() {
+            framesData = [];
+
+            if (typeof window.GREYMIST !== 'undefined') {
+                if (window.GREYMIST.frames && window.GREYMIST.frames.length > 0) {
+                    framesData = JSON.parse(JSON.stringify(window.GREYMIST.frames));
+                    console.log('Frames loaded from GREYMIST:', framesData.length);
+                }
+                if (window.GREYMIST.project && window.GREYMIST.project.project_name) {
+                    exportProjectTitle.textContent = window.GREYMIST.project.project_name;
+                }
+            }
+
+            if (framesData.length === 0) {
+                framesData = [
+                    { frame_id: 1, frame_name: 'Main Frame', core_content: '<div class="container" style="max-width:1200px;margin:0 auto;padding:20px;"><h1 style="color:#333;font-size:2rem;">Welcome to Greymist</h1><p style="color:#666;line-height:1.6;">This is a sample frame content</p><div class="nested" style="margin-top:20px;padding:10px;background:#f0f0f0;"><span>Nested element inside</span><button class="btn" style="background:#f59e0b;color:white;padding:10px 20px;border:none;border-radius:8px;">Click Me</button></div></div>' }
+                ];
+            }
+
+            renderFramesList();
+        }
+
+        // ========== OPEN MODAL ==========
+        window.gmOpenExportModal = function (projectTitle) {
+            console.log('Opening export modal, loading realtime data...');
+
+            if (projectTitle) {
+                exportProjectTitle.textContent = projectTitle;
+            }
+
+            currentSelectedIndex = null;
+            loadDataRealtime();
+            exportModal.classList.add('gm-show-modal');
+        };
+
+        function closeModal() {
+            exportModal.classList.remove('gm-show-modal');
+        }
+
+        // ========== EVENT LISTENERS ==========
+        closeExportBtn.addEventListener('click', closeModal);
+        refreshBtn.addEventListener('click', refreshData);
+        downloadAllBtn.addEventListener('click', downloadAll);
+        exportModal.addEventListener('click', (e) => {
+            if (e.target === exportModal) closeModal();
+        });
+        document.querySelector('.gm-export-container')?.addEventListener('click', (e) => e.stopPropagation());
+
+        initRadioGroup();
+    })();
+</script>

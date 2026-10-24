@@ -1,0 +1,445 @@
+/* height */
+
+/* Satuan Pixel (px) */
+.h-10px {
+    height: 10px;
+}
+
+.h-20px {
+    height: 20px;
+}
+.h-25px {
+    height: 25px;
+}
+
+
+.h-40px {
+    height: 40px;
+}
+.h-50px {
+    height: 50px;
+}
+
+.h-100px {
+    height: 100px;
+}
+
+.h-200px {
+    height: 200px;
+}
+
+.h-300px {
+    height: 300px;
+}
+
+.h-400px {
+    height: 400px;
+}
+
+.h-500px {
+    height: 500px;
+}
+
+.h-600px {
+    height: 600px;
+}
+
+.h-800px {
+    height: 800px;
+}
+
+.h-1000px {
+    height: 1000px;
+}
+
+.h-1200px {
+    height: 1200px;
+}
+
+.h-1400px {
+    height: 1400px;
+}
+
+/* Satuan EM */
+.h-02em {
+    height: 0.2em;
+}
+
+.h-05em {
+    height: 0.5em;
+}
+
+.h-1em {
+    height: 1em;
+}
+
+.h-2em {
+    height: 2em;
+}
+
+.h-3em {
+    height: 3em;
+}
+
+.h-4em {
+    height: 4em;
+}
+
+.h-5em {
+    height: 5em;
+}
+
+.h-6em {
+    height: 6em;
+}
+
+.h-8em {
+    height: 8em;
+}
+
+.h-10em {
+    height: 10em;
+}
+
+/* Satuan Persentase (%) */
+.h-10 {
+    height: 10%;
+}
+
+.h-15 {
+    height: 15%;
+}
+
+.h-20 {
+    height: 20%;
+}
+
+.h-25 {
+    height: 25%;
+}
+
+.h-30 {
+    height: 30%;
+}
+.h-35 {
+    height: 35%;
+}
+.h-40 {
+    height: 40%;
+}
+.h-45 {
+    height: 45%;
+}
+
+.h-50 {
+    height: 50%;
+}
+.h-60 {
+    height: 60%;
+}
+
+.h-75 {
+    height: 75%;
+}
+.h-80 {
+    height: 80%;
+}
+.h-90 {
+    height: 90%;
+}
+
+.h-100 {
+    height: 100%;
+}
+
+
+/* MAX-height */
+
+/* Satuan Pixel (px) */
+.max-h-10px {
+    max-height: 10px;
+}
+
+.max-h-20px {
+    max-height: 20px;
+}
+
+.max-h-50px {
+    max-height: 50px;
+}
+
+.max-h-100px {
+    max-height: 100px;
+}
+
+.max-h-200px {
+    max-height: 200px;
+}
+
+.max-h-300px {
+    max-height: 300px;
+}
+
+.max-h-400px {
+    max-height: 400px;
+}
+
+.max-h-500px {
+    max-height: 500px;
+}
+
+.max-h-600px {
+    max-height: 600px;
+}
+
+.max-h-800px {
+    max-height: 800px;
+}
+
+.max-h-1000px {
+    max-height: 1000px;
+}
+
+.max-h-1200px {
+    max-height: 1200px;
+}
+
+.max-h-1400px {
+    max-height: 1400px;
+}
+
+/* Satuan EM */
+.max-h-02em {
+    max-height: 0.2em;
+}
+
+.max-h-05em {
+    max-height: 0.5em;
+}
+
+.max-h-1em {
+    max-height: 1em;
+}
+
+.max-h-2em {
+    max-height: 2em;
+}
+
+.max-h-3em {
+    max-height: 3em;
+}
+
+.max-h-4em {
+    max-height: 4em;
+}
+
+.max-h-5em {
+    max-height: 5em;
+}
+
+.max-h-6em {
+    max-height: 6em;
+}
+
+.max-h-8em {
+    max-height: 8em;
+}
+
+.max-h-10em {
+    max-height: 10em;
+}
+
+/* Satuan Persentase (%) */
+.max-h-10 {
+    max-height: 10%;
+}
+
+.max-h-15 {
+    max-height: 15%;
+}
+
+.max-h-20 {
+    max-height: 20%;
+}
+
+.max-h-25 {
+    max-height: 25%;
+}
+
+.max-h-30 {
+    max-height: 30%;
+}
+.max-h-35 {
+    max-height: 35%;
+}
+.max-h-40 {
+    max-height: 40%;
+}
+.max-h-45 {
+    max-height: 45%;
+}
+
+.max-h-50 {
+    max-height: 50%;
+}
+
+.max-h-75 {
+    max-height: 75%;
+}
+.max-h-80 {
+    max-height: 80%;
+}
+.max-h-90 {
+    max-height: 90%;
+}
+
+.max-h-100 {
+    max-height: 100%;
+}
+
+
+
+/* MIN-height */
+
+/* Satuan Pixel (px) */
+.min-h-10px {
+    min-height: 10px;
+}
+
+.min-h-20px {
+    min-height: 20px;
+}
+
+.min-h-50px {
+    min-height: 50px;
+}
+
+.min-h-100px {
+    min-height: 100px;
+}
+
+.min-h-200px {
+    min-height: 200px;
+}
+
+.min-h-300px {
+    min-height: 300px;
+}
+
+.min-h-400px {
+    min-height: 400px;
+}
+
+.min-h-500px {
+    min-height: 500px;
+}
+
+.min-h-600px {
+    min-height: 600px;
+}
+
+.min-h-800px {
+    min-height: 800px;
+}
+
+.min-h-1000px {
+    min-height: 1000px;
+}
+
+.min-h-1200px {
+    min-height: 1200px;
+}
+
+.min-h-1400px {
+    min-height: 1400px;
+}
+
+/* Satuan EM */
+.min-h-02em {
+    min-height: 0.2em;
+}
+
+.min-h-05em {
+    min-height: 0.5em;
+}
+
+.min-h-1em {
+    min-height: 1em;
+}
+
+.min-h-2em {
+    min-height: 2em;
+}
+
+.min-h-3em {
+    min-height: 3em;
+}
+
+.min-h-4em {
+    min-height: 4em;
+}
+
+.min-h-5em {
+    min-height: 5em;
+}
+
+.min-h-6em {
+    min-height: 6em;
+}
+
+.min-h-8em {
+    min-height: 8em;
+}
+
+.min-h-10em {
+    min-height: 10em;
+}
+
+/* Satuan Persentase (%) */
+.min-h-10 {
+    min-height: 10%;
+}
+
+.min-h-15 {
+    min-height: 15%;
+}
+
+.min-h-20 {
+    min-height: 20%;
+}
+
+.min-h-25 {
+    min-height: 25%;
+}
+
+.min-h-30 {
+    min-height: 30%;
+}
+.min-h-35 {
+    min-height: 35%;
+}
+.min-h-40 {
+    min-height: 40%;
+}
+.min-h-45 {
+    min-height: 45%;
+}
+
+.min-h-50 {
+    min-height: 50%;
+}
+
+.min-h-75 {
+    min-height: 75%;
+}
+.min-h-80 {
+    min-height: 80%;
+}
+.min-h-90 {
+    min-height: 90%;
+}
+
+.min-h-100 {
+    min-height: 100%;
+}
+

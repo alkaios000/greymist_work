@@ -1,0 +1,43 @@
+/* CURSOR */
+
+/* Cursor Default */
+.c-default { cursor: default; }  /* Kursor standar */
+
+/* Pointer (Tangan Klik) */
+.c-pointer { cursor: pointer; }  /* Digunakan untuk tombol/link */
+
+/* Cursor Teks */
+.c-text { cursor: text; }  /* Kursor teks saat edit */
+
+/* Kursor Bantuan */
+.c-help { cursor: help; }  /* Tanda tanya untuk bantuan */
+
+/* Kursor Tidak Diizinkan */
+.c-not-allowed { cursor: not-allowed; }  /* Tanda larangan */
+
+/* Kursor Loading */
+.c-wait { cursor: wait; }  /* Kursor loading (jam pasir) */
+.c-progress { cursor: progress; }  /* Loading dengan indikator progres */
+
+/* Kursor Gerakan */
+.c-move { cursor: move; }  /* Gerakan bebas */
+.c-grab { cursor: grab; }  /* Pegangan objek */
+.c-grabbing { cursor: grabbing; }  /* Sedang menarik objek */
+
+/* Kursor Resize */
+.c-resize-n { cursor: n-resize; }  /* Resize ke atas */
+.c-resize-s { cursor: s-resize; }  /* Resize ke bawah */
+.c-resize-e { cursor: e-resize; }  /* Resize ke kanan */
+.c-resize-w { cursor: w-resize; }  /* Resize ke kiri */
+.c-resize-ne { cursor: ne-resize; }  /* Resize ke atas kanan */
+.c-resize-nw { cursor: nw-resize; }  /* Resize ke atas kiri */
+.c-resize-se { cursor: se-resize; }  /* Resize ke bawah kanan */
+.c-resize-sw { cursor: sw-resize; }  /* Resize ke bawah kiri */
+.c-resize-ew { cursor: ew-resize; }  /* Resize ke bawah kiri */
+
+/* Kursor Zoom */
+.c-zoom-in { cursor: zoom-in; }  /* Perbesar */
+.c-zoom-out { cursor: zoom-out; }  /* Perkecil */
+
+/* Kursor None */
+.c-none { cursor: none; }  /* Sembunyikan kursor */

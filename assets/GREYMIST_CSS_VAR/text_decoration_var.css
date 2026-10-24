@@ -1,0 +1,21 @@
+/* TEXT DECORATION */
+
+.td-none {
+    text-decoration: none;
+}
+
+.td-u {
+    text-decoration: underline;
+}
+
+.td-o {
+    text-decoration: overline;
+}
+
+.td-lt {
+    text-decoration: line-through;
+}
+
+.td-u-o {
+    text-decoration: underline overline;
+}

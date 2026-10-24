@@ -1,0 +1,21 @@
+/* TEXT ALIGNMENT */
+
+/* rata kiri */
+.ta-l {
+    text-align: left;
+}
+
+/* rata kanan */
+.ta-r {
+    text-align: right;
+}
+
+/* rata tengah */
+.ta-c {
+    text-align: center;
+}
+
+/* rata */
+.ta-j {
+    text-align: justify;
+}

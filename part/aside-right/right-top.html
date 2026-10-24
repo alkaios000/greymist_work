@@ -1,0 +1,286 @@
+<!-- NOT CLEAR YET -->
+<!-- untuk warna perlu perbaikan pada sinkronisasi code warna, pada bagian gradien color kurang sinkronisasi pada bagian derajat dan 
+ variabel pada saved gradient, perlu penambahan untuk variabel warna yang bisa ditambahkan dan disimpan oleh user. disimpan dalam chace/json sementara -->
+<!-- RIGHT TOP MENU -->
+<div class="gm-top-menu-right" id="gm-top-menu-right">
+
+    <div class="gm-general-menu-1 gm-general-menu-cont">
+        <div class="gm-grid-menu gm-undo"><i class="fa-solid fa-rotate-left"></i></div>
+        <div class="gm-grid-menu gm-redo"><i class="fa-solid fa-rotate-right"></i></div>
+        <div class="gm-grid-menu gm-scale-preview"><i class="fa-solid fa-up-right-and-down-left-from-center"></i></div>
+
+        <div class="gm-grid-menu gm-wide-3 gm-export-button" onclick="gmOpenExportModal('Nama Project')"
+            style="gap: 5px;">
+            <i class="fa-solid fa-file-arrow-up"></i> <span style="font-size: 0.9em; font-weight: 500;">Eksport</span>
+        </div>
+
+        <!-- <div class="gm-grid-menu gm-menu-empty"></div> -->
+        <!-- <button class="gm-export-button" onclick="gmOpenExportModal('Nama Project')"> -->
+        <!-- <i class="fas fa-download"></i> Export -->
+        <!-- </button> -->
+    </div>
+
+    <div class="gm-general-menu-2 gm-general-menu-cont">
+        <div class="gm-grid-menu gm-bg-color">
+            <div class="gm-color-button" id="colorMenuBtn"></div>
+
+            <div class="gm-color-dropdown" id="gmColorDropdown">
+                <!-- Header with Title & Tab Navigation -->
+                <div class="gm-bg-header">
+                    <div class="gm-bg-title-row">
+                        <span class="gm-bg-title-text"><i class="fa-solid fa-palette"></i> Background</span>
+                    </div>
+                    <div class="gm-bg-tabs">
+                        <button type="button" class="gm-bg-tab active" data-tab="solid">Solid & Variables</button>
+                        <button type="button" class="gm-bg-tab" data-tab="gradient">Gradient Studio</button>
+                    </div>
+                </div>
+
+                <!-- TAB 1: SOLID & COLOR VARIABLES -->
+                <div class="gm-bg-tab-content active" id="gmBgTabSolid">
+                    <!-- Main Color Input Field -->
+                    <div class="gm-bg-input-row">
+                        <div class="gm-bg-swatch-wrap" title="Click to choose custom color">
+                            <input type="color" id="gm-color-picker" class="gm-bg-picker-input">
+                            <div class="gm-bg-swatch-preview" id="gmBgSwatchPreview"></div>
+                        </div>
+                        <div class="gm-bg-text-input-wrap">
+                            <input type="text" id="gm-color-hex" class="gm-bg-hex-input"
+                                placeholder="#000000 / rgba() / var(--name)">
+                        </div>
+                    </div>
+
+                    <!-- Color Variables (Design Tokens) Section -->
+                    <div class="gm-bg-section gm-bg-tokens-section">
+                        <div class="gm-bg-section-head">
+                            <div class="gm-bg-section-label">
+                                <span>Color Variables</span>
+                                <span class="gm-bg-token-badge" id="gmBgTokenCount">0</span>
+                            </div>
+                            <span class="gm-bg-section-hint">Right-click for options</span>
+                        </div>
+                        <div class="gm-color-variable" id="gm-bg-color-variables">
+                            <!-- Tokens rendered dynamically by JS -->
+                            <span class="gm-color-token gm-add-token" id="gmBgAddTokenBtn">+ variable</span>
+                        </div>
+                    </div>
+
+                    <!-- Curated Quick Palette -->
+                    <div class="gm-bg-section">
+                        <div class="gm-bg-section-head">
+                            <span class="gm-bg-section-label">Quick Palette</span>
+                        </div>
+                        <div class="gm-bg-swatches-grid">
+                            <div class="gm-bg-swatch-item" data-color="#000000" style="background:#000000;"
+                                title="Black"></div>
+                            <div class="gm-bg-swatch-item" data-color="#1e293b" style="background:#1e293b;"
+                                title="Slate"></div>
+                            <div class="gm-bg-swatch-item" data-color="#3b82f6" style="background:#3b82f6;"
+                                title="Blue"></div>
+                            <div class="gm-bg-swatch-item" data-color="#10b981" style="background:#10b981;"
+                                title="Emerald"></div>
+                            <div class="gm-bg-swatch-item" data-color="#f59e0b" style="background:#f59e0b;"
+                                title="Amber"></div>
+                            <div class="gm-bg-swatch-item" data-color="#ef4444" style="background:#ef4444;" title="Red">
+                            </div>
+                            <div class="gm-bg-swatch-item" data-color="#8b5cf6" style="background:#8b5cf6;"
+                                title="Purple"></div>
+                            <div class="gm-bg-swatch-item" data-color="#ffffff"
+                                style="background:#ffffff; border:1px solid #e5e7eb;" title="White"></div>
+                            <div class="gm-bg-swatch-item gm-swatch-transparent" data-color="transparent"
+                                title="Transparent"></div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Colors -->
+                    <div class="gm-bg-section gm-bg-recent-section">
+                        <div class="gm-bg-section-head">
+                            <span class="gm-bg-section-label">Recent</span>
+                        </div>
+                        <div class="gm-recent-list" id="gmBgRecentList"></div>
+                    </div>
+
+                    <!-- Detailed Color Format Inputs (RGB, HSL, CMYK) -->
+                    <div class="gm-bg-formats-collapse">
+                        <details class="gm-bg-formats-details">
+                            <summary>Color Formats (RGB, HSL, CMYK)</summary>
+                            <div class="gm-color-format-inputs">
+                                <div><label>RGB</label><input type="text" id="gm-rgb" placeholder="255, 255, 255"></div>
+                                <div><label>HSL</label><input type="text" id="gm-hsl" placeholder="0, 0%, 100%"></div>
+                                <div><label>CMYK</label><input type="text" id="gm-cmyk" placeholder="0, 0, 0, 0"></div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- TAB 2: GRADIENT -->
+                <div class="gm-bg-tab-content" id="gmBgTabGradient">
+                    <div class="gm-bg-gradient-panel">
+                        <div class="gm-gradient-preview" id="gradientPreview" style="height:76px;border-radius:8px;"></div>
+                        <button type="button" class="gm-gradient-open-btn" id="openGradientEditor">
+                            <i class="fa-solid fa-sliders"></i> Open Landscape Studio
+                        </button>
+                        <div class="gm-gradient-quick-presets">
+                            <div class="gm-gradient-presets-title">Saved Gradients</div>
+                            <div id="savedGradients" class="gm-saved-gradients"></div>
+                        </div>
+                        <div class="gm-gradient-quick-presets" style="margin-top:10px;">
+                            <div class="gm-gradient-presets-title">Recent Gradients</div>
+                            <div id="recentGradients" class="gm-saved-gradients"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Gradient Studio (LANDSCAPE & DRAGGABLE - FLOATING WINDOW) -->
+        <div class="gm-gradient-modal" id="gmGradientModal">
+            <div class="gm-gradient-modal-content">
+                <!-- Header (Drag Handle) -->
+                <div class="gm-gradient-modal-header" id="gmGradientDragHeader" title="Drag to move">
+                    <div class="gm-gradient-modal-title">
+                        <i class="fa-solid fa-grip-vertical" style="color:#9ca3af;margin-right:2px;"></i>
+                        <i class="fa-solid fa-wand-magic-sparkles" style="color:#2563eb;"></i>
+                        <span>Gradient Studio</span>
+                    </div>
+                    <span class="gm-gradient-close" id="closeGradientModal" title="Close Studio">&times;</span>
+                </div>
+
+                <!-- Landscape Body: 2 Columns -->
+                <div class="gm-gradient-modal-body">
+                    <!-- Left Column: Visual Preview, Track, Angles, CSS Output -->
+                    <div class="gm-gradient-col-left">
+                        <!-- Big Preview Canvas -->
+                        <div class="gm-gradient-preview-canvas">
+                            <div class="gm-gradient-preview-overlay" id="gradientPreviewModal"></div>
+                        </div>
+
+                        <!-- Interactive Gradient Track -->
+                        <div class="gm-gradient-track-wrap">
+                            <div class="gm-gradient-track-label">
+                                <span>Color Spectrum</span>
+                                <span id="gradientAngleDisplay">90°</span>
+                            </div>
+                            <div class="gm-gradient-track" id="gradientTrackBar" title="Click on track to add stop"></div>
+                        </div>
+
+                        <!-- Quick Angles -->
+                        <div class="gm-gradient-angles-row">
+                            <button type="button" class="gm-angle-chip" data-angle="0">0° &rarr;</button>
+                            <button type="button" class="gm-angle-chip" data-angle="45">45° &nearr;</button>
+                            <button type="button" class="gm-angle-chip active" data-angle="90">90° &darr;</button>
+                            <button type="button" class="gm-angle-chip" data-angle="135">135° &searr;</button>
+                            <button type="button" class="gm-angle-chip" data-angle="180">180° &larr;</button>
+                            <button type="button" class="gm-angle-chip" data-angle="270">270° &uarr;</button>
+                        </div>
+
+                        <!-- CSS Code Snippet -->
+                        <div class="gm-gradient-code-wrap">
+                            <div class="gm-gradient-code-header">
+                                <span class="gm-gradient-code-title">CSS Output</span>
+                                <button type="button" class="gm-gradient-copy-btn" id="copyGradientCSSBtn" title="Copy CSS rule">
+                                    <i class="fa-regular fa-copy"></i> Copy
+                                </button>
+                            </div>
+                            <textarea id="gradientCSSCode" class="gm-gradient-code-textarea" readonly></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Type, Angle, Stops, Presets -->
+                    <div class="gm-gradient-col-right">
+                        <!-- Type Selector -->
+                        <div class="gm-gradient-control-group">
+                            <div class="gm-gradient-group-title">Gradient Type</div>
+                            <div class="gm-gradient-type-buttons">
+                                <button type="button" class="gm-gradient-type-btn active" data-type="linear">
+                                    <i class="fa-solid fa-arrows-left-right"></i> Linear
+                                </button>
+                                <button type="button" class="gm-gradient-type-btn" data-type="radial">
+                                    <i class="fa-regular fa-circle-dot"></i> Radial
+                                </button>
+                                <button type="button" class="gm-gradient-type-btn" data-type="conic">
+                                    <i class="fa-solid fa-circle-notch"></i> Conic
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Angle & Orientation -->
+                        <div class="gm-gradient-control-group" id="gradientAngleGroup">
+                            <div class="gm-gradient-group-title">
+                                <span>Angle / Direction</span>
+                                <span id="angleValue">90°</span>
+                            </div>
+                            <div class="gm-gradient-angle-row">
+                                <input type="range" id="gradientAngle" class="gm-gradient-angle-slider" min="0" max="360" value="90">
+                                <input type="number" id="gradientAngleInput" class="gm-gradient-angle-number" min="0" max="360" value="90">
+                            </div>
+                        </div>
+
+                        <!-- Color Stops -->
+                        <div class="gm-gradient-control-group">
+                            <div class="gm-gradient-group-title">
+                                <span>Color Stops</span>
+                                <span style="font-size:10.5px;color:#9ca3af;" id="gradientStopCount">2 stops</span>
+                            </div>
+                            <div class="gm-gradient-stops-list" id="gradientStops"></div>
+
+                            <div class="gm-stops-toolbar">
+                                <button id="addStopBtn" class="gm-add-stop-button" type="button">
+                                    <i class="fa-solid fa-plus"></i> Add Color Stop
+                                </button>
+                                <div class="gm-grad-tokens-bar" id="gradientTokensQuickBar" title="Insert variable as stop"></div>
+                            </div>
+                        </div>
+
+                        <!-- Presets Library: Saved & Recent -->
+                        <div class="gm-gradient-control-group">
+                            <div class="gm-gradient-group-title">
+                                <span>Saved Gradients</span>
+                                <button type="button" id="saveGradientBtn" class="gm-btn-secondary" style="padding:2px 8px;font-size:11px;">
+                                    <i class="fa-solid fa-bookmark"></i> Save Current
+                                </button>
+                            </div>
+                            <div id="savedGradientsModal" class="gm-gradient-presets-grid"></div>
+                        </div>
+
+                        <div class="gm-gradient-control-group">
+                            <div class="gm-gradient-group-title">
+                                <span>Recent Gradients</span>
+                            </div>
+                            <div id="recentGradientsModal" class="gm-gradient-presets-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="gm-gradient-modal-footer">
+                    <div class="gm-gradient-footer-info" id="gradientFooterSummary">
+                        Linear gradient • 2 color stops
+                    </div>
+                    <div class="gm-gradient-footer-actions">
+                        <button id="cancelGradientBtn" class="gm-btn-secondary" type="button">Cancel</button>
+                        <button id="applyGradientBtn" class="gm-btn-primary" type="button">
+                            <i class="fa-solid fa-check"></i> Apply to Active Object
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="gm-grid-menu gm-wide-3"></div>
+        <!-- <div class="gm-grid-menu"></div> -->
+        <!-- <div class="gm-grid-menu"></div> -->
+        <div class="gm-grid-menu"></div>
+        <div class="gm-grid-menu"></div>
+    </div>
+
+    <div class="gm-corner-menu" id="gm-corner-menu">
+        <div class="gm-right-menu">
+            <p class="gm-menu-1">General</p>
+            <p class="gm-menu-4">Display</p>
+            <p class="gm-menu-2">Text</p>
+            <p class="gm-menu-3">Box</p>
+        </div>
+    </div>
+    <!-- TOMBOL -->
+</div>

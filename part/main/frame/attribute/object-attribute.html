@@ -1,0 +1,4666 @@
+<!-- UI SHOW & HIDE -->
+<style>
+    .gm-attribute-hidden {
+        display: none !important;
+
+    }
+</style>
+
+<script>
+    // ==========================================
+    // CENTRALIZED ACTIVE OBJECT POLLING
+    // ==========================================
+    (function() {
+        let globalLastActive = null;
+        function centralActiveWatch() {
+            // We just trigger an event 60 times a second.
+            // The individual listeners will check if the active object changed.
+            window.dispatchEvent(new CustomEvent('gm-active-tick'));
+            requestAnimationFrame(centralActiveWatch);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', centralActiveWatch);
+        } else {
+            centralActiveWatch();
+        }
+    })();
+</script>
+<script>
+    (function () {
+
+        function initAttributePanel() {
+
+            const containers = {
+                global: document.querySelector('.gm-global-attribute-container'),
+                anchor: document.querySelector('.gm-anchor-attribute-container'),
+                input: document.querySelector('.gm-input-attribute-container'),
+                form: document.querySelector('.gm-form-attribute-container'),
+                select: document.querySelector('.gm-selectoption-attribute-container'),
+                list: document.querySelector('.gm-list-attribute-container'),
+                text: document.querySelector('.gm-text-attribute-container'),
+                image: document.querySelector('.gm-image-attribute-container'),
+                table: document.querySelector('.gm-table-attribute-container'),
+                textarea: document.querySelector('.gm-textarea-attribute-container'),
+                audiovideo: document.querySelector('.gm-audiovideo-attribute-container')
+            };
+
+            const tagMap = {
+                div: 'global',
+                a: 'anchor',
+                input: 'input',
+                form: 'form',
+                select: 'select',
+                option: 'select',
+                ul: 'list',
+                ol: 'list',
+                li: 'list',
+                p: 'text',
+                span: 'text',
+                label: 'text',
+                strong: 'text',
+                em: 'text',
+                small: 'text',
+                h1: 'text',
+                h2: 'text',
+                h3: 'text',
+                h4: 'text',
+                h5: 'text',
+                h6: 'text',
+                img: 'image',
+                table: 'table',
+                thead: 'table',
+                tbody: 'table',
+                tr: 'table',
+                td: 'table',
+                th: 'table',
+                textarea: 'textarea',
+                audio: 'audiovideo',
+                video: 'audiovideo'
+            };
+
+            let lastActive = null;
+
+            function hideAllSpecific() {
+                Object.keys(containers).forEach(key => {
+                    if (key !== 'global' && containers[key]) {
+                        containers[key].classList.add('gm-attribute-hidden');
+                        containers[key].style.display = 'none';
+                    }
+                });
+            }
+
+            function showGlobal() {
+                if (containers.global) {
+                    containers.global.classList.remove('gm-attribute-hidden');
+                    containers.global.style.display = 'block';
+                }
+            }
+
+            function updatePanel() {
+
+                // 🔥 Ambil core yang sedang actived
+                const activeCore = document.querySelector('.gm-object-core.actived');
+                if (!activeCore) {
+                    hideAllSpecific();
+                    showGlobal();
+                    return;
+                }
+
+                const activeObject = activeCore.querySelector('.gm-object.gm-active');
+
+                if (activeObject === lastActive) return;
+                lastActive = activeObject;
+
+                hideAllSpecific();
+                showGlobal();
+
+                if (!activeObject) return;
+
+                // Handle wrapper gm-object
+                let realElement = activeObject;
+
+                if (
+                    activeObject.children.length === 1 &&
+                    activeObject.firstElementChild instanceof HTMLElement
+                ) {
+                    realElement = activeObject.firstElementChild;
+                }
+
+                const tag = realElement.tagName.toLowerCase();
+                const key = tagMap[tag];
+
+                if (!key) return; // tag tidak terdaftar → hanya global
+
+                const container = containers[key];
+
+                if (container) {
+                    container.classList.remove('gm-attribute-hidden');
+                    container.style.display = 'block';
+                }
+            }
+
+            function watch() {
+                updatePanel();
+                // requestAnimationFrame(watch); replaced by centralized event
+            }
+
+            window.addEventListener('gm-active-tick', watch);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initAttributePanel);
+        } else {
+            initAttributePanel();
+        }
+
+    })();
+</script>
+
+<!-- 1.GLOBAL ATTRIBUTE (CLEAR) -->
+<div class="gm-global-attribute-container gm-menu-section" style="width: 250px; padding: 0;">
+
+    <div class="gm-menu-title">Global Attribute</div>
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-id">Id (selector)</label>
+            <input type="text" id="gm-attr-id" class="gm-attr-id" placeholder="">
+            <script>
+                // ===============================
+                // GLOBAL ATTRIBUTE - ID HANDLER
+                // ===============================
+
+                const idInput = document.querySelector('.gm-attr-id');
+
+                let lastActiveObject = null;
+
+                // -------------------------------
+                // GET ACTIVE OBJECT
+                // -------------------------------
+                function getActiveObject() {
+                    const activeCore = document.querySelector('.gm-object-core.actived');
+                    if (!activeCore) return null;
+
+                    return activeCore.querySelector('.gm-object.gm-active');
+                }
+
+                // -------------------------------
+                // SANITIZE ID
+                // -------------------------------
+                function sanitizeId(value) {
+                    return value
+                        .trim()
+                        .replace(/\s+/g, '-')       // spasi → dash
+                        .replace(/[^a-zA-Z0-9\-_]/g, ''); // hanya karakter valid
+                }
+
+                // -------------------------------
+                // WATCH ACTIVE OBJECT
+                // -------------------------------
+                function watchActiveObject() {
+                    const activeObject = getActiveObject();
+
+                    if (activeObject !== lastActiveObject) {
+                        lastActiveObject = activeObject;
+
+                        if (activeObject) {
+                            idInput.value = activeObject.id || '';
+                            idInput.disabled = false;
+                        } else {
+                            idInput.value = '';
+                            idInput.disabled = true;
+                        }
+                    }
+
+                    // requestAnimationFrame(watchActiveObject); replaced by centralized event
+                }
+
+                window.addEventListener('gm-active-tick', watchActiveObject);
+
+                // -------------------------------
+                // HANDLE INPUT REALTIME
+                // -------------------------------
+                idInput.addEventListener('input', () => {
+                    const activeObject = getActiveObject();
+                    if (!activeObject) return;
+
+                    const sanitized = sanitizeId(idInput.value);
+                    idInput.value = sanitized;
+
+                    if (sanitized === '') {
+                        activeObject.removeAttribute('id');
+                        idInput.classList.remove('gm-error');
+                        return;
+                    }
+
+                    // Cek duplicate ID
+                    const duplicate = document.querySelector(`#${CSS.escape(sanitized)}`);
+
+                    if (duplicate && duplicate !== activeObject) {
+                        idInput.classList.add('gm-error');
+                        return;
+                    }
+
+                    idInput.classList.remove('gm-error');
+                    activeObject.id = sanitized;
+                });
+            </script>
+        </div>
+        <div>
+            <label for="gm-attr-class">Class (selector)</label>
+            <input type="text" id="gm-attr-class" class="gm-attr-class" placeholder="">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - CLASS (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrClass_input = document.querySelector('.gm-attr-class');
+                    if (!gmAttrClass_input) return;
+
+                    const gmAttrClass_systemClasses = [
+                        'gm-object',
+                        'gm-active',
+                        'hover-core'
+                    ];
+
+                    let gmAttrClass_lastActive = null;
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrClass_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // FILTER USER CLASSES (hide system)
+                    // ------------------------------------
+                    function gmAttrClass_getUserClasses(element) {
+                        return Array.from(element.classList)
+                            .filter(cls => !gmAttrClass_systemClasses.includes(cls))
+                            .join(' ');
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrClass_watch() {
+                        const active = gmAttrClass_getActiveObject();
+
+                        if (active !== gmAttrClass_lastActive) {
+                            gmAttrClass_lastActive = active;
+
+                            if (active) {
+                                gmAttrClass_input.value =
+                                    gmAttrClass_getUserClasses(active);
+
+                                gmAttrClass_input.disabled = false;
+                            } else {
+                                gmAttrClass_input.value = '';
+                                gmAttrClass_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrClass_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrClass_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT (NO TRIM, NO SPACE BUG)
+                    // ------------------------------------
+                    gmAttrClass_input.addEventListener('input', function () {
+
+                        const active = gmAttrClass_getActiveObject();
+                        if (!active) return;
+
+                        // Ambil class system dulu
+                        const system = gmAttrClass_systemClasses.filter(cls =>
+                            active.classList.contains(cls)
+                        );
+
+                        // Ambil user input TANPA trim
+                        const userClasses = this.value
+                            .replace(/\s+/g, ' ') // rapikan double space
+                            .split(' ')
+                            .filter(Boolean);
+
+                        // Gabungkan system + user
+                        const finalClassList = [...system, ...userClasses];
+
+                        active.className = finalClassList.join(' ');
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-lang">Lang (Languange)</label>
+            <input type="text" id="gm-attr-lang" class="gm-attr-lang" placeholder="">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - LANG (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrLang_input = document.querySelector('.gm-attr-lang');
+                    if (!gmAttrLang_input) return;
+
+                    let gmAttrLang_lastActive = null;
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrLang_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrLang_watch() {
+                        const active = gmAttrLang_getActiveObject();
+
+                        if (active !== gmAttrLang_lastActive) {
+                            gmAttrLang_lastActive = active;
+
+                            if (active) {
+                                gmAttrLang_input.value =
+                                    active.getAttribute('lang') || '';
+
+                                gmAttrLang_input.disabled = false;
+                            } else {
+                                gmAttrLang_input.value = '';
+                                gmAttrLang_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrLang_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrLang_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrLang_input.addEventListener('input', function () {
+
+                        const active = gmAttrLang_getActiveObject();
+                        if (!active) return;
+
+                        const value = this.value.trim();
+
+                        if (value === '') {
+                            active.removeAttribute('lang');
+                            return;
+                        }
+
+                        active.setAttribute('lang', value);
+                    });
+
+                })();
+            </script>
+        </div>
+        <div>
+            <label>Content Editable</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-contenteditable {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-contenteditable:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-contenteditable" class="gm-attr-contenteditable">
+                <label for="gm-attr-contenteditable" style="margin: 0;">True</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - CONTENTEDITABLE
+                    // ========================================
+                    (function () {
+
+                        const gmAttrCE_input = document.querySelector('.gm-attr-contenteditable');
+                        if (!gmAttrCE_input) return;
+
+                        let gmAttrCE_lastActive = null;
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrCE_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrCE_watch() {
+                            const active = gmAttrCE_getActiveObject();
+
+                            if (active !== gmAttrCE_lastActive) {
+                                gmAttrCE_lastActive = active;
+
+                                if (active) {
+                                    const isEditable =
+                                        active.getAttribute('contenteditable') === 'true';
+
+                                    gmAttrCE_input.checked = isEditable;
+                                    gmAttrCE_input.disabled = false;
+                                } else {
+                                    gmAttrCE_input.checked = false;
+                                    gmAttrCE_input.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrCE_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrCE_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHECKBOX
+                        // ------------------------------------
+                        gmAttrCE_input.addEventListener('change', function () {
+
+                            const active = gmAttrCE_getActiveObject();
+                            if (!active) return;
+
+                            if (this.checked) {
+                                active.setAttribute('contenteditable', 'true');
+                            } else {
+                                active.removeAttribute('contenteditable');
+                            }
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-title">Title</label>
+            <input type="text" id="gm-attr-title" class="gm-attr-title" placeholder="">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - TITLE
+                // ========================================
+                (function () {
+
+                    const gmAttrTitle_input = document.querySelector('.gm-attr-title');
+                    if (!gmAttrTitle_input) return;
+
+                    let gmAttrTitle_lastActive = null;
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrTitle_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrTitle_watch() {
+                        const active = gmAttrTitle_getActiveObject();
+
+                        if (active !== gmAttrTitle_lastActive) {
+                            gmAttrTitle_lastActive = active;
+
+                            if (active) {
+                                gmAttrTitle_input.value =
+                                    active.getAttribute('title') || '';
+
+                                gmAttrTitle_input.disabled = false;
+                            } else {
+                                gmAttrTitle_input.value = '';
+                                gmAttrTitle_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrTitle_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrTitle_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrTitle_input.addEventListener('input', function () {
+
+                        const active = gmAttrTitle_getActiveObject();
+                        if (!active) return;
+
+                        const value = this.value;
+
+                        if (value === '') {
+                            active.removeAttribute('title');
+                            return;
+                        }
+
+                        active.setAttribute('title', value);
+                    });
+
+                })();
+            </script>
+        </div>
+        <div>
+            <!-- <label>Hidden</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-hidden {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-hidden:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-hidden" class="gm-attr-hidden">
+                <label for="gm-attr-hidden" style="margin: 0;">Hidden</label>
+                <script></script>
+            </div> -->
+        </div>
+    </div>
+
+</div>
+
+<!-- 2.<a> ANCHOR ATTRIBUTE (CLEAR) -->
+<div class="gm-anchor-attribute-container gm-menu-section gm-attribute-hidden" style="width: 250px; padding: 0;">
+    <div class="gm-menu-title">Link Attribute</div>
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-href">Href</label>
+            <input type="text" class="gm-attr-href" id="gm-attr-href">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - HREF (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrHref_input = document.querySelector('.gm-attr-href');
+                    if (!gmAttrHref_input) return;
+
+                    let gmAttrHref_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT HREF
+                    // ------------------------------------
+                    const gmAttrHref_supportedTags = [
+                        'a',
+                        'link',
+                        'area',
+                        'base'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrHref_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT HREF
+                    // ------------------------------------
+                    function gmAttrHref_isSupported(element) {
+                        if (!element) return false;
+                        return gmAttrHref_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrHref_watch() {
+
+                        const active = gmAttrHref_getActiveObject();
+
+                        if (active !== gmAttrHref_lastActive) {
+
+                            gmAttrHref_lastActive = active;
+
+                            if (active && gmAttrHref_isSupported(active)) {
+
+                                gmAttrHref_input.value =
+                                    active.getAttribute('href') || '';
+
+                                gmAttrHref_input.disabled = false;
+
+                            } else {
+
+                                gmAttrHref_input.value = '';
+                                gmAttrHref_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrHref_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrHref_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrHref_input.addEventListener('input', function () {
+
+                        const active = gmAttrHref_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrHref_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('href');
+                        } else {
+                            active.setAttribute('href', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+        <div>
+            <label for="gm-attr-target">Target</label>
+            <select id="gm-attr-target" class="gm-attr-target">
+                <option value="_self">Self</option>
+                <option value="_blank">Blank</option>
+                <option value="_parent">Parent</option>
+                <option value="_Top">Top</option>
+            </select>
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - TARGET (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrTarget_select = document.querySelector('.gm-attr-target');
+                    if (!gmAttrTarget_select) return;
+
+                    let gmAttrTarget_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT TARGET
+                    // ------------------------------------
+                    const gmAttrTarget_supportedTags = [
+                        'a',
+                        'form',
+                        'base'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrTarget_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT TARGET
+                    // ------------------------------------
+                    function gmAttrTarget_isSupported(element) {
+                        if (!element) return false;
+                        return gmAttrTarget_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrTarget_watch() {
+
+                        const active = gmAttrTarget_getActiveObject();
+
+                        if (active !== gmAttrTarget_lastActive) {
+
+                            gmAttrTarget_lastActive = active;
+
+                            if (active && gmAttrTarget_isSupported(active)) {
+
+                                gmAttrTarget_select.value =
+                                    active.getAttribute('target') || '_self';
+
+                                gmAttrTarget_select.disabled = false;
+
+                            } else {
+
+                                gmAttrTarget_select.value = '_self';
+                                gmAttrTarget_select.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrTarget_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrTarget_watch);
+
+                    // ------------------------------------
+                    // HANDLE CHANGE
+                    // ------------------------------------
+                    gmAttrTarget_select.addEventListener('change', function () {
+
+                        const active = gmAttrTarget_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrTarget_isSupported(active)) return;
+
+                        if (this.value === '_self') {
+                            active.removeAttribute('target');
+                        } else {
+                            active.setAttribute('target', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-rel">Rel</label>
+            <input type="text" class="gm-attr-rel" id="gm-attr-rel">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - REL (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrRel_input = document.querySelector('.gm-attr-rel');
+                    if (!gmAttrRel_input) return;
+
+                    let gmAttrRel_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT REL
+                    // ------------------------------------
+                    const gmAttrRel_supportedTags = [
+                        'a',
+                        'link',
+                        'area'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrRel_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT REL
+                    // ------------------------------------
+                    function gmAttrRel_isSupported(element) {
+                        if (!element) return false;
+                        return gmAttrRel_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrRel_watch() {
+
+                        const active = gmAttrRel_getActiveObject();
+
+                        if (active !== gmAttrRel_lastActive) {
+
+                            gmAttrRel_lastActive = active;
+
+                            if (active && gmAttrRel_isSupported(active)) {
+
+                                gmAttrRel_input.value =
+                                    active.getAttribute('rel') || '';
+
+                                gmAttrRel_input.disabled = false;
+
+                            } else {
+
+                                gmAttrRel_input.value = '';
+                                gmAttrRel_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrRel_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrRel_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrRel_input.addEventListener('input', function () {
+
+                        const active = gmAttrRel_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrRel_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('rel');
+                        } else {
+                            active.setAttribute('rel', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+        <div>
+            <label for="">Download</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-download {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-download:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-download" class="gm-attr-download">
+                <label for="gm-attr-download" style="margin: 0;">Download</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - DOWNLOAD (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrDownload_checkbox = document.querySelector('.gm-attr-download');
+                        if (!gmAttrDownload_checkbox) return;
+
+                        let gmAttrDownload_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT DOWNLOAD
+                        // ------------------------------------
+                        const gmAttrDownload_supportedTags = [
+                            'a',
+                            'area'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrDownload_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT DOWNLOAD
+                        // ------------------------------------
+                        function gmAttrDownload_isSupported(element) {
+                            if (!element) return false;
+                            return gmAttrDownload_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrDownload_watch() {
+
+                            const active = gmAttrDownload_getActiveObject();
+
+                            if (active !== gmAttrDownload_lastActive) {
+
+                                gmAttrDownload_lastActive = active;
+
+                                if (active && gmAttrDownload_isSupported(active)) {
+
+                                    gmAttrDownload_checkbox.checked =
+                                        active.hasAttribute('download');
+
+                                    gmAttrDownload_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrDownload_checkbox.checked = false;
+                                    gmAttrDownload_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrDownload_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrDownload_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrDownload_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrDownload_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrDownload_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('download', '');
+                            } else {
+                                active.removeAttribute('download');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-hreflang">Hreflang</label>
+            <select id="gm-attr-hreflang" class="gm-attr-hreflang">
+                <option value="en">en</option>
+                <option value="en-US">en-US</option>
+                <option value="en-GB">en-GB</option>
+                <option value="id">id</option>
+                <option value="id-ID">id-ID</option>
+                <option value="fr-CA">fr-CA</option>
+            </select>
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - HREFLANG (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrHreflang_select = document.querySelector('.gm-attr-hreflang');
+                    if (!gmAttrHreflang_select) return;
+
+                    let gmAttrHreflang_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT HREFLANG
+                    // ------------------------------------
+                    const gmAttrHreflang_supportedTags = [
+                        'a',
+                        'link',
+                        'area'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrHreflang_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT HREFLANG
+                    // ------------------------------------
+                    function gmAttrHreflang_isSupported(element) {
+                        if (!element) return false;
+                        return gmAttrHreflang_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrHreflang_watch() {
+
+                        const active = gmAttrHreflang_getActiveObject();
+
+                        if (active !== gmAttrHreflang_lastActive) {
+
+                            gmAttrHreflang_lastActive = active;
+
+                            if (active && gmAttrHreflang_isSupported(active)) {
+
+                                gmAttrHreflang_select.value =
+                                    active.getAttribute('hreflang') || '';
+
+                                gmAttrHreflang_select.disabled = false;
+
+                            } else {
+
+                                gmAttrHreflang_select.value = '';
+                                gmAttrHreflang_select.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrHreflang_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrHreflang_watch);
+
+                    // ------------------------------------
+                    // HANDLE CHANGE
+                    // ------------------------------------
+                    gmAttrHreflang_select.addEventListener('change', function () {
+
+                        const active = gmAttrHreflang_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrHreflang_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('hreflang');
+                        } else {
+                            active.setAttribute('hreflang', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+        <div>
+            <label for="gm-attr-type">Type</label>
+            <select id="gm-attr-type" class="gm-attr-type">
+                <option value="text/html">text/html</option>
+                <option value="application/pdf">application/pdf</option>
+                <option value="image/png">image/png</option>
+                <option value="image/jpeg">image/jpeg</option>
+                <option value="application/zip">application/zip</option>
+                <option value="video/mp4">video/mp4</option>
+            </select>
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - TYPE (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrType_select = document.querySelector('.gm-attr-type');
+                    if (!gmAttrType_select) return;
+
+                    let gmAttrType_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT TYPE ATTRIBUTE
+                    // ------------------------------------
+                    const gmAttrType_supportedTags = [
+                        'a',
+                        'link',
+                        'object',
+                        'source',
+                        'embed',
+                        'script',
+                        'style',
+                        'input',
+                        'button'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrType_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT TYPE
+                    // ------------------------------------
+                    function gmAttrType_isSupported(element) {
+                        if (!element) return false;
+                        return gmAttrType_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrType_watch() {
+
+                        const active = gmAttrType_getActiveObject();
+
+                        if (active !== gmAttrType_lastActive) {
+
+                            gmAttrType_lastActive = active;
+
+                            if (active && gmAttrType_isSupported(active)) {
+
+                                gmAttrType_select.value =
+                                    active.getAttribute('type') || '';
+
+                                gmAttrType_select.disabled = false;
+
+                            } else {
+
+                                gmAttrType_select.value = '';
+                                gmAttrType_select.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrType_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrType_watch);
+
+                    // ------------------------------------
+                    // HANDLE CHANGE
+                    // ------------------------------------
+                    gmAttrType_select.addEventListener('change', function () {
+
+                        const active = gmAttrType_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrType_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('type');
+                        } else {
+                            active.setAttribute('type', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+
+</div>
+
+<!-- 3.INPUT ATTRIBUTE -->
+<div class="gm-input-attribute-container gm-menu-section gm-attribute-hidden" style="width: 450px; padding: 0;">
+    <div class="gm-menu-title">Input Attribute</div>
+    <div class="gm-menu-row gm-row-pair">
+
+        <div>
+            <label for="gm-attr-inputtype">Input-Type</label>
+            <select id="gm-attr-inputtype" class="gm-attr-inputtype">
+                <option value="text">Text</option>
+                <option value="password">Password</option>
+                <option value="email">Email</option>
+                <option value="number">Number</option>
+                <option value="tel">Tel</option>
+                <option value="url">URL</option>
+                <option value="search">Search</option>
+                <option value="date">Date</option>
+                <option value="time">Time</option>
+                <option value="datetime-local">Datetime-local</option>
+                <option value="month">Month</option>
+                <option value="week">Week</option>
+                <option value="checkbox">Checkbox</option>
+                <option value="radio">Radio</option>
+                <option value="file">FIle</option>
+                <option value="color">Color</option>
+                <option value="range">Range</option>
+                <option value="hidden">Hidden</option>
+                <option value="submit">Submit</option>
+                <option value="reset">Reset</option>
+                <option value="button">Button</option>
+            </select>
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - INPUT TYPE (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrInputType_select = document.querySelector('.gm-attr-inputtype');
+                    if (!gmAttrInputType_select) return;
+
+                    let gmAttrInputType_lastActive = null;
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrInputType_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT (INPUT ONLY)
+                    // ------------------------------------
+                    function gmAttrInputType_isSupported(element) {
+                        if (!element) return false;
+                        return element.tagName.toLowerCase() === 'input';
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrInputType_watch() {
+
+                        const active = gmAttrInputType_getActiveObject();
+
+                        if (active !== gmAttrInputType_lastActive) {
+
+                            gmAttrInputType_lastActive = active;
+
+                            if (active && gmAttrInputType_isSupported(active)) {
+
+                                gmAttrInputType_select.value =
+                                    active.getAttribute('type') || 'text';
+
+                                gmAttrInputType_select.disabled = false;
+
+                            } else {
+
+                                gmAttrInputType_select.value = 'text';
+                                gmAttrInputType_select.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrInputType_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrInputType_watch);
+
+                    // ------------------------------------
+                    // HANDLE CHANGE
+                    // ------------------------------------
+                    gmAttrInputType_select.addEventListener('change', function () {
+
+                        const active = gmAttrInputType_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrInputType_isSupported(active)) return;
+
+                        active.setAttribute('type', this.value);
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="gm-attr-name">Name</label>
+            <input type="text" id="gm-attr-name" class="gm-attr-name" placeholder="">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - NAME (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrName_input = document.querySelector('.gm-attr-name');
+                    if (!gmAttrName_input) return;
+
+                    let gmAttrName_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT NAME
+                    // ------------------------------------
+                    const gmAttrName_supportedTags = [
+                        'input',
+                        'select',
+                        'textarea',
+                        'button',
+                        'form',
+                        'iframe',
+                        'map',
+                        'meta',
+                        'object',
+                        'param'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrName_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrName_isSupported(element) {
+                        if (!element) return false;
+                        return gmAttrName_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrName_watch() {
+
+                        const active = gmAttrName_getActiveObject();
+
+                        if (active !== gmAttrName_lastActive) {
+
+                            gmAttrName_lastActive = active;
+
+                            if (active && gmAttrName_isSupported(active)) {
+
+                                gmAttrName_input.value =
+                                    active.getAttribute('name') || '';
+
+                                gmAttrName_input.disabled = false;
+
+                            } else {
+
+                                gmAttrName_input.value = '';
+                                gmAttrName_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrName_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrName_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT (NO TRIM)
+                    // ------------------------------------
+                    gmAttrName_input.addEventListener('input', function () {
+
+                        const active = gmAttrName_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrName_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('name');
+                        } else {
+                            active.setAttribute('name', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="gm-attr-value">Value</label>
+            <input type="text" id="gm-attr-value" class="gm-attr-value" placeholder="">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - VALUE (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrValue_input = document.querySelector('.gm-attr-value');
+                    if (!gmAttrValue_input) return;
+
+                    let gmAttrValue_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT VALUE ATTRIBUTE
+                    // ------------------------------------
+                    const gmAttrValue_supportedTags = [
+                        'input',
+                        'textarea',
+                        'option',
+                        'button',
+                        'param',
+                        'meter',
+                        'progress'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrValue_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrValue_isSupported(element) {
+                        if (!element) return false;
+                        return gmAttrValue_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrValue_watch() {
+
+                        const active = gmAttrValue_getActiveObject();
+
+                        if (active !== gmAttrValue_lastActive) {
+
+                            gmAttrValue_lastActive = active;
+
+                            if (active && gmAttrValue_isSupported(active)) {
+
+                                gmAttrValue_input.value =
+                                    active.getAttribute('value') || '';
+
+                                gmAttrValue_input.disabled = false;
+
+                            } else {
+
+                                gmAttrValue_input.value = '';
+                                gmAttrValue_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrValue_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrValue_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT (NO TRIM)
+                    // ------------------------------------
+                    gmAttrValue_input.addEventListener('input', function () {
+
+                        const active = gmAttrValue_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrValue_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('value');
+                        } else {
+                            active.setAttribute('value', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="gm-attr-placeholder">Placeholder</label>
+            <input type="text" id="gm-attr-placeholder" class="gm-attr-placeholder">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - PLACEHOLDER (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrPlaceholder_input = document.querySelector('.gm-attr-placeholder');
+                    if (!gmAttrPlaceholder_input) return;
+
+                    let gmAttrPlaceholder_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT PLACEHOLDER
+                    // ------------------------------------
+                    const gmAttrPlaceholder_supportedTags = [
+                        'input',
+                        'textarea'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrPlaceholder_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrPlaceholder_isSupported(element) {
+                        if (!element) return false;
+                        return gmAttrPlaceholder_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrPlaceholder_watch() {
+
+                        const active = gmAttrPlaceholder_getActiveObject();
+
+                        if (active !== gmAttrPlaceholder_lastActive) {
+
+                            gmAttrPlaceholder_lastActive = active;
+
+                            if (active && gmAttrPlaceholder_isSupported(active)) {
+
+                                gmAttrPlaceholder_input.value =
+                                    active.getAttribute('placeholder') || '';
+
+                                gmAttrPlaceholder_input.disabled = false;
+
+                            } else {
+
+                                gmAttrPlaceholder_input.value = '';
+                                gmAttrPlaceholder_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrPlaceholder_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrPlaceholder_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT (NO TRIM)
+                    // ------------------------------------
+                    gmAttrPlaceholder_input.addEventListener('input', function () {
+
+                        const active = gmAttrPlaceholder_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrPlaceholder_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('placeholder');
+                        } else {
+                            active.setAttribute('placeholder', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="">Required</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-required {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-required:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-required" class="gm-attr-required">
+                <label for="gm-attr-required" style="margin: 0;">Required</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - REQUIRED (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrRequired_checkbox = document.querySelector('.gm-attr-required');
+                        if (!gmAttrRequired_checkbox) return;
+
+                        let gmAttrRequired_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT REQUIRED
+                        // ------------------------------------
+                        const gmAttrRequired_supportedTags = [
+                            'input',
+                            'textarea',
+                            'select'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrRequired_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrRequired_isSupported(element) {
+                            if (!element) return false;
+                            return gmAttrRequired_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrRequired_watch() {
+
+                            const active = gmAttrRequired_getActiveObject();
+
+                            if (active !== gmAttrRequired_lastActive) {
+
+                                gmAttrRequired_lastActive = active;
+
+                                if (active && gmAttrRequired_isSupported(active)) {
+
+                                    gmAttrRequired_checkbox.checked =
+                                        active.hasAttribute('required');
+
+                                    gmAttrRequired_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrRequired_checkbox.checked = false;
+                                    gmAttrRequired_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrRequired_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrRequired_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrRequired_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrRequired_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrRequired_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('required', '');
+                            } else {
+                                active.removeAttribute('required');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+
+        <div>
+            <label for="">Read only</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-readonly {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-readonly:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-readonly" class="gm-attr-readonly">
+                <label for="gm-attr-readonly" style="margin: 0;">Read only</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - READONLY (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrReadonly_checkbox = document.querySelector('.gm-attr-readonly');
+                        if (!gmAttrReadonly_checkbox) return;
+
+                        let gmAttrReadonly_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT READONLY
+                        // ------------------------------------
+                        const gmAttrReadonly_supportedTags = [
+                            'input',
+                            'textarea'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrReadonly_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrReadonly_isSupported(element) {
+                            if (!element) return false;
+                            return gmAttrReadonly_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrReadonly_watch() {
+
+                            const active = gmAttrReadonly_getActiveObject();
+
+                            if (active !== gmAttrReadonly_lastActive) {
+
+                                gmAttrReadonly_lastActive = active;
+
+                                if (active && gmAttrReadonly_isSupported(active)) {
+
+                                    gmAttrReadonly_checkbox.checked =
+                                        active.hasAttribute('readonly');
+
+                                    gmAttrReadonly_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrReadonly_checkbox.checked = false;
+                                    gmAttrReadonly_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrReadonly_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrReadonly_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrReadonly_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrReadonly_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrReadonly_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('readonly', '');
+                            } else {
+                                active.removeAttribute('readonly');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+
+        <div>
+            <label for="">Disabled</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-disabled {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-disabled:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-disabled" class="gm-attr-disabled">
+                <label for="gm-attr-disabled" style="margin: 0;">Disabled</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - DISABLED (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrDisabled_checkbox = document.querySelector('.gm-attr-disabled');
+                        if (!gmAttrDisabled_checkbox) return;
+
+                        let gmAttrDisabled_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT DISABLED
+                        // ------------------------------------
+                        const gmAttrDisabled_supportedTags = [
+                            'input',
+                            'textarea',
+                            'select',
+                            'button',
+                            'fieldset',
+                            'optgroup',
+                            'option'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrDisabled_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrDisabled_isSupported(element) {
+                            if (!element) return false;
+                            return gmAttrDisabled_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrDisabled_watch() {
+
+                            const active = gmAttrDisabled_getActiveObject();
+
+                            if (active !== gmAttrDisabled_lastActive) {
+
+                                gmAttrDisabled_lastActive = active;
+
+                                if (active && gmAttrDisabled_isSupported(active)) {
+
+                                    gmAttrDisabled_checkbox.checked =
+                                        active.hasAttribute('disabled');
+
+                                    gmAttrDisabled_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrDisabled_checkbox.checked = false;
+                                    gmAttrDisabled_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrDisabled_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrDisabled_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrDisabled_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrDisabled_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrDisabled_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('disabled', '');
+                            } else {
+                                active.removeAttribute('disabled');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+
+        <div>
+            <label for="">Checked</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-checked {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-checked:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-checked" class="gm-attr-checked">
+                <label for="gm-attr-checked" style="margin: 0;">Checked</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - CHECKED (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrChecked_checkbox = document.querySelector('.gm-attr-checked');
+                        if (!gmAttrChecked_checkbox) return;
+
+                        let gmAttrChecked_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT CHECKED
+                        // ------------------------------------
+                        const gmAttrChecked_supportedTags = [
+                            'input'
+                        ];
+
+                        // ------------------------------------
+                        // VALID INPUT TYPES
+                        // ------------------------------------
+                        const gmAttrChecked_supportedTypes = [
+                            'checkbox',
+                            'radio'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrChecked_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrChecked_isSupported(element) {
+                            if (!element) return false;
+
+                            if (!gmAttrChecked_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            )) return false;
+
+                            const type = element.getAttribute('type') || 'text';
+
+                            return gmAttrChecked_supportedTypes.includes(type.toLowerCase());
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrChecked_watch() {
+
+                            const active = gmAttrChecked_getActiveObject();
+
+                            if (active !== gmAttrChecked_lastActive) {
+
+                                gmAttrChecked_lastActive = active;
+
+                                if (active && gmAttrChecked_isSupported(active)) {
+
+                                    gmAttrChecked_checkbox.checked =
+                                        active.hasAttribute('checked');
+
+                                    gmAttrChecked_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrChecked_checkbox.checked = false;
+                                    gmAttrChecked_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrChecked_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrChecked_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrChecked_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrChecked_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrChecked_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('checked', '');
+                            } else {
+                                active.removeAttribute('checked');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-min">Min</label>
+            <input type="text" id="gm-attr-min" class="gm-attr-min">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - MIN (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrMin_input = document.querySelector('.gm-attr-min');
+                    if (!gmAttrMin_input) return;
+
+                    let gmAttrMin_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT MIN
+                    // ------------------------------------
+                    const gmAttrMin_supportedTags = [
+                        'input'
+                    ];
+
+                    // ------------------------------------
+                    // TYPE YANG SUPPORT MIN
+                    // ------------------------------------
+                    const gmAttrMin_supportedTypes = [
+                        'number',
+                        'range',
+                        'date',
+                        'datetime-local',
+                        'month',
+                        'time',
+                        'week'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrMin_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrMin_isSupported(element) {
+                        if (!element) return false;
+
+                        if (!gmAttrMin_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        )) return false;
+
+                        const type = element.getAttribute('type') || 'text';
+
+                        return gmAttrMin_supportedTypes.includes(type.toLowerCase());
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrMin_watch() {
+
+                        const active = gmAttrMin_getActiveObject();
+
+                        if (active !== gmAttrMin_lastActive) {
+
+                            gmAttrMin_lastActive = active;
+
+                            if (active && gmAttrMin_isSupported(active)) {
+
+                                gmAttrMin_input.value =
+                                    active.getAttribute('min') || '';
+
+                                gmAttrMin_input.disabled = false;
+
+                            } else {
+
+                                gmAttrMin_input.value = '';
+                                gmAttrMin_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrMin_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrMin_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrMin_input.addEventListener('input', function () {
+
+                        const active = gmAttrMin_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrMin_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('min');
+                        } else {
+                            active.setAttribute('min', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="gm-attr-max">Max</label>
+            <input type="text" id="gm-attr-max" class="gm-attr-max">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - MIN (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrMax_input = document.querySelector('.gm-attr-max');
+                    if (!gmAttrMax_input) return;
+
+                    let gmAttrMax_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT MIN
+                    // ------------------------------------
+                    const gmAttrMax_supportedTags = [
+                        'input'
+                    ];
+
+                    // ------------------------------------
+                    // TYPE YANG SUPPORT MIN
+                    // ------------------------------------
+                    const gmAttrMax_supportedTypes = [
+                        'number',
+                        'range',
+                        'date',
+                        'datetime-local',
+                        'month',
+                        'time',
+                        'week'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrMax_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrMax_isSupported(element) {
+                        if (!element) return false;
+
+                        if (!gmAttrMax_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        )) return false;
+
+                        const type = element.getAttribute('type') || 'text';
+
+                        return gmAttrMax_supportedTypes.includes(type.toLowerCase());
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrMax_watch() {
+
+                        const active = gmAttrMax_getActiveObject();
+
+                        if (active !== gmAttrMax_lastActive) {
+
+                            gmAttrMax_lastActive = active;
+
+                            if (active && gmAttrMax_isSupported(active)) {
+
+                                gmAttrMax_input.value =
+                                    active.getAttribute('max') || '';
+
+                                gmAttrMax_input.disabled = false;
+
+                            } else {
+
+                                gmAttrMax_input.value = '';
+                                gmAttrMax_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrMax_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrMax_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrMax_input.addEventListener('input', function () {
+
+                        const active = gmAttrMax_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrMax_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('max');
+                        } else {
+                            active.setAttribute('max', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="gm-attr-pattern">Pattern</label>
+            <input type="text" id="gm-attr-pattern" class="gm-attr-pattern">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - PATTERN (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrPattern_input = document.querySelector('.gm-attr-pattern');
+                    if (!gmAttrPattern_input) return;
+
+                    let gmAttrPattern_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT PATTERN
+                    // ------------------------------------
+                    const gmAttrPattern_supportedTags = [
+                        'input'
+                    ];
+
+                    // ------------------------------------
+                    // TYPE YANG SUPPORT PATTERN
+                    // ------------------------------------
+                    const gmAttrPattern_supportedTypes = [
+                        'text',
+                        'email',
+                        'password',
+                        'search',
+                        'tel',
+                        'url'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrPattern_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrPattern_isSupported(element) {
+                        if (!element) return false;
+
+                        if (!gmAttrPattern_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        )) return false;
+
+                        const type = element.getAttribute('type') || 'text';
+
+                        return gmAttrPattern_supportedTypes.includes(type.toLowerCase());
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrPattern_watch() {
+
+                        const active = gmAttrPattern_getActiveObject();
+
+                        if (active !== gmAttrPattern_lastActive) {
+
+                            gmAttrPattern_lastActive = active;
+
+                            if (active && gmAttrPattern_isSupported(active)) {
+
+                                gmAttrPattern_input.value =
+                                    active.getAttribute('pattern') || '';
+
+                                gmAttrPattern_input.disabled = false;
+
+                            } else {
+
+                                gmAttrPattern_input.value = '';
+                                gmAttrPattern_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrPattern_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrPattern_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrPattern_input.addEventListener('input', function () {
+
+                        const active = gmAttrPattern_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrPattern_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('pattern');
+                        } else {
+                            active.setAttribute('pattern', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="">Auto complete</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-autocomplete {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-autocomplete:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-autocomplete" class="gm-attr-autocomplete">
+                <label for="gm-attr-autocomplete" style="margin: 0;">Auto complete</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - AUTOCOMPLETE (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrAutocomplete_checkbox = document.querySelector('.gm-attr-autocomplete');
+                        if (!gmAttrAutocomplete_checkbox) return;
+
+                        let gmAttrAutocomplete_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT AUTOCOMPLETE
+                        // ------------------------------------
+                        const gmAttrAutocomplete_supportedTags = [
+                            'input',
+                            'textarea',
+                            'select'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrAutocomplete_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrAutocomplete_isSupported(element) {
+                            if (!element) return false;
+
+                            return gmAttrAutocomplete_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrAutocomplete_watch() {
+
+                            const active = gmAttrAutocomplete_getActiveObject();
+
+                            if (active !== gmAttrAutocomplete_lastActive) {
+
+                                gmAttrAutocomplete_lastActive = active;
+
+                                if (active && gmAttrAutocomplete_isSupported(active)) {
+
+                                    gmAttrAutocomplete_checkbox.checked =
+                                        active.getAttribute('autocomplete') === 'on';
+
+                                    gmAttrAutocomplete_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrAutocomplete_checkbox.checked = false;
+                                    gmAttrAutocomplete_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrAutocomplete_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrAutocomplete_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrAutocomplete_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrAutocomplete_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrAutocomplete_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('autocomplete', 'on');
+                            } else {
+                                active.setAttribute('autocomplete', 'off');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 4.FORM ATTRIBUTE -->
+<div class="gm-form-attribute-container gm-menu-section gm-attribute-hidden" style="width: 250px; padding: 0;">
+    <div class="gm-menu-title">Form Attribute</div>
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-action">Action</label>
+            <input type="text" id="gm-attr-action" class="gm-attr-action">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - ACTION (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrAction_input = document.querySelector('.gm-attr-action');
+                    if (!gmAttrAction_input) return;
+
+                    let gmAttrAction_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT ACTION
+                    // ------------------------------------
+                    const gmAttrAction_supportedTags = [
+                        'form'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrAction_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrAction_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrAction_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrAction_watch() {
+
+                        const active = gmAttrAction_getActiveObject();
+
+                        if (active !== gmAttrAction_lastActive) {
+
+                            gmAttrAction_lastActive = active;
+
+                            if (active && gmAttrAction_isSupported(active)) {
+
+                                gmAttrAction_input.value =
+                                    active.getAttribute('action') || '';
+
+                                gmAttrAction_input.disabled = false;
+
+                            } else {
+
+                                gmAttrAction_input.value = '';
+                                gmAttrAction_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrAction_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrAction_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrAction_input.addEventListener('input', function () {
+
+                        const active = gmAttrAction_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrAction_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('action');
+                        } else {
+                            active.setAttribute('action', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="gm-attr-method">Method</label>
+            <select id="gm-attr-method" class="gm-attr-method">
+                <option value="POST">POST</option>
+                <option value="GET">GET</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+                <option value="PATCH">PATCH</option>
+            </select>
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - METHOD (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrMethod_select = document.querySelector('.gm-attr-method');
+                    if (!gmAttrMethod_select) return;
+
+                    let gmAttrMethod_lastActive = null;
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrMethod_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT (FORM ONLY)
+                    // ------------------------------------
+                    function gmAttrMethod_isSupported(element) {
+                        if (!element) return false;
+                        return element.tagName.toLowerCase() === 'form';
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrMethod_watch() {
+
+                        const active = gmAttrMethod_getActiveObject();
+
+                        if (active !== gmAttrMethod_lastActive) {
+
+                            gmAttrMethod_lastActive = active;
+
+                            if (active && gmAttrMethod_isSupported(active)) {
+
+                                gmAttrMethod_select.value =
+                                    active.getAttribute('method') || 'POST';
+
+                                gmAttrMethod_select.disabled = false;
+
+                            } else {
+
+                                gmAttrMethod_select.value = 'POST';
+                                gmAttrMethod_select.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrMethod_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrMethod_watch);
+
+                    // ------------------------------------
+                    // HANDLE CHANGE
+                    // ------------------------------------
+                    gmAttrMethod_select.addEventListener('change', function () {
+
+                        const active = gmAttrMethod_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrMethod_isSupported(active)) return;
+
+                        active.setAttribute('method', this.value);
+
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-enctype">Enctype</label>
+            <select id="gm-attr-enctype" class="gm-attr-enctype">
+                <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+                <option value="multipart/form-data">multipart/form-data</option>
+                <option value="text/plain">text/plain</option>
+            </select>
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - ENCTYPE (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrEnctype_select = document.querySelector('.gm-attr-enctype');
+                    if (!gmAttrEnctype_select) return;
+
+                    let gmAttrEnctype_lastActive = null;
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrEnctype_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT (FORM ONLY)
+                    // ------------------------------------
+                    function gmAttrEnctype_isSupported(element) {
+                        if (!element) return false;
+                        return element.tagName.toLowerCase() === 'form';
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrEnctype_watch() {
+
+                        const active = gmAttrEnctype_getActiveObject();
+
+                        if (active !== gmAttrEnctype_lastActive) {
+
+                            gmAttrEnctype_lastActive = active;
+
+                            if (active && gmAttrEnctype_isSupported(active)) {
+
+                                gmAttrEnctype_select.value =
+                                    active.getAttribute('enctype') || 'application/x-www-form-urlencoded';
+
+                                gmAttrEnctype_select.disabled = false;
+
+                            } else {
+
+                                gmAttrEnctype_select.value = 'application/x-www-form-urlencoded';
+                                gmAttrEnctype_select.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrEnctype_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrEnctype_watch);
+
+                    // ------------------------------------
+                    // HANDLE CHANGE
+                    // ------------------------------------
+                    gmAttrEnctype_select.addEventListener('change', function () {
+
+                        const active = gmAttrEnctype_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrEnctype_isSupported(active)) return;
+
+                        active.setAttribute('enctype', this.value);
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="gm-attr-target-form">Target</label>
+            <select id="gm-attr-target-form" class="gm-attr-target-form">
+                <option value="_self">Self</option>
+                <option value="_blank">Blank</option>
+                <option value="_parent">Parent</option>
+                <option value="_Top">Top</option>
+            </select>
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - TARGET FORM (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrTargetForm_select = document.querySelector('.gm-attr-target-form');
+                    if (!gmAttrTargetForm_select) return;
+
+                    let gmAttrTargetForm_lastActive = null;
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrTargetForm_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT (FORM ONLY)
+                    // ------------------------------------
+                    function gmAttrTargetForm_isSupported(element) {
+                        if (!element) return false;
+                        return element.tagName.toLowerCase() === 'form';
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrTargetForm_watch() {
+
+                        const active = gmAttrTargetForm_getActiveObject();
+
+                        if (active !== gmAttrTargetForm_lastActive) {
+
+                            gmAttrTargetForm_lastActive = active;
+
+                            if (active && gmAttrTargetForm_isSupported(active)) {
+
+                                gmAttrTargetForm_select.value =
+                                    active.getAttribute('target') || '_self';
+
+                                gmAttrTargetForm_select.disabled = false;
+
+                            } else {
+
+                                gmAttrTargetForm_select.value = '_self';
+                                gmAttrTargetForm_select.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrTargetForm_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrTargetForm_watch);
+
+                    // ------------------------------------
+                    // HANDLE CHANGE
+                    // ------------------------------------
+                    gmAttrTargetForm_select.addEventListener('change', function () {
+
+                        const active = gmAttrTargetForm_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrTargetForm_isSupported(active)) return;
+
+                        active.setAttribute('target', this.value);
+
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="">Auto complete</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-autocomplete-form {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-autocomplete-form:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-autocomplete-form" class="gm-attr-autocomplete-form">
+                <label for="gm-attr-autocomplete-form" style="margin: 0;">Auto complete</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - AUTOCOMPLETE FORM (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrAutocompleteForm_checkbox = document.querySelector('.gm-attr-autocomplete-form');
+                        if (!gmAttrAutocompleteForm_checkbox) return;
+
+                        let gmAttrAutocompleteForm_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT AUTOCOMPLETE
+                        // ------------------------------------
+                        const gmAttrAutocompleteForm_supportedTags = [
+                            'form'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrAutocompleteForm_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrAutocompleteForm_isSupported(element) {
+                            if (!element) return false;
+
+                            return gmAttrAutocompleteForm_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrAutocompleteForm_watch() {
+
+                            const active = gmAttrAutocompleteForm_getActiveObject();
+
+                            if (active !== gmAttrAutocompleteForm_lastActive) {
+
+                                gmAttrAutocompleteForm_lastActive = active;
+
+                                if (active && gmAttrAutocompleteForm_isSupported(active)) {
+
+                                    gmAttrAutocompleteForm_checkbox.checked =
+                                        active.getAttribute('autocomplete') === 'on';
+
+                                    gmAttrAutocompleteForm_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrAutocompleteForm_checkbox.checked = false;
+                                    gmAttrAutocompleteForm_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrAutocompleteForm_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrAutocompleteForm_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrAutocompleteForm_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrAutocompleteForm_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrAutocompleteForm_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('autocomplete', 'on');
+                            } else {
+                                active.setAttribute('autocomplete', 'off');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+
+        <div>
+            <label for="">No validate</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-novalidate {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-novalidate:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-novalidate" class="gm-attr-novalidate">
+                <label for="gm-attr-novalidate" style="margin: 0;">No validate</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - NOVALIDATE (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrNovalidate_checkbox = document.querySelector('.gm-attr-novalidate');
+                        if (!gmAttrNovalidate_checkbox) return;
+
+                        let gmAttrNovalidate_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT NOVALIDATE
+                        // ------------------------------------
+                        const gmAttrNovalidate_supportedTags = [
+                            'form'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrNovalidate_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrNovalidate_isSupported(element) {
+                            if (!element) return false;
+
+                            return gmAttrNovalidate_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrNovalidate_watch() {
+
+                            const active = gmAttrNovalidate_getActiveObject();
+
+                            if (active !== gmAttrNovalidate_lastActive) {
+
+                                gmAttrNovalidate_lastActive = active;
+
+                                if (active && gmAttrNovalidate_isSupported(active)) {
+
+                                    gmAttrNovalidate_checkbox.checked =
+                                        active.hasAttribute('novalidate');
+
+                                    gmAttrNovalidate_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrNovalidate_checkbox.checked = false;
+                                    gmAttrNovalidate_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrNovalidate_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrNovalidate_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrNovalidate_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrNovalidate_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrNovalidate_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('novalidate', '');
+                            } else {
+                                active.removeAttribute('novalidate');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 5.SELECT & OPTION ATTRIBUTE -->
+<div class="gm-selectoption-attribute-container gm-menu-section gm-attribute-hidden" style="width: 250px; padding: 0;">
+    <div class="gm-menu-title">Select Attribute</div>
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-select-name">Name</label>
+            <input type="text" id="gm-attr-select-name" class="gm-attr-select-name">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - SELECT NAME (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrSelectName_input = document.querySelector('.gm-attr-select-name');
+                    if (!gmAttrSelectName_input) return;
+
+                    let gmAttrSelectName_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT NAME
+                    // ------------------------------------
+                    const gmAttrSelectName_supportedTags = [
+                        'select'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrSelectName_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrSelectName_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrSelectName_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrSelectName_watch() {
+
+                        const active = gmAttrSelectName_getActiveObject();
+
+                        if (active !== gmAttrSelectName_lastActive) {
+
+                            gmAttrSelectName_lastActive = active;
+
+                            if (active && gmAttrSelectName_isSupported(active)) {
+
+                                gmAttrSelectName_input.value =
+                                    active.getAttribute('name') || '';
+
+                                gmAttrSelectName_input.disabled = false;
+
+                            } else {
+
+                                gmAttrSelectName_input.value = '';
+                                gmAttrSelectName_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrSelectName_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrSelectName_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrSelectName_input.addEventListener('input', function () {
+
+                        const active = gmAttrSelectName_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrSelectName_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('name');
+                        } else {
+                            active.setAttribute('name', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="">Multiple</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-multiple {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-multiple:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-multiple" class="gm-attr-multiple">
+                <label for="gm-attr-multiple" style="margin: 0;">Multiple</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - MULTIPLE (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrMultiple_checkbox = document.querySelector('.gm-attr-multiple');
+                        if (!gmAttrMultiple_checkbox) return;
+
+                        let gmAttrMultiple_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT MULTIPLE
+                        // ------------------------------------
+                        const gmAttrMultiple_supportedTags = [
+                            'select'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrMultiple_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrMultiple_isSupported(element) {
+                            if (!element) return false;
+
+                            return gmAttrMultiple_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrMultiple_watch() {
+
+                            const active = gmAttrMultiple_getActiveObject();
+
+                            if (active !== gmAttrMultiple_lastActive) {
+
+                                gmAttrMultiple_lastActive = active;
+
+                                if (active && gmAttrMultiple_isSupported(active)) {
+
+                                    gmAttrMultiple_checkbox.checked =
+                                        active.hasAttribute('multiple');
+
+                                    gmAttrMultiple_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrMultiple_checkbox.checked = false;
+                                    gmAttrMultiple_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrMultiple_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrMultiple_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrMultiple_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrMultiple_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrMultiple_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('multiple', '');
+                            } else {
+                                active.removeAttribute('multiple');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="">Selected</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-selected {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-selected:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-selected" class="gm-attr-selected">
+                <label for="gm-attr-selected" style="margin: 0;">Selected</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - SELECTED (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrSelected_checkbox = document.querySelector('.gm-attr-selected');
+                        if (!gmAttrSelected_checkbox) return;
+
+                        let gmAttrSelected_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT SELECTED
+                        // ------------------------------------
+                        const gmAttrSelected_supportedTags = [
+                            'option'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrSelected_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrSelected_isSupported(element) {
+                            if (!element) return false;
+
+                            return gmAttrSelected_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrSelected_watch() {
+
+                            const active = gmAttrSelected_getActiveObject();
+
+                            if (active !== gmAttrSelected_lastActive) {
+
+                                gmAttrSelected_lastActive = active;
+
+                                if (active && gmAttrSelected_isSupported(active)) {
+
+                                    gmAttrSelected_checkbox.checked =
+                                        active.hasAttribute('selected');
+
+                                    gmAttrSelected_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrSelected_checkbox.checked = false;
+                                    gmAttrSelected_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrSelected_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrSelected_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrSelected_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrSelected_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrSelected_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('selected', '');
+                            } else {
+                                active.removeAttribute('selected');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+
+        <div>
+            <label for="">Disabled</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-disabled {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-disabled:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-disabled" class="gm-attr-disabled">
+                <label for="gm-attr-disabled" style="margin: 0;">Disabled</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - DISABLED (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrDisabled_checkbox = document.querySelector('.gm-attr-disabled');
+                        if (!gmAttrDisabled_checkbox) return;
+
+                        let gmAttrDisabled_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT DISABLED
+                        // ------------------------------------
+                        const gmAttrDisabled_supportedTags = [
+                            'input',
+                            'textarea',
+                            'select',
+                            'button'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrDisabled_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrDisabled_isSupported(element) {
+                            if (!element) return false;
+
+                            return gmAttrDisabled_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrDisabled_watch() {
+
+                            const active = gmAttrDisabled_getActiveObject();
+
+                            if (active !== gmAttrDisabled_lastActive) {
+
+                                gmAttrDisabled_lastActive = active;
+
+                                if (active && gmAttrDisabled_isSupported(active)) {
+
+                                    gmAttrDisabled_checkbox.checked = active.disabled;
+
+                                    gmAttrDisabled_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrDisabled_checkbox.checked = false;
+                                    gmAttrDisabled_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrDisabled_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrDisabled_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrDisabled_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrDisabled_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrDisabled_isSupported(active)) return;
+
+                            active.disabled = this.checked;
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <!-- <label for="gm-attr-value">Value</label>
+            <input type="text" id="gm-attr-value" class="gm-attr-value" placeholder="">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - VALUE (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrValue_input = document.querySelector('.gm-attr-value');
+                    if (!gmAttrValue_input) return;
+
+                    let gmAttrValue_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT VALUE
+                    // ------------------------------------
+                    const gmAttrValue_supportedTags = [
+                        'option'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrValue_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrValue_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrValue_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrValue_watch() {
+
+                        const active = gmAttrValue_getActiveObject();
+
+                        if (active !== gmAttrValue_lastActive) {
+
+                            gmAttrValue_lastActive = active;
+
+                            if (active && gmAttrValue_isSupported(active)) {
+
+                                gmAttrValue_input.value =
+                                    active.getAttribute('value') || '';
+
+                                gmAttrValue_input.disabled = false;
+
+                            } else {
+
+                                gmAttrValue_input.value = '';
+                                gmAttrValue_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrValue_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrValue_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrValue_input.addEventListener('input', function () {
+
+                        const active = gmAttrValue_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrValue_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('value');
+                        } else {
+                            active.setAttribute('value', this.value);
+                        }
+
+                    });
+
+                })();
+            </script> -->
+        </div>
+        <div></div>
+    </div>
+</div>
+
+<!-- 6.LIST ATTRIBUTE -->
+<div class="gm-list-attribute-container gm-menu-section gm-attribute-hidden" style="width: 250px; padding: 0;">
+    <div class="gm-menu-title">List Attribute</div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-type-list">Type</label>
+            <select id="gm-attr-type-list" class="gm-attr-type-list">
+                <option value="1">1</option>
+                <option value="A">A</option>
+                <option value="a">a</option>
+                <option value="i">i</option>
+                <option value="I">I</option>
+            </select>
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - TYPE LIST (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrTypeList_select = document.querySelector('.gm-attr-type-list');
+                    if (!gmAttrTypeList_select) return;
+
+                    let gmAttrTypeList_lastActive = null;
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrTypeList_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT (OL ONLY)
+                    // ------------------------------------
+                    function gmAttrTypeList_isSupported(element) {
+                        if (!element) return false;
+                        return element.tagName.toLowerCase() === 'ol';
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrTypeList_watch() {
+
+                        const active = gmAttrTypeList_getActiveObject();
+
+                        if (active !== gmAttrTypeList_lastActive) {
+
+                            gmAttrTypeList_lastActive = active;
+
+                            if (active && gmAttrTypeList_isSupported(active)) {
+
+                                gmAttrTypeList_select.value = active.type || '1';
+
+                                gmAttrTypeList_select.disabled = false;
+
+                            } else {
+
+                                gmAttrTypeList_select.value = '1';
+                                gmAttrTypeList_select.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrTypeList_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrTypeList_watch);
+
+                    // ------------------------------------
+                    // HANDLE CHANGE
+                    // ------------------------------------
+                    gmAttrTypeList_select.addEventListener('change', function () {
+
+                        const active = gmAttrTypeList_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrTypeList_isSupported(active)) return;
+
+                        active.type = this.value;
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="gm-attr-start-list">Start</label>
+            <input type="text" id="gm-attr-start-list" class="gm-attr-start-list" placeholder="">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - START LIST (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrStartList_input = document.querySelector('.gm-attr-start-list');
+                    if (!gmAttrStartList_input) return;
+
+                    let gmAttrStartList_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT START
+                    // ------------------------------------
+                    const gmAttrStartList_supportedTags = [
+                        'ol'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrStartList_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrStartList_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrStartList_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrStartList_watch() {
+
+                        const active = gmAttrStartList_getActiveObject();
+
+                        if (active !== gmAttrStartList_lastActive) {
+
+                            gmAttrStartList_lastActive = active;
+
+                            if (active && gmAttrStartList_isSupported(active)) {
+
+                                gmAttrStartList_input.value =
+                                    active.getAttribute('start') || '';
+
+                                gmAttrStartList_input.disabled = false;
+
+                            } else {
+
+                                gmAttrStartList_input.value = '';
+                                gmAttrStartList_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrStartList_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrStartList_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrStartList_input.addEventListener('input', function () {
+
+                        const active = gmAttrStartList_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrStartList_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('start');
+                        } else {
+                            active.setAttribute('start', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-reversed-list">Reversed</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-reversed-list {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-reversed-list:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-reversed-list" class="gm-attr-reversed-list">
+                <label for="gm-attr-reversed-list" style="margin: 0;">Reversed</label>
+                <script>
+                    // ========================================
+                    // GM ATTRIBUTE PANEL - REVERSED LIST (SAFE MODE)
+                    // ========================================
+                    (function () {
+
+                        const gmAttrReversedList_checkbox = document.querySelector('.gm-attr-reversed-list');
+                        if (!gmAttrReversedList_checkbox) return;
+
+                        let gmAttrReversedList_lastActive = null;
+
+                        // ------------------------------------
+                        // TAG YANG SUPPORT REVERSED
+                        // ------------------------------------
+                        const gmAttrReversedList_supportedTags = [
+                            'ol'
+                        ];
+
+                        // ------------------------------------
+                        // GET ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrReversedList_getActiveObject() {
+                            const core = document.querySelector('.gm-object-core.actived');
+                            if (!core) return null;
+                            return core.querySelector('.gm-object.gm-active');
+                        }
+
+                        // ------------------------------------
+                        // CHECK SUPPORT
+                        // ------------------------------------
+                        function gmAttrReversedList_isSupported(element) {
+                            if (!element) return false;
+
+                            return gmAttrReversedList_supportedTags.includes(
+                                element.tagName.toLowerCase()
+                            );
+                        }
+
+                        // ------------------------------------
+                        // WATCH ACTIVE OBJECT
+                        // ------------------------------------
+                        function gmAttrReversedList_watch() {
+
+                            const active = gmAttrReversedList_getActiveObject();
+
+                            if (active !== gmAttrReversedList_lastActive) {
+
+                                gmAttrReversedList_lastActive = active;
+
+                                if (active && gmAttrReversedList_isSupported(active)) {
+
+                                    gmAttrReversedList_checkbox.checked =
+                                        active.hasAttribute('reversed');
+
+                                    gmAttrReversedList_checkbox.disabled = false;
+
+                                } else {
+
+                                    gmAttrReversedList_checkbox.checked = false;
+                                    gmAttrReversedList_checkbox.disabled = true;
+                                }
+                            }
+
+                            // requestAnimationFrame(gmAttrReversedList_watch); replaced by centralized event
+                        }
+
+                        window.addEventListener('gm-active-tick', gmAttrReversedList_watch);
+
+                        // ------------------------------------
+                        // HANDLE CHANGE
+                        // ------------------------------------
+                        gmAttrReversedList_checkbox.addEventListener('change', function () {
+
+                            const active = gmAttrReversedList_getActiveObject();
+                            if (!active) return;
+
+                            if (!gmAttrReversedList_isSupported(active)) return;
+
+                            if (this.checked) {
+                                active.setAttribute('reversed', '');
+                            } else {
+                                active.removeAttribute('reversed');
+                            }
+
+                        });
+
+                    })();
+                </script>
+            </div>
+        </div>
+
+        <div>
+            <label for="gm-attr-value-li">Value</label>
+            <input type="text" id="gm-attr-value-li" class="gm-attr-value-li">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - VALUE (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrValue_input = document.querySelector('.gm-attr-value-li');
+                    if (!gmAttrValue_input) return;
+
+                    let gmAttrValue_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT VALUE
+                    // ------------------------------------
+                    const gmAttrValue_supportedTags = [
+                        'li'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrValue_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrValue_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrValue_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrValue_watch() {
+
+                        const active = gmAttrValue_getActiveObject();
+
+                        if (active !== gmAttrValue_lastActive) {
+
+                            gmAttrValue_lastActive = active;
+
+                            if (active && gmAttrValue_isSupported(active)) {
+
+                                gmAttrValue_input.value =
+                                    active.getAttribute('value') || '';
+
+                                gmAttrValue_input.disabled = false;
+
+                            } else {
+
+                                gmAttrValue_input.value = '';
+                                gmAttrValue_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrValue_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrValue_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrValue_input.addEventListener('input', function () {
+
+                        const active = gmAttrValue_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrValue_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('value');
+                        } else {
+                            active.setAttribute('value', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+</div>
+
+<!-- 7.TEXT ATTRIBUTE -->
+<div class="gm-text-attribute-container gm-menu-section gm-attribute-hidden" style="width: 250px; padding: 0;">
+    <div class="gm-menu-title">Text Attribute</div>
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-dir">Dir</label>
+            <select id="gm-attr-dir">
+                <option value="ltr">LTR</option>
+                <option value="rtl">RTL</option>
+            </select>
+        </div>
+        <div></div>
+    </div>
+</div>
+
+<!-- 8.IMAGE ATTRIBUTE -->
+<div class="gm-image-attribute-container gm-menu-section gm-attribute-hidden" style="width: 250px; padding: 0;">
+    <div class="gm-menu-title">Image Attribute</div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-src-image">Source</label>
+            <input type="text" id="gm-attr-src-image" class="gm-attr-src-image" placeholder="">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - SRC IMAGE (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrSrcImage_input = document.querySelector('.gm-attr-src-image');
+                    if (!gmAttrSrcImage_input) return;
+
+                    let gmAttrSrcImage_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT SRC
+                    // ------------------------------------
+                    const gmAttrSrcImage_supportedTags = [
+                        'img'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrSrcImage_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrSrcImage_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrSrcImage_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrSrcImage_watch() {
+
+                        const active = gmAttrSrcImage_getActiveObject();
+
+                        if (active !== gmAttrSrcImage_lastActive) {
+
+                            gmAttrSrcImage_lastActive = active;
+
+                            if (active && gmAttrSrcImage_isSupported(active)) {
+
+                                gmAttrSrcImage_input.value =
+                                    active.getAttribute('src') || '';
+
+                                gmAttrSrcImage_input.disabled = false;
+
+                            } else {
+
+                                gmAttrSrcImage_input.value = '';
+                                gmAttrSrcImage_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrSrcImage_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrSrcImage_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrSrcImage_input.addEventListener('input', function () {
+
+                        const active = gmAttrSrcImage_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrSrcImage_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('src');
+                        } else {
+                            active.setAttribute('src', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+        <div>
+            <label for="gm-attr-alt">Alt</label>
+            <input type="text" id="gm-attr-alt" class="gm-attr-alt" placeholder="">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - ALT (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrAlt_input = document.querySelector('.gm-attr-alt');
+                    if (!gmAttrAlt_input) return;
+
+                    let gmAttrAlt_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT ALT
+                    // ------------------------------------
+                    const gmAttrAlt_supportedTags = [
+                        'img'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrAlt_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrAlt_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrAlt_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrAlt_watch() {
+
+                        const active = gmAttrAlt_getActiveObject();
+
+                        if (active !== gmAttrAlt_lastActive) {
+
+                            gmAttrAlt_lastActive = active;
+
+                            if (active && gmAttrAlt_isSupported(active)) {
+
+                                gmAttrAlt_input.value =
+                                    active.getAttribute('alt') || '';
+
+                                gmAttrAlt_input.disabled = false;
+
+                            } else {
+
+                                gmAttrAlt_input.value = '';
+                                gmAttrAlt_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrAlt_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrAlt_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrAlt_input.addEventListener('input', function () {
+
+                        const active = gmAttrAlt_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrAlt_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('alt');
+                        } else {
+                            active.setAttribute('alt', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-loading">Loading</label>
+            <select id="gm-attr-loading" class="gm-attr-loading">
+                <option value="lazy">Lazy</option>
+                <option value="eager">Eager</option>
+                <option value="auto">Auto</option>
+            </select>
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - LOADING (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrLoading_select = document.querySelector('.gm-attr-loading');
+                    if (!gmAttrLoading_select) return;
+
+                    let gmAttrLoading_lastActive = null;
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrLoading_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT (IMG ONLY)
+                    // ------------------------------------
+                    function gmAttrLoading_isSupported(element) {
+                        if (!element) return false;
+                        return element.tagName.toLowerCase() === 'img';
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrLoading_watch() {
+
+                        const active = gmAttrLoading_getActiveObject();
+
+                        if (active !== gmAttrLoading_lastActive) {
+
+                            gmAttrLoading_lastActive = active;
+
+                            if (active && gmAttrLoading_isSupported(active)) {
+
+                                gmAttrLoading_select.value =
+                                    active.getAttribute('loading') || 'auto';
+
+                                gmAttrLoading_select.disabled = false;
+
+                            } else {
+
+                                gmAttrLoading_select.value = 'auto';
+                                gmAttrLoading_select.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrLoading_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrLoading_watch);
+
+                    // ------------------------------------
+                    // HANDLE CHANGE
+                    // ------------------------------------
+                    gmAttrLoading_select.addEventListener('change', function () {
+
+                        const active = gmAttrLoading_getActiveObject();
+                        if (!active) return;
+
+                        if (!gmAttrLoading_isSupported(active)) return;
+
+                        active.setAttribute('loading', this.value);
+
+                    });
+
+                })();
+            </script>
+        </div>
+        <div>
+            <!-- <label for="gm-attr-srcset">srcset</label> -->
+            <!-- <input type="text" id="gm-attr-srcset" class="gm-attr-srcset"> -->
+        </div>
+    </div>
+</div>
+
+<!-- 9.TABLE ATTRIBUTE -->
+<div class="gm-table-attribute-container gm-menu-section gm-attribute-hidden" style="width: 250px; padding: 0;">
+    <div class="gm-menu-title">Table Attribute</div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-border">Border</label>
+            <input type="text" id="gm-attr-border" class="gm-attr-border">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - BORDER (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrBorder_input = document.querySelector('.gm-attr-border');
+                    if (!gmAttrBorder_input) return;
+
+                    let gmAttrBorder_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT BORDER
+                    // ------------------------------------
+                    const gmAttrBorder_supportedTags = [
+                        'table'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrBorder_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrBorder_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrBorder_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrBorder_watch() {
+
+                        const active = gmAttrBorder_getActiveObject();
+
+                        if (active !== gmAttrBorder_lastActive) {
+
+                            gmAttrBorder_lastActive = active;
+
+                            if (active && gmAttrBorder_isSupported(active)) {
+
+                                gmAttrBorder_input.value =
+                                    active.getAttribute('border') || '';
+
+                                gmAttrBorder_input.disabled = false;
+
+                            } else {
+
+                                gmAttrBorder_input.value = '';
+                                gmAttrBorder_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrBorder_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrBorder_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrBorder_input.addEventListener('input', function () {
+
+                        const active = gmAttrBorder_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrBorder_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('border');
+                        } else {
+                            active.setAttribute('border', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+        <div></div>
+    </div>
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <!-- <label for="gm-attr-colspan">Colspan</label>
+            <input type="number" id="gm-attr-colspan" class="gm-attr-colspan"> -->
+        </div>
+
+        <div>
+            <!-- <label for="gm-attr-rowspan">Rowspan</label>
+            <input type="number" id="gm-attr-rowspan" class="gm-attr-rowspan"> -->
+        </div>
+    </div>
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <!-- <label for="gm-attr-headers">Headers</label>
+            <input type="text" id="gm-attr-headers" class="gm-attr-headers"> -->
+        </div>
+        <div></div>
+    </div>
+</div>
+
+<!-- 10.TEXTAREA ATTRIBUTE -->
+<div class="gm-textarea-attribute-container gm-menu-section gm-attribute-hidden" style="width: 250px; padding: 0;">
+    <div class="gm-menu-title">Textarea Attribute</div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <label for="gm-attr-rows">Rows</label>
+            <input type="number" id="gm-attr-rows" class="gm-attr-rows">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - ROWS (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrRows_input = document.querySelector('.gm-attr-rows');
+                    if (!gmAttrRows_input) return;
+
+                    let gmAttrRows_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT ROWS
+                    // ------------------------------------
+                    const gmAttrRows_supportedTags = [
+                        'textarea'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrRows_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrRows_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrRows_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrRows_watch() {
+
+                        const active = gmAttrRows_getActiveObject();
+
+                        if (active !== gmAttrRows_lastActive) {
+
+                            gmAttrRows_lastActive = active;
+
+                            if (active && gmAttrRows_isSupported(active)) {
+
+                                gmAttrRows_input.value =
+                                    active.getAttribute('rows') || '';
+
+                                gmAttrRows_input.disabled = false;
+
+                            } else {
+
+                                gmAttrRows_input.value = '';
+                                gmAttrRows_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrRows_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrRows_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrRows_input.addEventListener('input', function () {
+
+                        const active = gmAttrRows_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrRows_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('rows');
+                        } else {
+                            active.setAttribute('rows', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+
+        <div>
+            <label for="gm-attr-cols">Cols</label>
+            <input type="number" id="gm-attr-cols" class="gm-attr-cols">
+            <script>
+                // ========================================
+                // GM ATTRIBUTE PANEL - COLS (SAFE MODE)
+                // ========================================
+                (function () {
+
+                    const gmAttrCols_input = document.querySelector('.gm-attr-cols');
+                    if (!gmAttrCols_input) return;
+
+                    let gmAttrCols_lastActive = null;
+
+                    // ------------------------------------
+                    // TAG YANG SUPPORT COLS
+                    // ------------------------------------
+                    const gmAttrCols_supportedTags = [
+                        'textarea'
+                    ];
+
+                    // ------------------------------------
+                    // GET ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrCols_getActiveObject() {
+                        const core = document.querySelector('.gm-object-core.actived');
+                        if (!core) return null;
+                        return core.querySelector('.gm-object.gm-active');
+                    }
+
+                    // ------------------------------------
+                    // CHECK SUPPORT
+                    // ------------------------------------
+                    function gmAttrCols_isSupported(element) {
+                        if (!element) return false;
+
+                        return gmAttrCols_supportedTags.includes(
+                            element.tagName.toLowerCase()
+                        );
+                    }
+
+                    // ------------------------------------
+                    // WATCH ACTIVE OBJECT
+                    // ------------------------------------
+                    function gmAttrCols_watch() {
+
+                        const active = gmAttrCols_getActiveObject();
+
+                        if (active !== gmAttrCols_lastActive) {
+
+                            gmAttrCols_lastActive = active;
+
+                            if (active && gmAttrCols_isSupported(active)) {
+
+                                gmAttrCols_input.value =
+                                    active.getAttribute('cols') || '';
+
+                                gmAttrCols_input.disabled = false;
+
+                            } else {
+
+                                gmAttrCols_input.value = '';
+                                gmAttrCols_input.disabled = true;
+                            }
+                        }
+
+                        // requestAnimationFrame(gmAttrCols_watch); replaced by centralized event
+                    }
+
+                    window.addEventListener('gm-active-tick', gmAttrCols_watch);
+
+                    // ------------------------------------
+                    // HANDLE INPUT
+                    // ------------------------------------
+                    gmAttrCols_input.addEventListener('input', function () {
+
+                        const active = gmAttrCols_getActiveObject();
+                        if (!active) return;
+                        if (!gmAttrCols_isSupported(active)) return;
+
+                        if (this.value === '') {
+                            active.removeAttribute('cols');
+                        } else {
+                            active.setAttribute('cols', this.value);
+                        }
+
+                    });
+
+                })();
+            </script>
+        </div>
+    </div>
+</div>
+
+<!-- 11.AUDIO & VIDEO ATTRIBUTE -->
+<div class="gm-audiovideo-attribute-container gm-menu-section gm-attribute-hidden" style="width: 250px; padding: 0;">
+    <!-- <div class="gm-menu-title">Audio Video Attribute</div> -->
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <!-- <label for="gm-attr-src-audvid">Source</label>
+            <input type="text" id="gm-attr-src-audvid" class="gm-attr-src-audvid" placeholder=""> -->
+        </div>
+        <div>
+            <!-- <label for="gm-attr-preload">Preload</label>
+            <select id="gm-attr-preload" class="gm-attr-preload">
+                <option value="auto">Auto</option>
+                <option value="metadata">Metadata</option>
+                <option value="none">None</option>
+            </select> -->
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <!-- <label for="">Controls</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-controls {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-controls:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-controls" class="gm-attr-controls">
+                <label for="gm-attr-controls" style="margin: 0;">Controls</label>
+            </div> -->
+        </div>
+
+        <div>
+            <!-- <label for="">Autoplay</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-autoplay {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-autoplay:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-autoplay" class="gm-attr-autoplay">
+                <label for="gm-attr-autoplay" style="margin: 0;">Autoplay</label>
+            </div> -->
+        </div>
+    </div>
+
+    <div class="gm-menu-row gm-row-pair">
+        <div>
+            <!-- <label for="">Loop</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-loop {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-loop:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-loop" class="gm-attr-loop">
+                <label for="gm-attr-loop" style="margin: 0;">Loop</label>
+            </div> -->
+        </div>
+
+        <div>
+            <!-- <label for="">Muted</label>
+            <div class="gm-menu-row gm-row-pair" style="align-items: center; margin: 0;">
+                <style>
+                    .gm-attr-muted {
+                        /* vertical-align: middle; */
+                        width: fit-content !important;
+                        margin-right: 6px;
+                        cursor: pointer;
+                    }
+
+                    .gm-attr-muted:hover {
+                        box-shadow: none !important;
+                    }
+                </style>
+                <input type="checkbox" id="gm-attr-muted" class="gm-attr-muted">
+                <label for="gm-attr-muted" style="margin: 0;">Muted</label>
+            </div> -->
+        </div>
+    </div>
+</div>

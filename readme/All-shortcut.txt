@@ -1,0 +1,31 @@
+FLEX
+// | Shortcut     | Fungsi                        | Mode Toggle / Cycle                                                |
+// | ------------ | ----------------------------- | ------------------------------------------------------------------ |
+// |   Ctrl + F   | display: flex / block         | toggle                                                             |
+// |   Ctrl + J   | justify-content               | cycle → `start → center → between → around → evenly → end → start` |
+// |   Ctrl + E   | justify-content & align-items | toggle → center/start                                              |
+// |   Ctrl + R   | flex-direction                | toggle → row/column                                                |
+// |   Ctrl + Q   | flex-wrap                     | toggle → wrap/nowrap                                               |
+// |   Ctrl + G   | gap                           | cycle → 0 / 10 / 20 / 0                                            |
+
+BG-COLOR
+// |   Alt + T    | background transparent        | click                                                              |
+// |   Alt + S    | Box shadow                    | click                                                              |
+
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |
+// |   Ctrl +     |                               |                                                                    |

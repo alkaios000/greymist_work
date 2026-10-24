@@ -1,0 +1,49 @@
+/* OVERFLOW */
+
+.of-v {
+    overflow: visible;
+}
+
+.of-h {
+    overflow: hidden;
+}
+
+.of-s {
+    overflow: scroll;
+}
+
+.of-a {
+    overflow: auto;
+}
+
+.of-x-v {
+    overflow-x: visible;
+}
+
+.of-x-h {
+    overflow-x: hidden;
+}
+
+.of-x-s {
+    overflow-x: scroll;
+}
+
+.of-x-a {
+    overflow-x: auto;
+}
+
+.of-y-v {
+    overflow-y: visible;
+}
+
+.of-y-h {
+    overflow-y: hidden;
+}
+
+.of-y-s {
+    overflow-y: scroll;
+}
+
+.of-y-a {
+    overflow-y: auto;
+}

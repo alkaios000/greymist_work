@@ -1,0 +1,658 @@
+<div class="gm-menu-section gm-content-box-menu">
+    <div class="gm-menu-title">Background</div>
+
+    <!-- BACKGROUND IMAGE -->
+    <!-- PERLU DIPERBARUI UNTUK PATH MANAGEMENT AGAR COMPATIBLE UNTUK PENYIMPANAN DATABASE -->
+    <div class="gm-background-img-preview"></div>
+    <div class="gm-menu-row">
+        <label for="gm-background-image">Background Image</label>
+        <input type="file" id="gm-background-image" class="gm-background-image" accept="image/*">
+        <span id="gm-background-image-label" style="margin-left:8px; font-size:0.9em; color:#555;"></span>
+        <script>
+            // ================================
+            // CONFIG
+            // ================================
+            const CURRENT_USER_ID = window.GM_USER_ID; // dari session
+            const assetsContainer = document.querySelector(".gm-image-uploaded-container");
+            const coreSelector = ".gm-object-core";
+
+            // ================================
+            // BULK UPLOAD (.gm-assets-image)
+            // ================================
+            document.querySelector(".gm-assets-image").addEventListener("change", async function (e) {
+
+                const files = e.target.files;
+                if (!files.length) return;
+
+                const formData = new FormData();
+                for (let file of files) {
+                    formData.append("images[]", file);
+                }
+
+                try {
+                    const res = await fetch("api/upload-assets-image.php", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    const text = await res.text();
+                    console.log("UPLOAD RESPONSE:", text);
+
+                    const result = JSON.parse(text);
+
+                    if (result.success) {
+                        loadAssetsImages();
+                    } else {
+                        alert("Upload gagal");
+                    }
+
+                } catch (err) {
+                    console.error("ERROR:", err);
+                }
+            });
+
+            // ================================
+            // SINGLE BG UPLOAD (.gm-background-image)
+            // ================================
+            document.querySelector(".gm-background-image").addEventListener("change", async function (e) {
+
+                const activeObject = document.querySelector(".gm-object.gm-active");
+                if (!activeObject) {
+                    alert("No active object selected");
+                    return;
+                }
+
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const formData = new FormData();
+                formData.append("image", file);
+
+                const res = await fetch("api/upload-background-image.php", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await res.json();
+
+                if (result.success) {
+                    activeObject.style.backgroundImage = `url('${result.path}')`;
+                    loadAssetsImages();
+                }
+            });
+
+
+            // ================================
+            // LOAD ASSETS IMAGES
+            // ================================
+            async function loadAssetsImages() {
+
+                const res = await fetch(`api/get-images.php`);
+                const images = await res.json();
+                console.log("DATA DARI API:", images);
+                assetsContainer.innerHTML = "";
+
+                images.forEach(img => {
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "gm-image-wrapper";
+                    wrapper.dataset.path = img.path + img.image;
+                    wrapper.dataset.id = img.image_id;
+
+                    const image = document.createElement("img");
+                    image.src = img.path + img.image;
+                    image.className = "gm-image-uploaded gm-objectdropable";
+                    image.draggable = true;
+                    image.dataset.path = img.path + img.image;
+                    image.dataset.id = img.image_id;
+
+                    const titleInput = document.createElement("input");
+                    titleInput.type = "text";
+                    titleInput.className = "gm-image-title";
+                    titleInput.value = img.image_name || img.image;
+                    titleInput.title = img.image_name || img.image;
+                    
+                    // Rename logic on blur or enter
+                    const renameImage = async () => {
+                        const newName = titleInput.value.trim();
+                        if(newName && newName !== img.image_name) {
+                            await fetch("api/update-image-name.php", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ id: img.image_id, name: newName })
+                            });
+                        }
+                    };
+
+                    titleInput.addEventListener("blur", renameImage);
+                    titleInput.addEventListener("keydown", (e) => {
+                        if(e.key === "Enter") {
+                            titleInput.blur();
+                        }
+                    });
+
+                    wrapper.appendChild(image);
+                    wrapper.appendChild(titleInput);
+                    assetsContainer.appendChild(wrapper);
+                });
+            }
+
+
+            // ================================
+            // DRAG START
+            // ================================
+            document.addEventListener("dragstart", function (e) {
+                if (e.target.classList.contains("gm-objectdropable")) {
+                    e.dataTransfer.setData("imagePath", e.target.dataset.path);
+                }
+            });
+
+
+            // ================================
+            // DROP INTO CORE
+            // ================================
+            document.addEventListener("dragover", function (e) {
+                if (e.target.closest(coreSelector)) {
+                    e.preventDefault();
+                }
+            });
+
+            document.addEventListener("drop", function (e) {
+
+                const core = e.target.closest(coreSelector);
+                if (!core) return;
+
+                e.preventDefault();
+
+                const imagePath = e.dataTransfer.getData("imagePath");
+                if (!imagePath) return;
+
+                const img = document.createElement("img");
+                img.src = imagePath;
+                img.className = "gm-object";
+
+                core.appendChild(img);
+            });
+
+
+            // ================================
+            // CONTEXT MENU
+            // ================================
+            document.addEventListener("contextmenu", function (e) {
+                if (e.target.tagName === "INPUT") return;
+
+                const target = e.target.closest(".gm-image-wrapper") || e.target.closest(".gm-image-uploaded");
+                if (!target) return;
+
+                e.preventDefault();
+
+                const activeObject = document.querySelector(".gm-object.gm-active");
+
+                const menu = document.createElement("div");
+                menu.className = "gm-context-menu";
+                menu.style.position = "fixed";
+                menu.style.left = e.pageX + "px";
+                menu.style.top = e.pageY + "px";
+                menu.style.background = "#222";
+                menu.style.color = "#fff";
+                menu.style.padding = "5px";
+                menu.style.zIndex = 9999;
+                menu.style.borderRadius = "4px";
+                menu.style.boxShadow = "0 2px 5px rgba(0,0,0,0.3)";
+                menu.style.cursor = "pointer";
+
+                // DELETE
+                const del = document.createElement("div");
+                del.textContent = "Hapus";
+                del.style.padding = "5px 10px";
+                del.onmouseover = () => del.style.background = "#d32f2f";
+                del.onmouseout = () => del.style.background = "transparent";
+                del.onclick = async () => {
+                    await fetch("api/delete-image.php", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ id: target.dataset.id })
+                    });
+                    loadAssetsImages();
+                    menu.remove();
+                };
+
+                menu.appendChild(del);
+
+                // SET BG (if active object exists)
+                if (activeObject) {
+                    const setBg = document.createElement("div");
+                    setBg.textContent = "Set as BG Image";
+                    setBg.style.padding = "5px 10px";
+                    setBg.onmouseover = () => setBg.style.background = "#1976d2";
+                    setBg.onmouseout = () => setBg.style.background = "transparent";
+                    setBg.onclick = () => {
+                        activeObject.style.backgroundImage = `url('${target.dataset.path}')`;
+                        menu.remove();
+                    };
+                    menu.appendChild(setBg);
+                }
+
+                document.body.appendChild(menu);
+
+                document.addEventListener("click", () => menu.remove(), { once: true });
+            });
+
+
+            // Initial load
+            loadAssetsImages();
+        </script>
+        <script>
+            // ================================
+            // CLICK IMAGE → SET AS BACKGROUND
+            // ================================
+            document.addEventListener("click", function (e) {
+
+                const clickedImage = e.target.closest(".gm-image-uploaded");
+                if (!clickedImage) return;
+
+                const activeObject = document.querySelector(".gm-object.gm-active");
+                if (!activeObject) return;
+
+                const imagePath = clickedImage.dataset.path;
+
+                activeObject.style.backgroundImage = `url('${imagePath}')`;
+                activeObject.style.backgroundSize = "cover";
+                activeObject.style.backgroundPosition = "center";
+            });
+        </script>
+    </div>
+
+    <!-- BACKGROUND REPEAT -->
+    <div class="gm-menu-row">
+        <label for="gm-background-repeat">Background repeat</label>
+        <select id="gm-background-repeat">
+            <option value="">-</option>
+            <option value="repeat">Repeat</option>
+            <option value="no-repeat">No repeat</option>
+            <option value="repeat-x">Repeat X</option>
+            <option value="repeat-y">Repeat Y</option>
+            <option value="space">Space</option>
+            <option value="round">Round</option>
+        </select>
+        <script>
+            (function () {
+                const select = document.getElementById("gm-background-repeat");
+                if (!select) return;
+
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // =========================================
+                // Sinkron object → select
+                // =========================================
+                function updateBackgroundRepeatUI() {
+                    if (document.activeElement === select) return;
+                    const actives = getActiveObjects();
+                    if (!actives.length) {
+                        select.value = "";
+                        return;
+                    }
+
+                    const firstVal = actives[0].style.backgroundRepeat || getComputedStyle(actives[0]).backgroundRepeat || "";
+
+                    if (actives.length === 1) {
+                        select.value = firstVal;
+                        return;
+                    }
+
+                    // multi-select: cek apakah semua sama
+                    const same = [...actives].every(el => {
+                        const val = el.style.backgroundRepeat || getComputedStyle(el).backgroundRepeat || "";
+                        return val === firstVal;
+                    });
+
+                    select.value = same ? firstVal : ""; // beda → kosong
+                }
+
+                // =========================================
+                // Sinkron select → object
+                // =========================================
+                select.addEventListener("change", e => {
+                    const val = e.target.value;
+                    const actives = getActiveObjects();
+                    actives.forEach(el => {
+                        el.style.backgroundRepeat = val;
+                    });
+                    requestAnimationFrame(updateBackgroundRepeatUI);
+                });
+
+                // =========================================
+                // OBSERVER / SELECTION CHANGE
+                // =========================================
+                document.addEventListener("gm-selection-change", updateBackgroundRepeatUI);
+                
+
+                window.addEventListener('gm-active-tick', updateBackgroundRepeatUI);
+
+                // init
+                updateBackgroundRepeatUI();
+
+            })();
+        </script>
+    </div>
+
+    <!-- BACKGROUND POSITION -->
+    <div class="gm-menu-row">
+        <label for="gm-background-position">Background position</label>
+        <select id="gm-background-position">
+            <option value="">-</option>
+            <option value="left top">Left Top</option>
+            <option value="left center">Left Center</option>
+            <option value="left bottom">Left Bottom</option>
+            <option value="center top">Center Top</option>
+            <option value="center center">Center</option>
+            <option value="center bottom">Center Bottom</option>
+            <option value="right top">Right Top</option>
+            <option value="right center">Right Center</option>
+            <option value="right bottom">Right Bottom</option>
+        </select>
+        <script>
+            (function () {
+                const select = document.getElementById("gm-background-position");
+                if (!select) return;
+
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // =========================================
+                // Sinkron object → select
+                // =========================================
+                function updateBackgroundPositionUI() {
+                    if (document.activeElement === select) return;
+                    const actives = getActiveObjects();
+                    if (!actives.length) {
+                        select.value = "";
+                        return;
+                    }
+
+                    const firstVal = actives[0].style.backgroundPosition || getComputedStyle(actives[0]).backgroundPosition || "";
+
+                    if (actives.length === 1) {
+                        select.value = firstVal;
+                        return;
+                    }
+
+                    // multi-select: cek apakah semua sama
+                    const same = [...actives].every(el => {
+                        const val = el.style.backgroundPosition || getComputedStyle(el).backgroundPosition || "";
+                        return val === firstVal;
+                    });
+
+                    select.value = same ? firstVal : ""; // berbeda → kosong
+                }
+
+                // =========================================
+                // Sinkron select → object
+                // =========================================
+                select.addEventListener("change", e => {
+                    const val = e.target.value;
+                    const actives = getActiveObjects();
+                    actives.forEach(el => {
+                        el.style.backgroundPosition = val;
+                    });
+                    requestAnimationFrame(updateBackgroundPositionUI);
+                });
+
+                // =========================================
+                // OBSERVER / SELECTION CHANGE
+                // =========================================
+                document.addEventListener("gm-selection-change", updateBackgroundPositionUI);
+                
+
+                window.addEventListener('gm-active-tick', updateBackgroundPositionUI);
+
+                // init
+                updateBackgroundPositionUI();
+
+            })();
+        </script>
+    </div>
+
+    <!-- BACKGROUND SIZE -->
+    <div class="gm-menu-row">
+        <label for="gm-background-size">Background size</label>
+        <select id="gm-background-size">
+            <option value="">-</option>
+            <option value="auto">Auto</option>
+            <option value="cover">Cover</option>
+            <option value="contain">Contain</option>
+        </select>
+        <script>
+            (function () {
+                const select = document.getElementById("gm-background-size");
+                if (!select) return;
+
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // =========================================
+                // Sinkron object → select
+                // =========================================
+                function updateBackgroundSizeUI() {
+                    if (document.activeElement === select) return;
+                    const actives = getActiveObjects();
+                    if (!actives.length) {
+                        select.value = "";
+                        return;
+                    }
+
+                    const firstVal = actives[0].style.backgroundSize || getComputedStyle(actives[0]).backgroundSize || "";
+
+                    if (actives.length === 1) {
+                        select.value = firstVal;
+                        return;
+                    }
+
+                    // multi-select: cek apakah semua sama
+                    const same = [...actives].every(el => {
+                        const val = el.style.backgroundSize || getComputedStyle(el).backgroundSize || "";
+                        return val === firstVal;
+                    });
+
+                    select.value = same ? firstVal : ""; // berbeda → kosong
+                }
+
+                // =========================================
+                // Sinkron select → object
+                // =========================================
+                select.addEventListener("change", e => {
+                    const val = e.target.value;
+                    const actives = getActiveObjects();
+                    actives.forEach(el => {
+                        el.style.backgroundSize = val;
+                    });
+                    requestAnimationFrame(updateBackgroundSizeUI);
+                });
+
+                // =========================================
+                // OBSERVER / SELECTION CHANGE
+                // =========================================
+                document.addEventListener("gm-selection-change", updateBackgroundSizeUI);
+                
+
+                window.addEventListener('gm-active-tick', updateBackgroundSizeUI);
+
+                // init
+                updateBackgroundSizeUI();
+
+            })();
+        </script>
+    </div>
+
+    <!-- BACKGROUND CLIP -->
+    <div class="gm-menu-row">
+        <label for="gm-background-clip">Background clip</label>
+        <select id="gm-background-clip">
+            <option value="">-</option>
+            <option value="border-box">Border box</option>
+            <option value="padding-box">Padding box</option>
+            <option value="content-box">Content box</option>
+            <option value="text">Text</option>
+        </select>
+        <script>
+            (function () {
+                const select = document.getElementById("gm-background-clip");
+                if (!select) return;
+
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // =========================================
+                // Sinkron object → select
+                // =========================================
+                function updateBackgroundClipUI() {
+                    if (document.activeElement === select) return;
+                    const actives = getActiveObjects();
+                    if (!actives.length) {
+                        select.value = "";
+                        return;
+                    }
+
+                    const firstVal = actives[0].style.backgroundClip || getComputedStyle(actives[0]).backgroundClip || "";
+
+                    if (actives.length === 1) {
+                        select.value = firstVal;
+                        return;
+                    }
+
+                    // multi-select: cek apakah semua sama
+                    const same = [...actives].every(el => {
+                        const val = el.style.backgroundClip || getComputedStyle(el).backgroundClip || "";
+                        return val === firstVal;
+                    });
+
+                    select.value = same ? firstVal : ""; // berbeda → kosong
+                }
+
+                // =========================================
+                // Sinkron select → object
+                // =========================================
+                select.addEventListener("change", e => {
+                    const val = e.target.value;
+                    const actives = getActiveObjects();
+                    actives.forEach(el => {
+                        el.style.backgroundClip = val;
+
+                        // khusus 'text', perlu webkit prefix
+                        if (val === "text") {
+                            el.style.webkitBackgroundClip = "text";
+                            el.style.color = "transparent"; // wajib untuk gradient text
+                        } else {
+                            el.style.webkitBackgroundClip = "";
+                            // restore warna default jika sebelumnya text
+                            if (el.dataset.originalColor) {
+                                el.style.color = el.dataset.originalColor;
+                            } else if (el.style.color === "transparent") {
+                                el.style.color = "";
+                            }
+                        }
+                    });
+                    requestAnimationFrame(updateBackgroundClipUI);
+                });
+
+                // =========================================
+                // OBSERVER / SELECTION CHANGE
+                // =========================================
+                document.addEventListener("gm-selection-change", updateBackgroundClipUI);
+                
+
+                window.addEventListener('gm-active-tick', updateBackgroundClipUI);
+
+                // INIT
+                updateBackgroundClipUI();
+
+            })();
+        </script>
+    </div>
+
+    <!-- BACKGROUND ORIGIN -->
+    <div class="gm-menu-row">
+        <label for="gm-background-origin">Background origin</label>
+        <select id="gm-background-origin">
+            <option value="">-</option>
+            <option value="border-box">Border box</option>
+            <option value="padding-box">Padding box</option>
+            <option value="content-box">Content box</option>
+        </select>
+        <script>
+            (function () {
+                const select = document.getElementById("gm-background-origin");
+                if (!select) return;
+
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // =========================================
+                // Sinkron object → select
+                // =========================================
+                function updateBackgroundOriginUI() {
+                    if (document.activeElement === select) return;
+                    const actives = getActiveObjects();
+                    if (!actives.length) {
+                        select.value = "";
+                        return;
+                    }
+
+                    const firstVal = actives[0].style.backgroundOrigin || getComputedStyle(actives[0]).backgroundOrigin || "";
+
+                    if (actives.length === 1) {
+                        select.value = firstVal;
+                        return;
+                    }
+
+                    // multi-select: cek apakah semua sama
+                    const same = [...actives].every(el => {
+                        const val = el.style.backgroundOrigin || getComputedStyle(el).backgroundOrigin || "";
+                        return val === firstVal;
+                    });
+
+                    select.value = same ? firstVal : ""; // berbeda → kosong
+                }
+
+                // =========================================
+                // Sinkron select → object
+                // =========================================
+                select.addEventListener("change", e => {
+                    const val = e.target.value;
+                    const actives = getActiveObjects();
+                    actives.forEach(el => {
+                        el.style.backgroundOrigin = val;
+                    });
+                    requestAnimationFrame(updateBackgroundOriginUI);
+                });
+
+                // =========================================
+                // OBSERVER / SELECTION CHANGE
+                // =========================================
+                document.addEventListener("gm-selection-change", updateBackgroundOriginUI);
+                
+
+                window.addEventListener('gm-active-tick', updateBackgroundOriginUI);
+
+                // INIT
+                updateBackgroundOriginUI();
+
+            })();
+        </script>
+    </div>
+</div>

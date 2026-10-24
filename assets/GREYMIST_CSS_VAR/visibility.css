@@ -1,0 +1,16 @@
+/* VISIBILITY */
+
+/* item tetap terlihat */
+.visible {
+    visibility: visible;
+}
+
+/* item tidak terlihat tapi tetap mengambil ruang */
+.hidden{
+    visibility: hidden;
+}
+
+/* item tidak terlihat dan tidak mengambil ruang */
+.collapse {
+    visibility: collapse;
+}

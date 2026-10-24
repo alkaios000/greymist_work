@@ -1,0 +1,392 @@
+<div class="gm-menu-section gm-content-box-menu">
+    <div class="gm-menu-title">Outline</div>
+
+    <!-- OUTLINE SHORTHAND -->
+    <div class="gm-menu-row">
+        <label for="gm-outline">Outline</label>
+        <input type="text" id="gm-outline" placeholder="1px solid #000">
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                const input = document.getElementById("gm-outline");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getOutlineValue() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const base = first.style.outline || getComputedStyle(first).outline;
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v = el.style.outline || getComputedStyle(el).outline;
+                            return v === base;
+                        });
+                        if (!same) return "";
+                    }
+
+                    return base === "none" ? "" : base;
+                }
+
+                function applyOutline() {
+                    const value = input.value.trim();
+                    getActiveObjects().forEach(el => {
+                        if (!value) {
+                            el.style.removeProperty("outline");
+                        } else {
+                            el.style.outline = value;
+                        }
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === input) return;
+                    input.value = getOutlineValue();
+                }
+
+                /* ================= EVENTS ================= */
+
+                input.addEventListener("keydown", e => {
+                    if (e.key === "Enter") applyOutline();
+                });
+
+                input.addEventListener("blur", applyOutline);
+
+                document.addEventListener("click", e => {
+                    if (e.target.closest(ACTIVE_SELECTOR)) {
+                        requestAnimationFrame(updateUI);
+                    } else {
+                        requestAnimationFrame(updateUI); // deselect → kosong
+                    }
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(updateUI);
+                });
+
+                /* observer hanya untuk sinkron UI */
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- OUTLINE WIDTH -->
+    <div class="gm-menu-row">
+        <label for="gm-outline-width">Outline width</label>
+        <input type="text" id="gm-outline-width" placeholder="px | thin | medium | thick">
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                const input = document.getElementById("gm-outline-width");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getOutlineWidth() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const base =
+                        first.style.outlineWidth ||
+                        getComputedStyle(first).outlineWidth;
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v =
+                                el.style.outlineWidth ||
+                                getComputedStyle(el).outlineWidth;
+                            return v === base;
+                        });
+                        if (!same) return "";
+                    }
+
+                    return base === "medium" ? "" : base;
+                }
+
+                function applyOutlineWidth() {
+                    const value = input.value.trim();
+                    getActiveObjects().forEach(el => {
+                        if (!value) {
+                            el.style.removeProperty("outline-width");
+                        } else {
+                            el.style.outlineWidth = value;
+                        }
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === input) return;
+                    input.value = getOutlineWidth();
+                }
+
+                /* ================= EVENTS ================= */
+
+                input.addEventListener("keydown", e => {
+                    if (e.key === "Enter") applyOutlineWidth();
+                });
+
+                input.addEventListener("blur", applyOutlineWidth);
+
+                document.addEventListener("click", () => {
+                    requestAnimationFrame(updateUI);
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(updateUI);
+                });
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- OUTLINE STYLE -->
+    <div class="gm-menu-row">
+        <label for="gm-outline-style">Outline style</label>
+        <select id="gm-outline-style">
+            <option value="">-</option>
+            <option value="none">None</option>
+            <option value="solid">Solid</option>
+            <option value="dashed">Dashed</option>
+            <option value="dotted">Dotted</option>
+            <option value="double">Double</option>
+            <option value="groove">Groove</option>
+            <option value="ridge">Ridge</option>
+            <option value="inset">Inset</option>
+            <option value="outset">Outset</option>
+        </select>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                const select = document.getElementById("gm-outline-style");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getOutlineStyle() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const base =
+                        first.style.outlineStyle ||
+                        getComputedStyle(first).outlineStyle;
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v =
+                                el.style.outlineStyle ||
+                                getComputedStyle(el).outlineStyle;
+                            return v === base;
+                        });
+                        if (!same) return "";
+                    }
+
+                    return base === "none" ? "none" : base;
+                }
+
+                function applyOutlineStyle() {
+                    const value = select.value;
+                    getActiveObjects().forEach(el => {
+                        if (!value) {
+                            el.style.removeProperty("outline-style");
+                        } else {
+                            el.style.outlineStyle = value;
+                        }
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === select) return;
+                    select.value = getOutlineStyle();
+                }
+
+                /* ================= EVENTS ================= */
+
+                select.addEventListener("change", applyOutlineStyle);
+
+                document.addEventListener("click", () => {
+                    requestAnimationFrame(updateUI);
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(updateUI);
+                });
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- OUTLINE COLOR -->
+    <div class="gm-menu-row">
+        <label for="gm-outline-color">Outline color</label>
+        <input type="text" id="gm-outline-color" placeholder="#000 | rgba() | currentColor">
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                const input = document.getElementById("gm-outline-color");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getOutlineColor() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const base =
+                        first.style.outlineColor ||
+                        getComputedStyle(first).outlineColor;
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v =
+                                el.style.outlineColor ||
+                                getComputedStyle(el).outlineColor;
+                            return v === base;
+                        });
+                        if (!same) return "";
+                    }
+
+                    // default browser value biasanya currentColor / rgb(...)
+                    return base === "currentColor" ? "currentColor" : base;
+                }
+
+                function applyOutlineColor() {
+                    const value = input.value.trim();
+                    getActiveObjects().forEach(el => {
+                        if (!value) {
+                            el.style.removeProperty("outline-color");
+                        } else {
+                            el.style.outlineColor = value;
+                        }
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === input) return;
+                    input.value = getOutlineColor();
+                }
+
+                /* ================= EVENTS ================= */
+
+                input.addEventListener("keydown", e => {
+                    if (e.key === "Enter") applyOutlineColor();
+                });
+
+                input.addEventListener("blur", applyOutlineColor);
+
+                document.addEventListener("click", () => {
+                    requestAnimationFrame(updateUI);
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(updateUI);
+                });
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- OUTLINE OFFSET -->
+    <div class="gm-menu-row">
+        <label for="gm-outline-offset">Outline offset</label>
+        <input type="text" id="gm-outline-offset" placeholder="px">
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                const input = document.getElementById("gm-outline-offset");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getOutlineOffset() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const base =
+                        first.style.outlineOffset ||
+                        getComputedStyle(first).outlineOffset;
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v =
+                                el.style.outlineOffset ||
+                                getComputedStyle(el).outlineOffset;
+                            return v === base;
+                        });
+                        if (!same) return "";
+                    }
+
+                    return base === "0px" ? "0px" : base;
+                }
+
+                function applyOutlineOffset() {
+                    const value = input.value.trim();
+                    getActiveObjects().forEach(el => {
+                        if (!value) {
+                            el.style.removeProperty("outline-offset");
+                        } else {
+                            el.style.outlineOffset = value;
+                        }
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === input) return;
+                    input.value = getOutlineOffset();
+                }
+
+                /* ================= EVENTS ================= */
+
+                input.addEventListener("keydown", e => {
+                    if (e.key === "Enter") applyOutlineOffset();
+                });
+
+                input.addEventListener("blur", applyOutlineOffset);
+
+                document.addEventListener("click", () => {
+                    requestAnimationFrame(updateUI);
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(updateUI);
+                });
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+</div>

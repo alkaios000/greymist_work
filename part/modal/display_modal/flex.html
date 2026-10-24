@@ -1,0 +1,555 @@
+<!-- CLEAR -->
+<div class="gm-menu-section gm-display-panel" data-display="flex">
+    <!-- Container Settings -->
+    <div class="gm-menu-row">
+        <div class="gm-menu-title">Container</div>
+        <div class="gm-menu-row">
+            <label>Flex-direction</label>
+            <select id="gm-flex-direction">
+                <option value="row">row</option>
+                <option value="row-reverse">row-reverse</option>
+                <option value="column">column</option>
+                <option value="column-reverse">column-reverse</option>
+            </select>
+            <!-- ERROR -->
+          <script>
+(function () {
+
+    const select = document.getElementById("gm-flex-direction");
+    if (!select) return;
+
+    const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+    function getActiveObjects() {
+        return document.querySelectorAll(ACTIVE_SELECTOR);
+    }
+
+    function getFlexDirection(el) {
+        // inline lebih prioritas
+        const inline = el.style.flexDirection;
+        if (inline && inline.trim() !== "") return inline.trim();
+
+        // hanya valid jika display flex
+        const cs = getComputedStyle(el);
+        if (cs.display.includes("flex")) {
+            return cs.flexDirection || "row";
+        }
+
+        return "";
+    }
+
+    // ==============================
+    // SYNC OBJECT → UI
+    // ==============================
+    function syncFlexDirection() {
+        if (document.activeElement === select) return;
+
+        const active = getActiveObjects();
+
+        if (active.length === 0) {
+            select.value = "row";
+            return;
+        }
+
+        if (active.length === 1) {
+            const val = getFlexDirection(active[0]) || "row";
+            select.value = val;
+            return;
+        }
+
+        // multi-select
+        const values = [...active].map(el => getFlexDirection(el) || "row");
+        const same = values.every(v => v === values[0]);
+        select.value = same ? values[0] : "row";
+    }
+
+    // ==============================
+    // APPLY UI → OBJECT
+    // ==============================
+    select.addEventListener("change", () => {
+        const val = select.value;
+        const active = getActiveObjects();
+
+        active.forEach(el => {
+            const cs = getComputedStyle(el);
+            if (!cs.display.includes("flex")) {
+                el.style.display = "flex";
+            }
+            el.style.flexDirection = val;
+        });
+
+        syncFlexDirection();
+    });
+
+    // ==============================
+    // OBSERVE SELECTION CHANGE
+    // ==============================
+    
+
+    window.addEventListener('gm-active-tick', syncFlexDirection);
+
+    window.gm_syncFlexDirection = syncFlexDirection;
+
+})();
+</script>
+
+        </div>
+
+        <div class="gm-menu-row">
+            <label>Flex-wrap</label>
+            <select id="gm-flex-wrap">
+                <option value="nowrap">nowrap</option>
+                <option value="wrap">wrap</option>
+                <option value="wrap-reverse">wrap-reverse</option>
+            </select>
+            <script>
+                const flexWrapSelect = document.getElementById("gm-flex-wrap");
+                // ambil object aktif
+                function getActiveObject() {
+                    return document.querySelector(".gm-object.gm-active");
+                }
+                // Sinkron dari object → select
+                function updateFlexWrapUI() {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    const computed = getComputedStyle(active);
+                    const wrap = computed.flexWrap || "nowrap";
+                    flexWrapSelect.value = wrap;
+                }
+                // Sinkron dari select → object
+                flexWrapSelect.addEventListener("change", e => {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    active.style.flexWrap = e.target.value;
+                });
+                // Observasi perubahan .gm-active
+                window.addEventListener('gm-active-tick', updateFlexWrapUI);
+            </script>
+        </div>
+        
+        <div class="gm-menu-row">
+            <label>Justify-content</label>
+            <select id="gm-flex-justify">
+                <option value="flex-start">flex-start</option>
+                <option value="center">center</option>
+                <option value="flex-end">flex-end</option>
+                <option value="space-between">space-between</option>
+                <option value="space-around">space-around</option>
+                <option value="space-evenly">space-evenly</option>
+            </select>
+            <script>
+                const flexJustifySelect = document.getElementById("gm-flex-justify");
+                // ambil object aktif
+                function getActiveObject() {
+                    return document.querySelector(".gm-object.gm-active");
+                }
+                // Sinkron dari object → select
+                function updateFlexJustifyUI() {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    const computed = getComputedStyle(active);
+                    let justify = computed.justifyContent || "flex-start";
+                    // Normalisasi nilai default yang tidak cocok dengan option
+                    if (justify === "normal") justify = "flex-start";
+                    if (!["flex-start", "center", "flex-end", "space-between", "space-around", "space-evenly"].includes(justify)) {
+                        justify = "flex-start";
+                    }
+                    flexJustifySelect.value = justify;
+                }
+                // Sinkron dari select → object
+                flexJustifySelect.addEventListener("change", e => {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    active.style.justifyContent = e.target.value;
+                });
+                // Observasi perubahan .gm-active
+                window.addEventListener('gm-active-tick', updateFlexJustifyUI);
+            </script>
+        </div>
+
+        <div class="gm-menu-row">
+            <label>Align-items</label>
+            <select id="gm-flex-align-items">
+                <option value="stretch">stretch</option>
+                <option value="flex-start">flex-start</option>
+                <option value="center">center</option>
+                <option value="flex-end">flex-end</option>
+                <option value="baseline">baseline</option>
+            </select>
+            <script>
+                const flexAlignSelect = document.getElementById("gm-flex-align-items");
+                // ambil object aktif
+                function getActiveObject() {
+                    return document.querySelector(".gm-object.gm-active");
+                }
+                // Sinkron dari object → select
+                function updateFlexAlignUI() {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    const computed = getComputedStyle(active);
+                    let align = computed.alignItems || "stretch";
+                    // Normalisasi nilai bawaan browser
+                    if (align === "normal") align = "stretch";
+                    if (!["stretch", "flex-start", "center", "flex-end", "baseline"].includes(align)) {
+                        align = "stretch";
+                    }
+                    flexAlignSelect.value = align;
+                }
+                // Sinkron dari select → object
+                flexAlignSelect.addEventListener("change", e => {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    active.style.alignItems = e.target.value;
+                });
+                // Observasi perubahan .gm-active
+                window.addEventListener('gm-active-tick', updateFlexAlignUI);
+            </script>
+        </div>
+
+        <div class="gm-menu-row">
+            <!-- Flex Align Content -->
+            <label for="gm-flex-align-content" class="gm-flex-align-content-label">Align Content</label>
+            <select id="gm-flex-align-content">
+                <option value="stretch">stretch</option>
+                <option value="flex-start">flex-start</option>
+                <option value="center">center</option>
+                <option value="flex-end">flex-end</option>
+                <option value="space-between">space-between</option>
+                <option value="space-around">space-around</option>
+            </select>
+            <script>
+                const flexAlignContentSelect = document.getElementById("gm-flex-align-content");
+                const flexAlignContentLabel = document.querySelector(".gm-flex-align-content-label");
+                // ambil object aktif
+                function getActiveObject() {
+                    return document.querySelector(".gm-object.gm-active");
+                }
+                // Normalisasi nilai agar aman
+                function normalizeAlignContent(value) {
+                    if (!value || value === "normal") return "stretch";
+                    const allowed = [
+                        "stretch",
+                        "flex-start",
+                        "center",
+                        "flex-end",
+                        "space-between",
+                        "space-around",
+                    ];
+                    return allowed.includes(value) ? value : "stretch";
+                }
+                // Fungsi utama: update UI berdasarkan object aktif
+                function updateFlexAlignContentUI() {
+                    const active = getActiveObject();
+                    // Jika tidak ada object aktif, sembunyikan
+                    if (!active) {
+                        flexAlignContentSelect.style.display = "none";
+                        flexAlignContentLabel.style.display = "none";
+                        return;
+                    }
+                    const computed = getComputedStyle(active);
+                    // Jika bukan flex container, sembunyikan
+                    if (computed.display !== "flex" && computed.display !== "inline-flex") {
+                        flexAlignContentSelect.style.display = "none";
+                        flexAlignContentLabel.style.display = "none";
+                        return;
+                    }
+                    const wrap = computed.flexWrap || "nowrap";
+                    const alignContent = normalizeAlignContent(computed.alignContent);
+                    // Jika nowrap → sembunyikan
+                    if (wrap === "nowrap") {
+                        flexAlignContentSelect.style.display = "none";
+                        flexAlignContentLabel.style.display = "none";
+                    } else {
+                        flexAlignContentSelect.style.display = "inline-block";
+                        flexAlignContentLabel.style.display = "inline-block";
+                        flexAlignContentSelect.value = alignContent;
+                    }
+                }
+                // Saat user mengganti nilai align-content → terapkan ke object
+                flexAlignContentSelect.addEventListener("change", (e) => {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    active.style.alignContent = e.target.value;
+                });
+                // Sinkron realtime dengan perubahan flex-wrap select
+                if (flexWrapSelect) {
+                    flexWrapSelect.addEventListener("change", () => {
+                        const active = getActiveObject();
+                        if (!active) return;
+                        // Terapkan perubahan flex-wrap ke object aktif
+                        active.style.flexWrap = flexWrapSelect.value;
+                        // Setelah diterapkan, update UI align-content
+                        updateFlexAlignContentUI();
+                    });
+                }
+                // Observasi perubahan class (klik object lain)
+                window.addEventListener('gm-active-tick', updateFlexAlignContentUI);
+            </script>
+        </div>
+
+        <div class="gm-menu-row">
+            <label for="gm-flex-gap">Gap</label>
+            <input type="text" id="gm-flex-gap" placeholder="e.g. 10px" />
+            <script>
+                // Flex Gap Controller (preserve unit + auto select on focus)
+                const flexGapInput = document.getElementById("gm-flex-gap");
+                // Helper: ambil object aktif
+                function getActiveObject() {
+                    return document.querySelector(".gm-object.gm-active");
+                }
+                // Sinkron dari object → input
+                function updateFlexGapUI() {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    const inlineGap = active.style.gap;
+                    if (inlineGap && inlineGap.trim() !== "") {
+                        flexGapInput.value = inlineGap;
+                    } else {
+                        const computed = getComputedStyle(active);
+                        flexGapInput.value = computed.gap || "";
+                    }
+                }
+                // Sinkron dari input → object (realtime)
+                flexGapInput.addEventListener("input", e => {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    active.style.gap = e.target.value;
+                });
+                // Auto-select all saat fokus
+                flexGapInput.addEventListener("focus", e => {
+                    e.target.select();
+                });
+                // Observasi perubahan .gm-active agar update otomatis
+                window.addEventListener('gm-active-tick', updateFlexGapUI);
+            </script>
+        </div>
+    </div>
+    
+    <!-- Item Settings -->
+    <div class="gm-menu-row">
+        <div class="gm-menu-title">Items</div>
+        <div class="gm-menu-row">
+            <label>Align-self</label>
+            <select id="gm-flex-align-self">
+                <option value="auto">auto</option>
+                <option value="flex-start">flex-start</option>
+                <option value="center">center</option>
+                <option value="flex-end">flex-end</option>
+                <option value="stretch">stretch</option>
+                <option value="baseline">baseline</option>
+            </select>
+            <script>
+                const flexAlignSelfSelect = document.getElementById("gm-flex-align-self");
+                // ambil object aktif
+                function getActiveObject() {
+                    return document.querySelector(".gm-object.gm-active");
+                }
+                // Sinkron dari object → select
+                function updateFlexAlignSelfUI() {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    const computed = getComputedStyle(active);
+                    const alignSelf = computed.alignSelf || "auto";
+                    flexAlignSelfSelect.value = alignSelf;
+                }
+                // Sinkron dari select → object (realtime)
+                flexAlignSelfSelect.addEventListener("change", e => {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    active.style.alignSelf = e.target.value;
+                });
+                // Auto-select text saat fokus (opsional agar UX konsisten)
+                flexAlignSelfSelect.addEventListener("focus", e => {
+                    e.target.select?.();
+                });
+                // Observasi perubahan .gm-active agar update otomatis
+                window.addEventListener('gm-active-tick', updateFlexAlignSelfUI);
+            </script>
+        </div>
+
+        <div class="gm-menu-row">
+            <label>Order</label>
+            <input type="number" id="gm-flex-order" min="0" step="1" />
+            <script>
+                const flexOrderInput = document.getElementById("gm-flex-order");
+                // ambil object aktif
+                function getActiveObject() {
+                    return document.querySelector(".gm-object.gm-active");
+                }
+                // Sinkron dari object → input
+                function updateFlexOrderUI() {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    const computed = getComputedStyle(active);
+                    const order = active.style.order || computed.order || "0";
+                    flexOrderInput.value = order;
+                }
+                // Sinkron dari input → object (realtime)
+                flexOrderInput.addEventListener("input", e => {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    // Jika input kosong, set default ke 0
+                    const val = e.target.value.trim();
+                    active.style.order = val === "" ? "0" : val;
+                });
+                // Auto-select seluruh isi saat fokus
+                flexOrderInput.addEventListener("focus", e => {
+                    e.target.select();
+                });
+                // Observasi perubahan .gm-active agar update otomatis
+                window.addEventListener('gm-active-tick', updateFlexOrderUI);
+            </script>
+        </div>
+
+        <div class="gm-menu-row">
+            <label>Flex (shorthand)</label>
+            <input type="text" id="gm-flex-shorthand" placeholder="e.g. 1 1 auto" />
+        </div>
+
+        <div class="gm-menu-row">
+            <label>Flex-grow</label>
+            <input type="number" id="gm-flex-grow" min="0" step="1" />
+        </div>
+
+        <div class="gm-menu-row">
+            <label>Flex-shrink</label>
+            <input type="number" id="gm-flex-shrink" min="0" step="1" />
+        </div>
+
+        <div class="gm-menu-row">
+            <label>Flex-basis</label>
+            <input type="text" id="gm-flex-basis" placeholder="e.g. auto or 50px" />
+        <script>
+            function initFlexPropertiesPanel() {
+                const flexShorthand = document.getElementById("gm-flex-shorthand");
+                const flexGrow = document.getElementById("gm-flex-grow");
+                const flexShrink = document.getElementById("gm-flex-shrink");
+                const flexBasis = document.getElementById("gm-flex-basis");
+                // Ambil elemen aktif
+                function getActiveObject() {
+                    return document.querySelector(".gm-object.gm-active");
+                }
+                // ambil inline terlebih dahulu, lalu fallback ke computed
+                function readStyleValue(active, propCamel, cssPropName) {
+                    if (!active) return "";
+                    // inline style
+                    const inline = active.style[propCamel];
+                    if (inline && String(inline).trim() !== "") return String(inline);
+                    // computed
+                    const computed = getComputedStyle(active);
+                    return computed[cssPropName] || "";
+                }
+                // Apply value ke elemen
+                function applyFlexProperty(propertyCamel, value) {
+                    const active = getActiveObject();
+                    if (!active) return;
+                    if (value === "" || value == null) {
+                        active.style.removeProperty(propertyCamel.replace(/[A-Z]/g, m => "-" + m.toLowerCase()));
+                    } else {
+                        active.style[propertyCamel] = value;
+                    }
+                }
+                // Input → Style Element
+                flexShorthand?.addEventListener("input", e => {
+                    const val = e.target.value.trim();
+                    const active = getActiveObject();
+                    if (!active) return;
+                    // terapkan shorthand
+                    if (val === "") {
+                        active.style.removeProperty("flex");
+                    } else {
+                        active.style.flex = val;
+                    }
+                    // pecah ke bagian individual bila memungkinkan
+                    const parts = val.split(/\s+/).filter(Boolean);
+                    // safe mapping: allow 1, 2 or 3 parts
+                    if (parts.length === 1) {
+                        // e.g. "1" or "auto" -> interpretasi umum: "1 1 0" or "none"? keep simple:
+                        flexGrow.value = parts[0];
+                        flexShrink.value = ""; // biarkan default computed nanti
+                        flexBasis.value = "";
+                    } else if (parts.length === 2) {
+                        flexGrow.value = parts[0];
+                        flexShrink.value = parts[1];
+                        flexBasis.value = "";
+                    } else if (parts.length >= 3) {
+                        flexGrow.value = parts[0];
+                        flexShrink.value = parts[1];
+                        // gabungkan sisa sebagai basis (bisa mengandung spaces jika misal "calc(...)")
+                        flexBasis.value = parts.slice(2).join(" ");
+                    }
+                });
+                flexGrow?.addEventListener("input", e => {
+                    applyFlexProperty("flexGrow", e.target.value);
+                    syncShorthandFromInputs();
+                });
+                flexShrink?.addEventListener("input", e => {
+                    applyFlexProperty("flexShrink", e.target.value);
+                    syncShorthandFromInputs();
+                });
+                flexBasis?.addEventListener("input", e => {
+                    applyFlexProperty("flexBasis", e.target.value);
+                    syncShorthandFromInputs();
+                });
+                // Sinkronisasi Shorthand
+                function syncShorthandFromInputs() {
+                    const g = flexGrow.value !== "" ? flexGrow.value : getDefaultGrow();
+                    const s = flexShrink.value !== "" ? flexShrink.value : getDefaultShrink();
+                    const b = flexBasis.value !== "" ? flexBasis.value : getDefaultBasis();
+                    const active = getActiveObject();
+                    const shorthand = `${g} ${s} ${b}`;
+                    if (flexShorthand) flexShorthand.value = shorthand;
+                    if (active) active.style.flex = shorthand;
+                }
+                function getDefaultGrow() {
+                    return "0";
+                }
+                function getDefaultShrink() {
+                    return "1";
+                }
+                function getDefaultBasis() {
+                    return "auto";
+                }
+                // Style → Update Panel
+                function updatePanelFromActive() {
+                    const active = getActiveObject();
+                    if (!active) {
+                        // tidak ada active: kosongkan atau set default
+                        if (flexShorthand) flexShorthand.value = "";
+                        if (flexGrow) flexGrow.value = "";
+                        if (flexShrink) flexShrink.value = "";
+                        if (flexBasis) flexBasis.value = "";
+                        return;
+                    }
+                    // baca inline dahulu agar unit asli dipertahankan
+                    const inlineFlex = active.style.flex || "";
+                    const inlineGrow = active.style.flexGrow || "";
+                    const inlineShrink = active.style.flexShrink || "";
+                    const inlineBasis = active.style.flexBasis || "";
+                    if (flexShorthand) {
+                        flexShorthand.value = inlineFlex || getComputedStyle(active).flex || "";
+                    }
+                    if (flexGrow) {
+                        flexGrow.value = inlineGrow || getComputedStyle(active).flexGrow || "";
+                    }
+                    if (flexShrink) {
+                        flexShrink.value = inlineShrink || getComputedStyle(active).flexShrink || "";
+                    }
+                    if (flexBasis) {
+                        // basis harus prefer inline supaya unit preserved; fallback ke computed
+                        flexBasis.value = inlineBasis || getComputedStyle(active).flexBasis || "";
+                    }
+                }
+                // Keep UI in sync events
+                window.addEventListener('gm-active-tick', updatePanelFromActive);
+            }
+            // Inisialisasi panel setelah DOM siap
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", initFlexPropertiesPanel);
+            } else {
+                initFlexPropertiesPanel();
+            }
+        </script>
+        </div>
+    </div>
+</div>

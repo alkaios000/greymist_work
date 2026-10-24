@@ -1,0 +1,65 @@
+{
+    "total_files": 205,
+    "total_lines": 582775,
+    "total_blank": 22648,
+    "total_comments": 3101,
+    "total_code": 557026,
+    "by_extension": {
+        "php": {
+            "files": 44,
+            "total": 10969,
+            "code": 9355,
+            "blank": 1313,
+            "comment": 301
+        },
+        "py": {
+            "files": 3,
+            "total": 130,
+            "code": 106,
+            "blank": 19,
+            "comment": 5
+        },
+        "css": {
+            "files": 39,
+            "total": 50942,
+            "code": 34710,
+            "blank": 15910,
+            "comment": 322
+        },
+        "html": {
+            "files": 47,
+            "total": 16951,
+            "code": 13293,
+            "blank": 2986,
+            "comment": 672
+        },
+        "js": {
+            "files": 60,
+            "total": 43307,
+            "code": 39133,
+            "blank": 2373,
+            "comment": 1801
+        },
+        "txt": {
+            "files": 3,
+            "total": 111,
+            "code": 99,
+            "blank": 12,
+            "comment": 0
+        },
+        "json": {
+            "files": 8,
+            "total": 460271,
+            "code": 460269,
+            "blank": 2,
+            "comment": 0
+        },
+        "md": {
+            "files": 1,
+            "total": 94,
+            "code": 61,
+            "blank": 33,
+            "comment": 0
+        }
+    }
+}

@@ -1,0 +1,34 @@
+/* BACKGROUND POSITION */
+
+/* TOP */
+.bg-p-tc {
+    background-position: top center;
+}
+.bg-p-tr {
+    background-position: top right;
+}
+.bg-p-tl {
+    background-position: top left;
+}
+
+/* CENTER */
+.bg-p-cc {
+    background-position: center center;
+}
+.bg-p-cr {
+    background-position: center right;
+}
+.bg-p-cl {
+    background-position: center left;
+}
+
+/* CENTER */
+.bg-p-bc {
+    background-position: bottom center;
+}
+.bg-p-br {
+    background-position: bottom right;
+}
+.bg-p-bl {
+    background-position: bottom left;
+}

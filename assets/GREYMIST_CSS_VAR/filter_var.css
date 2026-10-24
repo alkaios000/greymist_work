@@ -1,0 +1,56 @@
+/* FILTER */
+
+/* Blur (Kabur) */
+.f-blur-0 { filter: blur(0px); }  /* Tidak ada blur */
+.f-blur-1 { filter: blur(1px); }
+.f-blur-2 { filter: blur(2px); }
+.f-blur-5 { filter: blur(5px); }
+.f-blur-10 { filter: blur(10px); }
+
+/* Brightness (Kecerahan) */
+.f-bright-0 { filter: brightness(0); }  /* Hitam pekat */
+.f-bright-50 { filter: brightness(50%); }
+.f-bright-100 { filter: brightness(100%); }  /* Normal */
+.f-bright-150 { filter: brightness(150%); }
+.f-bright-200 { filter: brightness(200%); }  /* Lebih cerah */
+
+/* Contrast (Kontras) */
+.f-contrast-0 { filter: contrast(0%); }  /* Tanpa kontras */
+.f-contrast-50 { filter: contrast(50%); }
+.f-contrast-100 { filter: contrast(100%); }  /* Normal */
+.f-contrast-150 { filter: contrast(150%); }
+.f-contrast-200 { filter: contrast(200%); }  /* Kontras tinggi */
+
+/* Grayscale (Hitam Putih) */
+.f-gray-0 { filter: grayscale(0%); }  /* Warna asli */
+.f-gray-50 { filter: grayscale(50%); }
+.f-gray-100 { filter: grayscale(100%); }  /* Hitam putih penuh */
+
+/* Hue Rotate (Putar Warna) */
+.f-hue-0 { filter: hue-rotate(0deg); }  /* Warna asli */
+.f-hue-90 { filter: hue-rotate(90deg); }
+.f-hue-180 { filter: hue-rotate(180deg); }
+.f-hue-270 { filter: hue-rotate(270deg); }
+
+/* Invert (Balik Warna) */
+.f-invert-0 { filter: invert(0%); }  /* Warna asli */
+.f-invert-50 { filter: invert(50%); }
+.f-invert-100 { filter: invert(100%); }  /* Warna terbalik total */
+
+/* Opacity (Transparansi) */
+.f-opacity-0 { filter: opacity(0%); }  /* Tak terlihat */
+.f-opacity-25 { filter: opacity(25%); }
+.f-opacity-50 { filter: opacity(50%); }
+.f-opacity-75 { filter: opacity(75%); }
+.f-opacity-100 { filter: opacity(100%); }  /* Tampilan penuh */
+
+/* Saturation (Kejenuhan Warna) */
+.f-saturate-0 { filter: saturate(0%); }  /* Hitam putih */
+.f-saturate-50 { filter: saturate(50%); }
+.f-saturate-100 { filter: saturate(100%); }  /* Normal */
+.f-saturate-200 { filter: saturate(200%); }  /* Warna lebih kuat */
+
+/* Sepia (Efek Coklat Klasik) */
+.f-sepia-0 { filter: sepia(0%); }  /* Warna asli */
+.f-sepia-50 { filter: sepia(50%); }
+.f-sepia-100 { filter: sepia(100%); }  /* Efek sepia penuh */

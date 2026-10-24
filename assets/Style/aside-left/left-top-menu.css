@@ -1,0 +1,9 @@
+.gm-app-main-menu {
+    width: 100% !important;
+
+}
+
+.gm-menu {
+    display: flex;
+    width: 300%;
+}

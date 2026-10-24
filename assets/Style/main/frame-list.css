@@ -1,0 +1,137 @@
+ /* Menu Frame Fixed di bagian atas kontainer utama */
+ .gm-frame-menu {
+   display: flex;
+   align-items: center;
+   padding: 0 10px;
+   background-color: #ffffff;
+   border-bottom: 1px solid rgb(231, 231, 231);
+   position: fixed;
+   top: 0;
+   left: 250px;
+   right: 250px;
+   z-index: 10;
+   height: 90px;
+   z-index: 1;
+   transition: 0.3s ease-in-out;
+ }
+
+ .gm-frame-menu.hide {
+   transform: translateY(-90px);
+ }
+
+ .gm-frame-thumbnails::-webkit-scrollbar {
+   display: none;
+ }
+
+ .gm-frame-thumbnails {
+   padding: 10px 0;
+   display: flex;
+   gap: 10px;
+   overflow-x: scroll;
+   flex-grow: 1;
+   align-items: center;
+   height: 100%;
+ }
+
+ .gm-frame-thumbnail {
+   box-shadow: -1px 1px 5px 2px rgba(17, 17, 26, 0.1);
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   border: 1px solid #e3e7ef;
+   border-radius: 4px;
+   /* padding: 5px; */
+   cursor: pointer;
+   width: 107px;
+   min-width: 107px;
+   max-width: 107px;
+   height: 100%;
+   background-color: #fff;
+   font-size: 0.7em;
+ }
+
+ .sortable-ghost {
+   opacity: 0.5;
+   background: #ddd;
+ }
+
+
+ .gm-frame-thumbnail.actived {
+   border: 2px solid #9ad0ff;
+   box-shadow: -1px 1px 5px 2px rgba(185, 214, 246, 0.408);
+
+ }
+
+ .gm-frame-thumbnail .gm-preview-box {
+   width: 100%;
+   height: 60px;
+   background-color: #f0f2f6;
+   position: relative;
+   overflow: hidden;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+ }
+
+ .gm-frame-thumbnail .gm-frame-name {
+   font-size: 0.9em;
+   width: 100%;
+   height: 25%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   white-space: nowrap;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   padding: 0 4px;
+   box-sizing: border-box;
+   text-align: center;
+ }
+
+ .gm-add-frame-btn {
+   font-size: 1.5em;
+   background-color: #ffffff;
+   color: #000000;
+   border: none;
+   /* padding: 5px 10px; */
+   cursor: pointer;
+   box-shadow: 0px 1px 4px 0px rgba(0, 0, 0, 0.16);
+   border-radius: 50%;
+   width: 40px;
+   height: 40px;
+   position: absolute;
+   right: 1em;
+   transition: 0.2s ease-in-out;
+ }
+
+ .gm-add-frame-btn:hover {
+   background-color: rgb(232, 232, 232);
+   transition: 0.2s ease-in-out;
+   /* color: white; */
+ }
+
+ .gm-hide-frame-btn {
+   /* font-size: 1.5em; */
+   background-color: #ffffff;
+   color: #000000;
+   border: none;
+   /* padding: 5px 10px; */
+   cursor: pointer;
+   /* box-shadow: 0px 1px 4px 0px rgba(0,0,0,0.16); */
+   /* border-radius: 50%; */
+   width: 40px;
+   height: 20px;
+   position: absolute;
+   right: 2em;
+   margin-top: 112px;
+   border-radius: 0 0 100% 100%;
+   z-index: 0;
+   transition: 0.2s ease-in-out;
+   font-size: 0.7em;
+ }
+
+ .gm-hide-frame-btn:hover {
+   background-color: rgb(232, 232, 232);
+   transition: 0.2s ease-in-out;
+   /* color: white; */
+ }

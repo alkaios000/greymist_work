@@ -1,0 +1,67 @@
+<div class="gm-object-attribute">
+    <button id="gm-hide-attribute-frame"><i class="fas fa-angle-up"></i></button>
+
+    <div class="gm-menu-bottom-frame">
+        <div class="bottom-menu">Attribute</div>
+        <div class="bottom-menu">Action</div>
+        <div class="bottom-menu">Animasi</div>
+        <div class="bottom-menu">Menu 4</div>
+        <div class="bottom-menu">Menu 5</div>
+    </div>
+
+    <div class="gm-menu-bottom-content">
+        <div class="gm-content-bottom-menu gm-content-attribute"
+            style="flex-direction: row; gap: 0.5em; flex-wrap: wrap;">
+
+            <?php include 'part/main/frame/attribute/object-attribute.html'; ?>
+            
+        </div>
+
+        <div class="gm-content-bottom-menu">
+            <?php include 'part/main/frame/attribute/object-action.html'; ?>
+        </div>
+        <div class="gm-content-bottom-menu">
+            <?php include 'part/main/frame/attribute/object-animation.html'; ?>
+        </div>
+        <div class="gm-content-bottom-menu">4</div>
+        <div class="gm-content-bottom-menu">5</div>
+    </div>
+</div>
+
+<script>
+    (function () {
+
+        const btn = document.getElementById('gm-hide-attribute-frame');
+        const panel = document.querySelector('.gm-object-attribute');
+        const icon = btn ? btn.querySelector('i') : null;
+
+        if (!btn || !panel || !icon) return;
+
+        // default state: tenggelam
+        let isShown = false;
+
+        // set posisi awal (aman kalau CSS belum jalan)
+        panel.style.transform = 'translateY(200px)';
+        icon.classList.remove('fa-angle-down');
+        icon.classList.add('fa-angle-up');
+
+        btn.addEventListener('click', function () {
+
+            isShown = !isShown;
+
+            if (isShown) {
+                // naik ke atas
+                panel.style.transform = 'translateY(0)';
+                icon.classList.remove('fa-angle-up');
+                icon.classList.add('fa-angle-down');
+            } else {
+                // turun lagi
+                panel.style.transform = 'translateY(200px)';
+                icon.classList.remove('fa-angle-down');
+                icon.classList.add('fa-angle-up');
+            }
+
+        });
+
+    })();
+</script>

@@ -1,0 +1,1319 @@
+<div class="gm-panelstyle-menu">
+    <!-- === Size & Dimensions === -->
+    <div class="gm-menu-section">
+        <div class="gm-menu-title">Size</div>
+
+        <div class="gm-menu-row gm-row-pair">
+            <div>
+                <label for="width">Width</label>
+                <input type="text" id="width" placeholder="0">
+            </div>
+            <div>
+                <label for="min-width">Min Width</label>
+                <input type="text" id="min-width" placeholder="0">
+            </div>
+            <div>
+                <label for="max-width">Max Width</label>
+                <input type="text" id="max-width" placeholder="0">
+            </div>
+            <script>
+                (function () {
+                    const minInput = document.getElementById("min-width");
+                    const maxInput = document.getElementById("max-width");
+
+                    if (!minInput || !maxInput) return;
+
+                    const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                    function getActiveObjects() {
+                        return document.querySelectorAll(ACTIVE_SELECTOR);
+                    }
+
+                    // Ambil inline supaya satuan asli tetap (px, em, %, dll)
+                    function getInline(el, prop) {
+                        const val = el.style[prop];
+                        return (val && val.trim() !== "") ? val.trim() : "";
+                    }
+
+                    function getRawWidth(el) {
+                        const inline = el.style.width;
+
+                        // Jika inline ada → gunakan inline (misal %, vw, em tetap aman)
+                        if (inline && inline.trim() !== "") {
+                            // Tetapi pastikan masih tidak melewati min/max
+                            const min = el.style.minWidth ? parseFloat(el.style.minWidth) : null;
+                            const max = el.style.maxWidth ? parseFloat(el.style.maxWidth) : null;
+                            const current = parseFloat(window.getComputedStyle(el).width);
+
+                            if (min !== null && current <= min) return el.style.minWidth;
+                            if (max !== null && current >= max) return el.style.maxWidth;
+
+                            return inline.trim();
+                        }
+
+                        // Default → computed width (agar min/max berfungsi normal)
+                        return window.getComputedStyle(el).width;
+                    }
+
+                    // ======================================================
+                    // SYNC MIN WIDTH
+                    // ======================================================
+                    function syncMinWidth() {
+                        if (document.activeElement === minInput) return;
+
+                        const active = getActiveObjects();
+                        if (active.length === 0) {
+                            minInput.value = "";
+                            return;
+                        }
+
+                        if (active.length === 1) {
+                            minInput.value = getInline(active[0], "minWidth");
+                            return;
+                        }
+
+                        const values = [...active].map(el => getInline(el, "minWidth"));
+                        const same = values.every(v => v === values[0]);
+
+                        minInput.value = same ? values[0] : "";
+                    }
+
+                    // ======================================================
+                    // SYNC MAX WIDTH
+                    // ======================================================
+                    function syncMaxWidth() {
+                        if (document.activeElement === maxInput) return;
+
+                        const active = getActiveObjects();
+                        if (active.length === 0) {
+                            maxInput.value = "";
+                            return;
+                        }
+
+                        if (active.length === 1) {
+                            maxInput.value = getInline(active[0], "maxWidth");
+                            return;
+                        }
+
+                        const values = [...active].map(el => getInline(el, "maxWidth"));
+                        const same = values.every(v => v === values[0]);
+
+                        maxInput.value = same ? values[0] : "";
+                    }
+
+                    // ======================================================
+                    // APPLY MIN WIDTH (ENTER)
+                    // ======================================================
+                    minInput.addEventListener("keydown", e => {
+                        if (e.key !== "Enter") return;
+
+                        let val = minInput.value.trim();
+                        if (/^\d+$/.test(val)) val += "px";
+
+                        const active = getActiveObjects();
+                        active.forEach(el => {
+                            el.style.minWidth = val;
+
+                            // clamp: jika width < min → width = min
+                            const w = parseFloat(window.getComputedStyle(el).width);
+                            const minW = parseFloat(val);
+                            if (!isNaN(w) && !isNaN(minW) && w < minW) {
+                                el.style.width = val;
+                            }
+                        });
+
+                        requestAnimationFrame(() => {
+                            syncMinWidth();
+                            syncMaxWidth();
+                        });
+                        minInput.blur();
+                    });
+
+                    // ======================================================
+                    // APPLY MAX WIDTH (ENTER)
+                    // ======================================================
+                    maxInput.addEventListener("keydown", e => {
+                        if (e.key !== "Enter") return;
+
+                        let val = maxInput.value.trim();
+                        if (/^\d+$/.test(val)) val += "px";
+
+                        const active = getActiveObjects();
+                        active.forEach(el => {
+                            el.style.maxWidth = val;
+
+                            // clamp: jika width > max → width = max
+                            const w = parseFloat(window.getComputedStyle(el).width);
+                            const maxW = parseFloat(val);
+                            if (!isNaN(w) && !isNaN(maxW) && w > maxW) {
+                                el.style.width = val;
+                            }
+                        });
+
+                        requestAnimationFrame(() => {
+                            syncMinWidth();
+                            syncMaxWidth();
+                        });
+                        maxInput.blur();
+                    });
+
+                    // ======================================================
+                    // TRIGGER SYNC
+                    // ======================================================
+                    function syncAll() {
+                        syncMinWidth();
+                        syncMaxWidth();
+                    }
+
+                    document.addEventListener("click", () => {
+                        requestAnimationFrame(syncAll);
+                    }, true);
+
+                    document.addEventListener("gm-selection-change", () => {
+                        requestAnimationFrame(syncAll);
+                    });
+
+                    window.addEventListener('gm-active-tick', syncAll);
+
+                    requestAnimationFrame(syncAll);
+
+                    window.gm_syncMinMaxWidth = syncAll;
+                })();
+            </script>
+            <script>
+                // ===============================
+                // Realtime sync for #width input
+                // - fills immediately when .gm-active changes
+                // - supports multi-select (mixed -> empty)
+                // - won't overwrite while user is typing (input focused)
+                // - listens to clicks, custom events, and DOM mutations
+                // ===============================
+
+                (function () {
+                    const widthInput = document.getElementById("width");
+                    if (!widthInput) return;
+
+                    // -------------------------------
+                    // Helpers
+                    // -------------------------------
+                    const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                    function getActiveObjects() {
+                        return document.querySelectorAll(ACTIVE_SELECTOR);
+                    }
+
+                    function getComputedStyleValue(el, prop) {
+                        return window.getComputedStyle(el)[prop];
+                    }
+
+                    function getRawWidth(el) {
+                        // 1. Ambil inline style dulu (ini mempertahankan satuan asli)
+                        const inline = el.style.width;
+                        if (inline && inline.trim() !== "") return inline.trim();
+
+                        // 2. Jika tidak ada inline → fallback ke computed (px)
+                        return window.getComputedStyle(el).width;
+                    }
+
+                    function syncWidthInput() {
+                        if (document.activeElement === widthInput) return;
+
+                        const active = getActiveObjects();
+                        if (active.length === 0) {
+                            widthInput.value = "";
+                            return;
+                        }
+
+                        if (active.length === 1) {
+                            widthInput.value = getRawWidth(active[0]);
+                            return;
+                        }
+
+                        // multi-select
+                        const widths = [...active].map(el => getRawWidth(el));
+                        const allSame = widths.every(w => w === widths[0]);
+                        widthInput.value = allSame ? widths[0] : "";
+                    }
+
+
+                    // -------------------------------
+                    // Apply on Enter
+                    // -------------------------------
+                    widthInput.addEventListener("keydown", (e) => {
+                        if (e.key === "Enter") {
+                            let val = widthInput.value.trim();
+
+                            if (val === "") return; // nothing to do
+
+                            // add px if numeric only
+                            if (/^\d+$/.test(val)) val += "px";
+
+                            const actives = getActiveObjects();
+                            actives.forEach(obj => {
+                                obj.style.width = val;
+                            });
+
+                            // after applying, re-sync (in case computed value differs)
+                            requestAnimationFrame(syncWidthInput);
+                            widthInput.blur();
+                        }
+                    });
+
+                    // -------------------------------
+                    // Listen for selection changes:
+                    // 1) clicks (capture phase) -> sync after frame
+                    // 2) custom event 'gm-selection-change' (if your app emits it)
+                    // 3) mutation observer to detect class changes / node add/remove
+                    // -------------------------------
+
+                    // 1) Clicks (use capture so we run early, but still wait a frame to let other handlers set classes)
+                    document.addEventListener("click", () => {
+                        requestAnimationFrame(syncWidthInput);
+                    }, true);
+
+                    // 2) Custom event (if your selection system emits it)
+                    document.addEventListener("gm-selection-change", () => {
+                        requestAnimationFrame(syncWidthInput);
+                    });
+
+                    // 3) MutationObserver - observe body subtree for class changes / added/removed nodes
+                    window.addEventListener('gm-active-tick', syncWidthInput);
+
+                    // initial sync
+                    requestAnimationFrame(syncWidthInput);
+
+                    // Expose a manual sync method (optional)
+                    window.gm_syncWidthInput = syncWidthInput;
+                })();
+
+            </script>
+        </div>
+
+        <div class="gm-menu-row gm-row-pair">
+            <div>
+                <label for="height">Height</label>
+                <input type="text" id="height" placeholder="0">
+            </div>
+            <div>
+                <label for="min-height">Min Height</label>
+                <input type="text" id="min-height" placeholder="0">
+            </div>
+            <div>
+                <label for="max-height">Max Height</label>
+                <input type="text" id="max-height" placeholder="0">
+            </div>
+            <script>
+                (function () {
+                    const minInput = document.getElementById("min-height");
+                    const maxInput = document.getElementById("max-height");
+
+                    if (!minInput || !maxInput) return;
+
+                    const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                    function getActiveObjects() {
+                        return document.querySelectorAll(ACTIVE_SELECTOR);
+                    }
+
+                    // Ambil inline supaya satuan asli tetap (px, %, em, dsb)
+                    function getInline(el, prop) {
+                        const val = el.style[prop];
+                        return (val && val.trim() !== "") ? val.trim() : "";
+                    }
+
+                    // ================================================
+                    // RAW HEIGHT (stabil, tidak tembus min/max)
+                    // ================================================
+                    function getRawHeight(el) {
+                        const inline = el.style.height;
+
+                        if (inline && inline.trim() !== "") {
+                            const min = el.style.minHeight ? parseFloat(el.style.minHeight) : null;
+                            const max = el.style.maxHeight ? parseFloat(el.style.maxHeight) : null;
+                            const current = parseFloat(window.getComputedStyle(el).height);
+
+                            if (min !== null && current <= min) return el.style.minHeight;
+                            if (max !== null && current >= max) return el.style.maxHeight;
+
+                            return inline.trim();
+                        }
+
+                        return window.getComputedStyle(el).height;
+                    }
+
+                    // ================================================
+                    // SYNC MIN HEIGHT
+                    // ================================================
+                    function syncMinHeight() {
+                        if (document.activeElement === minInput) return;
+
+                        const active = getActiveObjects();
+                        if (active.length === 0) {
+                            minInput.value = "";
+                            return;
+                        }
+
+                        if (active.length === 1) {
+                            minInput.value = getInline(active[0], "minHeight");
+                            return;
+                        }
+
+                        const values = [...active].map(el => getInline(el, "minHeight"));
+                        const same = values.every(v => v === values[0]);
+
+                        minInput.value = same ? values[0] : "";
+                    }
+
+                    // ================================================
+                    // SYNC MAX HEIGHT
+                    // ================================================
+                    function syncMaxHeight() {
+                        if (document.activeElement === maxInput) return;
+
+                        const active = getActiveObjects();
+                        if (active.length === 0) {
+                            maxInput.value = "";
+                            return;
+                        }
+
+                        if (active.length === 1) {
+                            maxInput.value = getInline(active[0], "maxHeight");
+                            return;
+                        }
+
+                        const values = [...active].map(el => getInline(el, "maxHeight"));
+                        const same = values.every(v => v === values[0]);
+
+                        maxInput.value = same ? values[0] : "";
+                    }
+
+                    // ================================================
+                    // APPLY MIN HEIGHT (ENTER)
+                    // ================================================
+                    minInput.addEventListener("keydown", e => {
+                        if (e.key !== "Enter") return;
+
+                        let val = minInput.value.trim();
+                        if (/^\d+$/.test(val)) val += "px";
+
+                        const active = getActiveObjects();
+                        active.forEach(el => {
+                            el.style.minHeight = val;
+
+                            // clamp jika height < min
+                            const h = parseFloat(window.getComputedStyle(el).height);
+                            const minH = parseFloat(val);
+                            if (!isNaN(h) && !isNaN(minH) && h < minH) {
+                                el.style.height = val;
+                            }
+                        });
+
+                        requestAnimationFrame(() => {
+                            syncMinHeight();
+                            syncMaxHeight();
+                        });
+
+                        minInput.blur();
+                    });
+
+                    // ================================================
+                    // APPLY MAX HEIGHT (ENTER)
+                    // ================================================
+                    maxInput.addEventListener("keydown", e => {
+                        if (e.key !== "Enter") return;
+
+                        let val = maxInput.value.trim();
+                        if (/^\d+$/.test(val)) val += "px";
+
+                        const active = getActiveObjects();
+                        active.forEach(el => {
+                            el.style.maxHeight = val;
+
+                            // clamp jika height > max
+                            const h = parseFloat(window.getComputedStyle(el).height);
+                            const maxH = parseFloat(val);
+                            if (!isNaN(h) && !isNaN(maxH) && h > maxH) {
+                                el.style.height = val;
+                            }
+                        });
+
+                        requestAnimationFrame(() => {
+                            syncMinHeight();
+                            syncMaxHeight();
+                        });
+
+                        maxInput.blur();
+                    });
+
+                    // ================================================
+                    // TRIGGER SYNC
+                    // ================================================
+                    function syncAll() {
+                        syncMinHeight();
+                        syncMaxHeight();
+                    }
+
+                    document.addEventListener("click", () => {
+                        requestAnimationFrame(syncAll);
+                    }, true);
+
+                    document.addEventListener("gm-selection-change", () => {
+                        requestAnimationFrame(syncAll);
+                    });
+
+                    window.addEventListener('gm-active-tick', syncAll);
+
+                    requestAnimationFrame(syncAll);
+
+                    window.gm_syncMinMaxHeight = syncAll;
+                })();
+            </script>
+            <script>
+                // ============================================================
+                // HEIGHT SYSTEM (mirip width, namun properti: height)
+                // ============================================================
+
+                (function () {
+                    const heightInput = document.getElementById("height");
+                    if (!heightInput) return;
+
+                    const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                    function getActiveObjects() {
+                        return document.querySelectorAll(ACTIVE_SELECTOR);
+                    }
+
+                    function getRawHeight(el) {
+                        // 1. ambil inline (pertahankan satuan asli)
+                        const inline = el.style.height;
+                        if (inline && inline.trim() !== "") return inline.trim();
+
+                        // 2. fallback computed (px)
+                        return window.getComputedStyle(el).height;
+                    }
+
+                    // Sync input value berdasarkan object active
+                    function syncHeightInput() {
+                        if (document.activeElement === heightInput) return;
+
+                        const active = getActiveObjects();
+                        if (active.length === 0) {
+                            heightInput.value = "";
+                            return;
+                        }
+
+                        if (active.length === 1) {
+                            heightInput.value = getRawHeight(active[0]);
+                            return;
+                        }
+
+                        const heights = [...active].map(el => getRawHeight(el));
+                        const allSame = heights.every(h => h === heights[0]);
+
+                        heightInput.value = allSame ? heights[0] : "";
+                    }
+
+                    // Apply saat Enter
+                    heightInput.addEventListener("keydown", e => {
+                        if (e.key === "Enter") {
+                            let val = heightInput.value.trim();
+
+                            // auto px kalau angka murni
+                            if (/^\d+$/.test(val)) val += "px";
+
+                            getActiveObjects().forEach(obj => {
+                                obj.style.height = val;
+                            });
+
+                            requestAnimationFrame(syncHeightInput);
+                            heightInput.blur();
+                        }
+                    });
+
+                    // Listener klik
+                    document.addEventListener("click", () => {
+                        requestAnimationFrame(syncHeightInput);
+                    }, true);
+
+                    // Listener custom event (jika ada)
+                    document.addEventListener("gm-selection-change", syncHeightInput);
+
+                    // MutationObserver untuk deteksi perubahan .gm-active
+                    window.addEventListener('gm-active-tick', syncHeightInput);
+
+                    requestAnimationFrame(syncHeightInput);
+                })();
+
+            </script>
+        </div>
+    </div>
+
+    <!-- === Position === -->
+    <div class="gm-menu-section gm-menu-row">
+        <div class="gm-menu-title">Position</div>
+        <select id="position">
+            <option value="static">Static</option>
+            <option value="relative">Relative</option>
+            <option value="absolute">Absolute</option>
+            <option value="fixed">Fixed</option>
+            <option value="sticky">Sticky</option>
+        </select>
+        <script>
+            (function () {
+                const positionSelect = document.getElementById("position");
+                if (!positionSelect) return;
+
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // Ambil inline supaya lebih akurat (static/relative/absolute/sticky)
+                function getInline(el, prop) {
+                    const val = el.style[prop];
+                    return (val && val.trim() !== "") ? val.trim() : "";
+                }
+
+                // ========================================
+                // SYNC POSITION
+                // ========================================
+                function syncPosition() {
+                    if (document.activeElement === positionSelect) return;
+
+                    const active = getActiveObjects();
+
+                    if (active.length === 0) {
+                        positionSelect.value = "static";
+                        return;
+                    }
+
+                    if (active.length === 1) {
+                        const val = getInline(active[0], "position") || window.getComputedStyle(active[0]).position;
+                        positionSelect.value = val;
+                        return;
+                    }
+
+                    // Multi-select: cek apakah semua sama
+                    const values = [...active].map(el =>
+                        getInline(el, "position") || window.getComputedStyle(el).position
+                    );
+
+                    const same = values.every(v => v === values[0]);
+                    positionSelect.value = same ? values[0] : "static"; // default fallback
+                }
+
+                // ========================================
+                // APPLY POSITION (CHANGE)
+                // ========================================
+                positionSelect.addEventListener("change", () => {
+                    const val = positionSelect.value;
+                    const active = getActiveObjects();
+                    active.forEach(el => (el.style.position = val));
+
+                    requestAnimationFrame(syncPosition);
+                });
+
+                // ========================================
+                // APPLY WITH ENTER (optional)
+                // ========================================
+                positionSelect.addEventListener("keydown", e => {
+                    if (e.key !== "Enter") return;
+
+                    const val = positionSelect.value;
+                    const active = getActiveObjects();
+                    active.forEach(el => (el.style.position = val));
+
+                    positionSelect.blur();
+                    requestAnimationFrame(syncPosition);
+                });
+
+                // ========================================
+                // Trigger sync
+                // ========================================
+                document.addEventListener("click", () => {
+                    requestAnimationFrame(syncPosition);
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(syncPosition);
+                });
+
+                window.addEventListener('gm-active-tick', syncPosition);
+
+                requestAnimationFrame(syncPosition);
+
+                window.gm_syncPosition = syncPosition;
+            })();
+        </script>
+    </div>
+
+    <!-- === Margin & Padding === -->
+    <div class="gm-menu-section">
+        <div class="gm-menu-title">Margin</div>
+        <div class="gm-row-pair gm-menu-row">
+            <div>
+                <label for="margin-shorthand">Shorthand</label>
+                <input type="text" id="margin-shorthand" placeholder="-">
+            </div>
+        </div>
+
+        <div class="gm-row-pair gm-menu-row">
+            <div>
+                <label for="margin-top">Top</label>
+                <input type="text" id="margin-top" placeholder="-">
+            </div>
+            <div>
+                <label for="margin-right">Right</label>
+                <input type="text" id="margin-right" placeholder="-">
+            </div>
+
+            <div>
+                <label for="margin-bottom">Bottom</label>
+                <input type="text" id="margin-bottom" placeholder="-">
+            </div>
+            <div>
+                <label for="margin-left">Left</label>
+                <input type="text" id="margin-left" placeholder="-">
+            </div>
+        </div>
+        <script>
+            (function () {
+                // elements
+                const inSh = document.getElementById("margin-shorthand");
+                const inTop = document.getElementById("margin-top");
+                const inRight = document.getElementById("margin-right");
+                const inBottom = document.getElementById("margin-bottom");
+                const inLeft = document.getElementById("margin-left");
+
+                if (!inSh || !inTop || !inRight || !inBottom || !inLeft) return;
+
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                let marginLock = false;
+
+                // ---------- util ----------
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // normalize on Enter/change: numeric -> px, else keep
+                function normalizeUnit(v) {
+                    if (!v) return "";
+                    v = v.trim();
+                    if (/^-?\d+(\.\d+)?$/.test(v)) return v + "px";
+                    return v;
+                }
+
+                // read inline if present else computed (so panel shows meaningful values)
+                function readMarginValue(el, prop) {
+                    const inline = el.style[prop];
+                    if (inline && inline.trim() !== "") return inline.trim();
+                    return window.getComputedStyle(el)[prop] || "";
+                }
+
+                // apply current per-side inputs to all active objects
+                function applyMarginToActive() {
+                    const nodes = getActiveObjects();
+                    if (!nodes.length) return;
+                    nodes.forEach(obj => {
+                        // write exactly what's in inputs (they should be normalized on Enter/change)
+                        obj.style.marginTop = inTop.value || "";
+                        obj.style.marginRight = inRight.value || "";
+                        obj.style.marginBottom = inBottom.value || "";
+                        obj.style.marginLeft = inLeft.value || "";
+                    });
+                }
+
+                // ---------- shorthand → sides ----------
+                function expandShorthandToSides(shVal, doApply = true) {
+                    if (marginLock) return;
+                    marginLock = true;
+
+                    const raw = (shVal || "").trim();
+                    if (!raw) {
+                        inTop.value = inRight.value = inBottom.value = inLeft.value = "";
+                        marginLock = false;
+                        if (doApply) applyMarginToActive();
+                        return;
+                    }
+
+                    const parts = raw.split(/\s+/).map(p => p.trim()).filter(Boolean).map(normalizeUnit);
+
+                    if (parts.length === 1) {
+                        inTop.value = inRight.value = inBottom.value = inLeft.value = parts[0];
+                    } else if (parts.length === 2) {
+                        inTop.value = inBottom.value = parts[0];
+                        inRight.value = inLeft.value = parts[1];
+                    } else if (parts.length === 3) {
+                        inTop.value = parts[0];
+                        inRight.value = inLeft.value = parts[1];
+                        inBottom.value = parts[2];
+                    } else {
+                        inTop.value = parts[0] || "";
+                        inRight.value = parts[1] || "";
+                        inBottom.value = parts[2] || "";
+                        inLeft.value = parts[3] || "";
+                    }
+
+                    marginLock = false;
+                    if (doApply) applyMarginToActive();
+                }
+
+                // Enter on shorthand => normalize + expand + apply
+                inSh.addEventListener("keydown", e => {
+                    if (e.key === "Enter") {
+                        inSh.value = normalizeUnit(inSh.value);
+                        expandShorthandToSides(inSh.value, true);
+                        inSh.blur();
+                    }
+                });
+                // also apply on change/paste
+                inSh.addEventListener("change", () => {
+                    inSh.value = normalizeUnit(inSh.value);
+                    expandShorthandToSides(inSh.value, true);
+                });
+
+                // ---------- sides → shorthand ----------
+                function updateShorthandFromSides(doApply = true) {
+                    if (marginLock) return;
+                    marginLock = true;
+
+                    // normalize current side inputs (but do not change while user is actively typing in that field)
+                    // We'll normalize on Enter/change; for live input, don't force-add "px"
+                    const t = inTop.value.trim();
+                    const r = inRight.value.trim();
+                    const b = inBottom.value.trim();
+                    const l = inLeft.value.trim();
+
+                    // Determine shorthand form (prefer shortest)
+                    let sh = "";
+                    if (!t && !r && !b && !l) {
+                        sh = "";
+                    } else {
+                        // we want to use normalized values in shorthand, but only normalize numbers -> px, preserve others
+                        const nt = /^\-?\d+(\.\d+)?$/.test(t) ? (t + "px") : t || "0px";
+                        const nr = /^\-?\d+(\.\d+)?$/.test(r) ? (r + "px") : r || "0px";
+                        const nb = /^\-?\d+(\.\d+)?$/.test(b) ? (b + "px") : b || "0px";
+                        const nl = /^\-?\d+(\.\d+)?$/.test(l) ? (l + "px") : l || "0px";
+
+                        if (nt === nr && nr === nb && nb === nl) {
+                            sh = nt;
+                        } else if (nt === nb && nr === nl) {
+                            sh = `${nt} ${nr}`;
+                        } else if (nr === nl) {
+                            sh = `${nt} ${nr} ${nb}`;
+                        } else {
+                            sh = `${nt} ${nr} ${nb} ${nl}`;
+                        }
+
+                        // reflect normalized sides back to inputs only when not focused on them
+                        if (document.activeElement !== inTop) inTop.value = nt;
+                        if (document.activeElement !== inRight) inRight.value = nr;
+                        if (document.activeElement !== inBottom) inBottom.value = nb;
+                        if (document.activeElement !== inLeft) inLeft.value = nl;
+                    }
+
+                    inSh.value = sh;
+
+                    marginLock = false;
+                    if (doApply) applyMarginToActive();
+                }
+
+                // live update shorthand while editing sides (but avoid overwriting currently focused input)
+                [inTop, inRight, inBottom, inLeft].forEach(inp => {
+                    // live input -> update shorthand but don't normalize units yet
+                    inp.addEventListener("input", () => updateShorthandFromSides(false));
+
+                    // Enter or change -> normalize current field and apply to active
+                    inp.addEventListener("keydown", e => {
+                        if (e.key === "Enter") {
+                            // normalize all sides (numbers -> px)
+                            inTop.value = normalizeUnit(inTop.value);
+                            inRight.value = normalizeUnit(inRight.value);
+                            inBottom.value = normalizeUnit(inBottom.value);
+                            inLeft.value = normalizeUnit(inLeft.value);
+
+                            updateShorthandFromSides(true);
+                            inp.blur();
+                        }
+                    });
+
+                    inp.addEventListener("change", () => {
+                        inTop.value = normalizeUnit(inTop.value);
+                        inRight.value = normalizeUnit(inRight.value);
+                        inBottom.value = normalizeUnit(inBottom.value);
+                        inLeft.value = normalizeUnit(inLeft.value);
+                        updateShorthandFromSides(true);
+                    });
+                });
+
+                // ---------- SYNC when selection changes ----------
+                function syncFromSelection() {
+                    // don't stomp while user types in any margin input
+                    if ([inSh, inTop, inRight, inBottom, inLeft].includes(document.activeElement)) return;
+
+                    const nodes = getActiveObjects();
+                    if (!nodes.length) {
+                        // no selection -> clear inputs
+                        inSh.value = inTop.value = inRight.value = inBottom.value = inLeft.value = "";
+                        return;
+                    }
+
+                    // if single active -> read its inline if present, else computed
+                    if (nodes.length === 1) {
+                        const el = nodes[0];
+                        const t = readMarginValue(el, "marginTop");
+                        const r = readMarginValue(el, "marginRight");
+                        const b = readMarginValue(el, "marginBottom");
+                        const l = readMarginValue(el, "marginLeft");
+
+                        // set sides
+                        inTop.value = t;
+                        inRight.value = r;
+                        inBottom.value = b;
+                        inLeft.value = l;
+
+                        // compute shorthand using normalized form
+                        updateShorthandFromSides(false);
+                        return;
+                    }
+
+                    // multi-select -> only show if all actives have identical side values (inline or computed)
+                    const vals = [...nodes].map(el => {
+                        return {
+                            t: readMarginValue(el, "marginTop"),
+                            r: readMarginValue(el, "marginRight"),
+                            b: readMarginValue(el, "marginBottom"),
+                            l: readMarginValue(el, "marginLeft")
+                        };
+                    });
+
+                    const allSame = vals.every(v =>
+                        v.t === vals[0].t && v.r === vals[0].r && v.b === vals[0].b && v.l === vals[0].l
+                    );
+
+                    if (allSame) {
+                        inTop.value = vals[0].t;
+                        inRight.value = vals[0].r;
+                        inBottom.value = vals[0].b;
+                        inLeft.value = vals[0].l;
+                        updateShorthandFromSides(false);
+                    } else {
+                        inSh.value = inTop.value = inRight.value = inBottom.value = inLeft.value = "";
+                    }
+                }
+
+                // ---------- observers & event triggers ----------
+                
+                
+
+                window.addEventListener('gm-active-tick', syncFromSelection);
+
+                // initial sync
+                requestAnimationFrame(syncFromSelection);
+
+                // expose for debug
+                window.gm_margin_sync = syncFromSelection;
+            })();
+        </script>
+
+        <div class="gm-menu-title">Padding</div>
+
+        <div class="gm-row-pair gm-menu-row">
+            <div>
+                <label for="">shorthand</label>
+                <input type="text" id="padding-shorthand" placeholder="-">
+            </div>
+        </div>
+
+        <div class="gm-row-pair gm-menu-row">
+            <div>
+                <label for="padding-top">Top</label>
+                <input type="text" id="padding-top" placeholder="-">
+            </div>
+            <div>
+                <label for="padding-right">Right</label>
+                <input type="text" id="padding-right" placeholder="-">
+            </div>
+
+            <div>
+                <label for="padding-bottom">Bottom</label>
+                <input type="text" id="padding-bottom" placeholder="-">
+            </div>
+            <div>
+                <label for="padding-left">Left</label>
+                <input type="text" id="padding-left" placeholder="-">
+            </div>
+        </div>
+        <script>
+            (function () {
+                // inputs
+                const inSh = document.getElementById("padding-shorthand");
+                const inTop = document.getElementById("padding-top");
+                const inRight = document.getElementById("padding-right");
+                const inBottom = document.getElementById("padding-bottom");
+                const inLeft = document.getElementById("padding-left");
+
+                if (!inSh || !inTop || !inRight || !inBottom || !inLeft) return;
+
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                let lock = false;
+
+                // ============================
+                // Utilities
+                // ============================
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function normalizeUnit(v) {
+                    if (!v) return "";
+                    v = v.trim();
+                    if (/^-?\d+(\.\d+)?$/.test(v)) return v + "px";
+                    return v;
+                }
+
+                function readValue(el, prop) {
+                    const inline = el.style[prop];
+                    if (inline && inline.trim() !== "") return inline.trim();
+                    return window.getComputedStyle(el)[prop] || "";
+                }
+
+                function applyToActive() {
+                    const nodes = getActiveObjects();
+                    if (!nodes.length) return;
+
+                    nodes.forEach(el => {
+                        el.style.paddingTop = inTop.value || "";
+                        el.style.paddingRight = inRight.value || "";
+                        el.style.paddingBottom = inBottom.value || "";
+                        el.style.paddingLeft = inLeft.value || "";
+                    });
+                }
+
+                // ============================
+                // Shorthand -> Sides
+                // ============================
+                function expandShorthand(shVal, apply = true) {
+                    if (lock) return;
+                    lock = true;
+
+                    const raw = (shVal || "").trim();
+                    if (!raw) {
+                        inTop.value = inRight.value = inBottom.value = inLeft.value = "";
+                        lock = false;
+                        if (apply) applyToActive();
+                        return;
+                    }
+
+                    const parts = raw.split(/\s+/).map(p => normalizeUnit(p));
+
+                    if (parts.length === 1) {
+                        inTop.value = inRight.value = inBottom.value = inLeft.value = parts[0];
+                    } else if (parts.length === 2) {
+                        inTop.value = inBottom.value = parts[0];
+                        inRight.value = inLeft.value = parts[1];
+                    } else if (parts.length === 3) {
+                        inTop.value = parts[0];
+                        inRight.value = inLeft.value = parts[1];
+                        inBottom.value = parts[2];
+                    } else {
+                        inTop.value = parts[0] || "";
+                        inRight.value = parts[1] || "";
+                        inBottom.value = parts[2] || "";
+                        inLeft.value = parts[3] || "";
+                    }
+
+                    lock = false;
+                    if (apply) applyToActive();
+                }
+
+                // ENTER → normalize → expand → apply
+                inSh.addEventListener("keydown", e => {
+                    if (e.key === "Enter") {
+                        inSh.value = normalizeUnit(inSh.value);
+                        expandShorthand(inSh.value, true);
+                        inSh.blur();
+                    }
+                });
+
+                inSh.addEventListener("change", () => {
+                    inSh.value = normalizeUnit(inSh.value);
+                    expandShorthand(inSh.value, true);
+                });
+
+                // ============================
+                // Sides -> Shorthand
+                // ============================
+                function updateShorthand(apply = true) {
+                    if (lock) return;
+                    lock = true;
+
+                    let t = inTop.value.trim(), r = inRight.value.trim(), b = inBottom.value.trim(), l = inLeft.value.trim();
+
+                    if (!t && !r && !b && !l) {
+                        inSh.value = "";
+                        lock = false;
+                        if (apply) applyToActive();
+                        return;
+                    }
+
+                    const nt = /^\-?\d+(\.\d+)?$/.test(t) ? t + "px" : t || "0px";
+                    const nr = /^\-?\d+(\.\d+)?$/.test(r) ? r + "px" : r || "0px";
+                    const nb = /^\-?\d+(\.\d+)?$/.test(b) ? b + "px" : b || "0px";
+                    const nl = /^\-?\d+(\.\d+)?$/.test(l) ? l + "px" : l || "0px";
+
+                    // reflect normalized (if that field not focused)
+                    if (document.activeElement !== inTop) inTop.value = nt;
+                    if (document.activeElement !== inRight) inRight.value = nr;
+                    if (document.activeElement !== inBottom) inBottom.value = nb;
+                    if (document.activeElement !== inLeft) inLeft.value = nl;
+
+                    // shortest shorthand
+                    let sh = "";
+
+                    if (nt === nr && nr === nb && nb === nl) {
+                        sh = nt;
+                    } else if (nt === nb && nr === nl) {
+                        sh = `${nt} ${nr}`;
+                    } else if (nr === nl) {
+                        sh = `${nt} ${nr} ${nb}`;
+                    } else {
+                        sh = `${nt} ${nr} ${nb} ${nl}`;
+                    }
+
+                    inSh.value = sh;
+
+                    lock = false;
+                    if (apply) applyToActive();
+                }
+
+                // sides input events
+                [inTop, inRight, inBottom, inLeft].forEach(inp => {
+                    inp.addEventListener("input", () => updateShorthand(false));
+
+                    inp.addEventListener("keydown", e => {
+                        if (e.key === "Enter") {
+                            inTop.value = normalizeUnit(inTop.value);
+                            inRight.value = normalizeUnit(inRight.value);
+                            inBottom.value = normalizeUnit(inBottom.value);
+                            inLeft.value = normalizeUnit(inLeft.value);
+
+                            updateShorthand(true);
+                            inp.blur();
+                        }
+                    });
+
+                    inp.addEventListener("change", () => {
+                        inTop.value = normalizeUnit(inTop.value);
+                        inRight.value = normalizeUnit(inRight.value);
+                        inBottom.value = normalizeUnit(inBottom.value);
+                        inLeft.value = normalizeUnit(inLeft.value);
+                        updateShorthand(true);
+                    });
+                });
+
+                // ============================
+                // Sync from selection
+                // ============================
+                function syncFromSelection() {
+                    if ([inSh, inTop, inRight, inBottom, inLeft].includes(document.activeElement)) return;
+
+                    const nodes = getActiveObjects();
+                    if (!nodes.length) {
+                        inSh.value = inTop.value = inRight.value = inBottom.value = inLeft.value = "";
+                        return;
+                    }
+
+                    if (nodes.length === 1) {
+                        const el = nodes[0];
+                        inTop.value = readValue(el, "paddingTop");
+                        inRight.value = readValue(el, "paddingRight");
+                        inBottom.value = readValue(el, "paddingBottom");
+                        inLeft.value = readValue(el, "paddingLeft");
+
+                        updateShorthand(false);
+                        return;
+                    }
+
+                    const vals = [...nodes].map(el => ({
+                        t: readValue(el, "paddingTop"),
+                        r: readValue(el, "paddingRight"),
+                        b: readValue(el, "paddingBottom"),
+                        l: readValue(el, "paddingLeft"),
+                    }));
+
+                    const same = vals.every(v =>
+                        v.t === vals[0].t && v.r === vals[0].r && v.b === vals[0].b && v.l === vals[0].l
+                    );
+
+                    if (same) {
+                        inTop.value = vals[0].t;
+                        inRight.value = vals[0].r;
+                        inBottom.value = vals[0].b;
+                        inLeft.value = vals[0].l;
+                        updateShorthand(false);
+                    } else {
+                        inSh.value = inTop.value = inRight.value = inBottom.value = inLeft.value = "";
+                    }
+                }
+
+                
+                
+
+                window.addEventListener('gm-active-tick', syncFromSelection);
+
+                requestAnimationFrame(syncFromSelection);
+
+                window.gm_padding_sync = syncFromSelection;
+            })();
+        </script>
+    </div>
+
+    <!-- === Opacity === -->
+    <div class="gm-menu-section gm-menu-row">
+        <div class="gm-menu-title">Opacity</div>
+        <input type="number" id="opacity" min="0" max="1" step="0.1" placeholder="-">
+        <script>
+            const opacityInput = document.getElementById("opacity");
+
+            // ==== Ambil object aktif ====
+            function getActiveObject() {
+                return document.querySelector(".gm-object.gm-active");
+            }
+
+            // ==== Tampilkan opacity begitu object aktif berubah ====
+            function refreshOpacityPanel() {
+                const el = getActiveObject();
+
+                if (!el) {
+                    opacityInput.value = "";
+                    return;
+                }
+
+                // baca opacity asli
+                let op = el.style.opacity || window.getComputedStyle(el).opacity;
+
+                // isi input tanpa men-trigger event
+                opacityInput.value = op;
+            }
+
+            // ==== Pemicu ENTER untuk update ====
+            opacityInput.addEventListener("keydown", (e) => {
+                if (e.key !== "Enter") return;
+
+                const el = getActiveObject();
+                if (!el) return;
+
+                let val = parseFloat(opacityInput.value);
+
+                // validasi angka
+                if (isNaN(val)) val = 1;
+                if (val < 0) val = 0;
+                if (val > 1) val = 1;
+
+                // set style
+                el.style.opacity = val;
+
+                // kunci input dengan nilai final
+                opacityInput.value = val;
+            });
+
+            // ==== Deteksi perubahan object aktif ====
+            window.addEventListener('gm-active-tick', refreshOpacityPanel);
+
+            // klik event juga membantu refresh langsung
+            document.addEventListener("click", () => {
+                setTimeout(refreshOpacityPanel, 0);
+            });
+
+        </script>
+    </div>
+
+    <!-- === Z-Index === -->
+    <div class="gm-menu-section gm-menu-row">
+        <div class="gm-menu-title">Z-index</div>
+        <input type="number" id="zindex" placeholder="-">
+        <!-- <input type="number" id="opacity" min="0" value="" placeholder="-"> -->
+        <script>
+            (function () {
+                const input = document.getElementById("zindex");
+                if (!input) return;
+
+                const ACTIVE = ".gm-object.gm-active";
+
+                function getActives() {
+                    return document.querySelectorAll(ACTIVE);
+                }
+
+                function readZ(el) {
+                    if (!el) return "";
+
+                    // Inline dulu → paling akurat
+                    if (el.style.zIndex && el.style.zIndex.trim() !== "")
+                        return el.style.zIndex.trim();
+
+                    // Kalau computed = auto → tampil kosong
+                    const c = window.getComputedStyle(el).zIndex;
+                    return (c === "auto") ? "" : c;
+                }
+
+                function sync() {
+                    const list = getActives();
+
+                    if (document.activeElement === input) return;
+
+                    if (list.length === 0) {
+                        input.value = "";
+                        return;
+                    }
+
+                    if (list.length === 1) {
+                        input.value = readZ(list[0]);
+                        return;
+                    }
+
+                    const values = [...list].map(readZ);
+                    const same = values.every(v => v === values[0]);
+
+                    input.value = same ? values[0] : "";
+                }
+
+                // Apply on Enter
+                input.addEventListener("keydown", e => {
+                    if (e.key !== "Enter") return;
+
+                    const list = getActives();
+                    if (list.length === 0) return;
+
+                    let val = input.value.trim();
+
+                    if (val === "") {
+                        list.forEach(el => el.style.zIndex = "");
+                    } else {
+                        let num = parseInt(val, 10);
+                        if (isNaN(num)) num = 0;
+                        list.forEach(el => el.style.zIndex = num);
+                    }
+
+                    requestAnimationFrame(sync);
+                    input.blur();
+                });
+
+                // Sync saat klik, selection berubah, atau style berubah
+                
+                
+
+                // Observer aman TANPA nama variabel
+                window.addEventListener('gm-active-tick', sync);
+
+                requestAnimationFrame(sync);
+            })();
+        </script>
+    </div>
+</div>
+
+<!-- <main>
+    <section></section>
+    <aside></aside>
+</main> -->

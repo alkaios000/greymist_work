@@ -1,0 +1,22 @@
+/* CLEAR */
+
+.clear-l {
+    clear: left;
+}
+
+/* Menghindari elemen dengan float kiri */
+.clear-r {
+    clear: right;
+}
+
+/* Menghindari elemen dengan float kanan */
+.clear-b {
+    clear: both;
+}
+
+/* Menghindari elemen dengan float kiri dan kanan */
+.clear-n {
+    clear: none;
+}
+
+/* Tidak ada efek clear */

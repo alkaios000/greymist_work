@@ -1,0 +1,59 @@
+| Selector                      | Fungsi                                    |
+| ----------------------------- | ----------------------------------------- |
+| `:hover`                      | Saat elemen disentuh kursor               |
+| `:active`                     | Saat elemen ditekan (klik/tap)            |
+| `:focus`                      | Saat elemen mendapat fokus (input aktif)  |
+| `:focus-visible`              | Fokus terlihat (biasanya karena keyboard) |
+| `:visited`                    | Link yang sudah dikunjungi                |
+| `:link`                       | Link yang belum dikunjungi                |
+| `:checked`                    | Input (checkbox/radio) yang terpilih      |
+| `:disabled`                   | Elemen form yang dinonaktifkan            |
+| `:enabled`                    | Elemen form yang aktif                    |
+| `:read-only`                  | Input yang tidak bisa diedit              |
+| `:required`                   | Input wajib diisi                         |
+| `:optional`                   | Input opsional                            |
+| `:placeholder-shown`          | Saat placeholder terlihat                 |
+| `:in-range` / `:out-of-range` | Nilai input numerik dalam/di luar batas   |
+| `:valid` / `:invalid`         | Validasi form benar/salah                 |
+
+| Selector             | Fungsi                                          |
+| -------------------- | ----------------------------------------------- |
+| `:first-child`       | Elemen anak pertama                             |
+| `:last-child`        | Elemen anak terakhir                            |
+| `:nth-child(n)`      | Anak ke-n                                       |
+| `:nth-last-child(n)` | Anak ke-n dari belakang                         |
+| `:only-child`        | Satu-satunya anak                               |
+| `:first-of-type`     | Elemen pertama dari jenis tag tertentu          |
+| `:last-of-type`      | Elemen terakhir dari jenis tag tertentu         |
+| `:nth-of-type(n)`    | Elemen ke-n dari jenis tag tertentu             |
+| `:only-of-type`      | Satu-satunya elemen dari jenis tag itu          |
+| `:empty`             | Elemen tanpa konten anak                        |
+| `:not(selector)`     | Kecuali elemen tertentu                         |
+| `:has(selector)`     | Elemen yang mengandung elemen tertentu (modern) |
+
+| Selector           | Fungsi                                        |
+| ------------------ | --------------------------------------------- |
+| `:root`            | Elemen akar dokumen (`<html>`)                |
+| `:target`          | Elemen dengan `id` sesuai fragment URL        |
+| `:lang(xx)`        | Elemen dengan bahasa tertentu (`lang="en"`)   |
+| `:dir(ltr/rtl)`    | Arah teks                                     |
+| `:is(selector)`    | Gabungkan beberapa selector (ringkas)         |
+| `:where(selector)` | Seperti `:is()` tapi tanpa prioritas          |
+| `:scope`           | Elemen konteks saat query selector dijalankan |
+| `:defined`         | Custom element yang sudah terdefinisi         |
+| `:fullscreen`      | Saat elemen fullscreen                        |
+
+| Selector                 | Fungsi                                  |
+| ------------------------ | --------------------------------------- |
+| `::before`               | Konten semu di awal elemen              |
+| `::after`                | Konten semu di akhir elemen             |
+| `::first-letter`         | Huruf pertama dari teks                 |
+| `::first-line`           | Baris pertama dari teks                 |
+| `::selection`            | Area teks yang diseleksi pengguna       |
+| `::placeholder`          | Teks placeholder dalam input            |
+| `::marker`               | Simbol daftar (`•`, `1.`, dsb)          |
+| `::backdrop`             | Latar belakang mode fullscreen/dialog   |
+| `::file-selector-button` | Tombol default di input file            |
+| `::cue`                  | Subtitle pada video (`<track>`)         |
+| `::part(name)`           | Bagian dari shadow DOM (custom element) |
+| `::slotted(selector)`    | Konten yang dimasukkan via `<slot>`     |

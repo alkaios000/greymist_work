@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Greymist v1.0 – Dokumentasi Lengkap</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh}
+  header{background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-bottom:1px solid #334155;padding:32px 48px;display:flex;align-items:center;gap:24px}
+  header svg{flex-shrink:0}
+  header h1{font-size:28px;font-weight:700;color:#f1f5f9;letter-spacing:-0.5px}
+  header p{color:#94a3b8;font-size:14px;margin-top:4px}
+  .badge{display:inline-block;background:#1e40af;color:#bfdbfe;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-left:8px;vertical-align:middle}
+  nav{background:#1e293b;border-bottom:1px solid #334155;padding:0 48px;display:flex;gap:0;overflow-x:auto}
+  nav a{display:block;padding:14px 20px;color:#94a3b8;text-decoration:none;font-size:13px;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+  nav a:hover,nav a.active{color:#e2e8f0;border-bottom-color:#3b82f6}
+  main{max-width:1200px;margin:0 auto;padding:40px 48px}
+  h2{font-size:22px;font-weight:700;color:#f1f5f9;margin-bottom:8px}
+  .subtitle{color:#64748b;font-size:14px;margin-bottom:32px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;margin-bottom:48px}
+  .card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:24px;cursor:pointer;transition:all .2s;text-decoration:none;display:block}
+  .card:hover{border-color:#3b82f6;background:#1e3a5f;transform:translateY(-2px)}
+  .card-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:20px}
+  .card h3{font-size:15px;font-weight:600;color:#f1f5f9;margin-bottom:6px}
+  .card p{font-size:13px;color:#64748b;line-height:1.5}
+  .card .files{margin-top:12px;display:flex;flex-wrap:wrap;gap:4px}
+  .tag{background:#0f172a;border:1px solid #334155;color:#94a3b8;font-size:10px;padding:2px 6px;border-radius:4px;font-family:monospace}
+  .section-title{font-size:16px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin:40px 0 16px;border-bottom:1px solid #1e293b;padding-bottom:8px}
+  footer{background:#1e293b;border-top:1px solid #334155;padding:24px 48px;text-align:center;color:#475569;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+    <rect width="48" height="48" rx="10" fill="#1e40af"/>
+    <path d="M12 24 L24 12 L36 24 L24 36 Z" fill="none" stroke="#93c5fd" stroke-width="2"/>
+    <circle cx="24" cy="24" r="4" fill="#3b82f6"/>
+    <circle cx="12" cy="24" r="2.5" fill="#60a5fa"/>
+    <circle cx="36" cy="24" r="2.5" fill="#60a5fa"/>
+    <circle cx="24" cy="12" r="2.5" fill="#60a5fa"/>
+    <circle cx="24" cy="36" r="2.5" fill="#60a5fa"/>
+  </svg>
+  <div>
+    <h1>Greymist <span class="badge">v1.0</span></h1>
+    <p>Dokumentasi Lengkap — Web-Based Visual UI Editor | PHP + MySQL + Vanilla JS</p>
+  </div>
+</header>
+<nav>
+  <a href="index.html" class="active">🏠 Beranda</a>
+  <a href="01_arsitektur.html">🏗️ Arsitektur</a>
+  <a href="02_autentikasi.html">🔐 Autentikasi</a>
+  <a href="03_editor.html">🎨 Editor</a>
+  <a href="04_panel_kiri.html">◀️ Panel Kiri</a>
+  <a href="05_panel_kanan.html">▶️ Panel Kanan</a>
+  <a href="06_api.html">⚡ API</a>
+  <a href="07_admin.html">👑 Admin</a>
+  <a href="08_ekspor.html">📤 Ekspor</a>
+  <a href="09_css_var.html">🎨 CSS Var</a>
+  <a href="10_database.html">🗄️ Database</a>
+</nav>
+<main>
+  <h2>Selamat Datang di Dokumentasi Greymist</h2>
+  <p class="subtitle">Pilih modul di bawah atau gunakan navigasi atas untuk menjelajahi dokumentasi fitur lengkap.</p>
+
+  <div class="section-title">Modul Utama</div>
+  <div class="grid">
+    <a href="01_arsitektur.html" class="card">
+      <div class="card-icon" style="background:#1e3a5f">🏗️</div>
+      <h3>Arsitektur Sistem</h3>
+      <p>Gambaran menyeluruh arsitektur three-tier, alur data, dan struktur folder proyek.</p>
+      <div class="files"><span class="tag">flow diagram</span><span class="tag">folder tree</span></div>
+    </a>
+    <a href="02_autentikasi.html" class="card">
+      <div class="card-icon" style="background:#1a2e1a">🔐</div>
+      <h3>Autentikasi & Sesi</h3>
+      <p>Alur login, register, logout, dan sistem proteksi halaman menggunakan session PHP.</p>
+      <div class="files"><span class="tag">session/</span><span class="tag">includes/auth.php</span></div>
+    </a>
+    <a href="03_editor.html" class="card">
+      <div class="card-icon" style="background:#2d1b4e">🎨</div>
+      <h3>Editor Kanvas</h3>
+      <p>Inti aplikasi: manajemen frame, objek, drag & drop, undo-redo, zoom, dan context menu.</p>
+      <div class="files"><span class="tag">part/main/</span><span class="tag">object_define/</span></div>
+    </a>
+    <a href="04_panel_kiri.html" class="card">
+      <div class="card-icon" style="background:#1a2a1a">◀️</div>
+      <h3>Panel Kiri</h3>
+      <p>Panel objek, aset (gambar/ikon/audio/video), template, dan DOM view tree.</p>
+      <div class="files"><span class="tag">part/aside-left/</span><span class="tag">user_interface/aside</span></div>
+    </a>
+    <a href="05_panel_kanan.html" class="card">
+      <div class="card-icon" style="background:#2d1f0a">▶️</div>
+      <h3>Panel Kanan – CSS Properties</h3>
+      <p>Semua properti CSS yang bisa diatur: box model, background, border, tipografi, filter, dan lainnya.</p>
+      <div class="files"><span class="tag">part/aside-right/</span><span class="tag">GREYMIST_CSS_VAR/</span></div>
+    </a>
+    <a href="06_api.html" class="card">
+      <div class="card-icon" style="background:#0d2a2a">⚡</div>
+      <h3>REST API Endpoints</h3>
+      <p>Dokumentasi semua endpoint PHP yang digunakan oleh frontend melalui AJAX.</p>
+      <div class="files"><span class="tag">api/</span></div>
+    </a>
+    <a href="07_admin.html" class="card">
+      <div class="card-icon" style="background:#2d1a1a">👑</div>
+      <h3>Panel Admin</h3>
+      <p>Alur manajemen pengguna, proyek, laporan, template, dan pengaturan sistem oleh admin.</p>
+      <div class="files"><span class="tag">admin/</span></div>
+    </a>
+    <a href="08_ekspor.html" class="card">
+      <div class="card-icon" style="background:#1a1a2d">📤</div>
+      <h3>Fitur Ekspor Menu</h3>
+      <p>Alur ekspor desain ke format HTML — fitur unggulan versi 1.0 ini.</p>
+      <div class="files"><span class="tag">part/modal/eksport.html</span></div>
+    </a>
+    <a href="09_css_var.html" class="card">
+      <div class="card-icon" style="background:#2d2a0a">🎨</div>
+      <h3>Sistem CSS Variable</h3>
+      <p>Dokumentasi sistem utility CSS custom GREYMIST_CSS_VAR — 25+ file properti.</p>
+      <div class="files"><span class="tag">GREYMIST_CSS_VAR/</span></div>
+    </a>
+    <a href="10_database.html" class="card">
+      <div class="card-icon" style="background:#0d1a2d">🗄️</div>
+      <h3>Struktur Database</h3>
+      <p>Skema tabel, relasi antar entitas, dan diagram ERD basis data Greymist.</p>
+      <div class="files"><span class="tag">DB/DB_Structure.txt</span></div>
+    </a>
+  </div>
+</main>
+<footer>Greymist v1.0 – Dokumentasi Teknis | Dibuat untuk keperluan analisis & akademik</footer>
+</body>
+</html>

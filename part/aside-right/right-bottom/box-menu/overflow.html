@@ -1,0 +1,318 @@
+<div class="gm-menu-section gm-content-box-menu">
+    <div class="gm-menu-title">Overflow & Visibility</div>
+
+    <!-- OVERFLOW SHORTHAND -->
+    <div class="gm-menu-row">
+        <label for="gm-overflow">Overflow</label>
+        <select id="gm-overflow">
+            <option value="">-</option>
+            <option value="visible">Visible</option>
+            <option value="hidden">Hidden</option>
+            <option value="scroll">Scroll</option>
+            <option value="auto">Auto</option>
+            <option value="clip">Clip</option>
+        </select>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                const select = document.getElementById("gm-overflow");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getOverflow() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const base =
+                        first.style.overflow ||
+                        getComputedStyle(first).overflow;
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v =
+                                el.style.overflow ||
+                                getComputedStyle(el).overflow;
+                            return v === base;
+                        });
+                        if (!same) return "";
+                    }
+
+                    return base;
+                }
+
+                function applyOverflow() {
+                    const value = select.value;
+                    getActiveObjects().forEach(el => {
+                        if (!value) {
+                            el.style.removeProperty("overflow");
+                        } else {
+                            el.style.overflow = value;
+                        }
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === select) return;
+                    select.value = getOverflow();
+                }
+
+                /* ================= EVENTS ================= */
+
+                select.addEventListener("change", applyOverflow);
+
+                document.addEventListener("click", () => {
+                    requestAnimationFrame(updateUI);
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(updateUI);
+                });
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- OVERFLOW X -->
+    <div class="gm-menu-row">
+        <label for="gm-overflow-x">Overflow X</label>
+        <select id="gm-overflow-x">
+            <option value="">-</option>
+            <option value="visible">Visible</option>
+            <option value="hidden">Hidden</option>
+            <option value="scroll">Scroll</option>
+            <option value="auto">Auto</option>
+            <option value="clip">Clip</option>
+        </select>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                const select = document.getElementById("gm-overflow-x");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getOverflowX() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const base =
+                        first.style.overflowX ||
+                        getComputedStyle(first).overflowX;
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v =
+                                el.style.overflowX ||
+                                getComputedStyle(el).overflowX;
+                            return v === base;
+                        });
+                        if (!same) return "";
+                    }
+
+                    return base;
+                }
+
+                function applyOverflowX() {
+                    const value = select.value;
+                    getActiveObjects().forEach(el => {
+                        if (!value) {
+                            el.style.removeProperty("overflow-x");
+                        } else {
+                            el.style.overflowX = value;
+                        }
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === select) return;
+                    select.value = getOverflowX();
+                }
+
+                /* ================= EVENTS ================= */
+
+                select.addEventListener("change", applyOverflowX);
+
+                document.addEventListener("click", () => {
+                    requestAnimationFrame(updateUI);
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(updateUI);
+                });
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- OVERFLOW Y -->
+    <div class="gm-menu-row">
+        <label for="gm-overflow-y">Overflow Y</label>
+        <select id="gm-overflow-y">
+            <option value="">-</option>
+            <option value="visible">Visible</option>
+            <option value="hidden">Hidden</option>
+            <option value="scroll">Scroll</option>
+            <option value="auto">Auto</option>
+            <option value="clip">Clip</option>
+        </select>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                const select = document.getElementById("gm-overflow-y");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getOverflowY() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const base =
+                        first.style.overflowY ||
+                        getComputedStyle(first).overflowY;
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v =
+                                el.style.overflowY ||
+                                getComputedStyle(el).overflowY;
+                            return v === base;
+                        });
+                        if (!same) return "";
+                    }
+
+                    return base;
+                }
+
+                function applyOverflowY() {
+                    const value = select.value;
+                    getActiveObjects().forEach(el => {
+                        if (!value) {
+                            el.style.removeProperty("overflow-y");
+                        } else {
+                            el.style.overflowY = value;
+                        }
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === select) return;
+                    select.value = getOverflowY();
+                }
+
+                /* ================= EVENTS ================= */
+
+                select.addEventListener("change", applyOverflowY);
+
+                document.addEventListener("click", () => {
+                    requestAnimationFrame(updateUI);
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(updateUI);
+                });
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- VISIBILITY -->
+    <div class="gm-menu-row">
+        <label for="gm-visibility">Visibility</label>
+        <select id="gm-visibility">
+            <option value="">-</option>
+            <option value="visible">Visible</option>
+            <option value="hidden">Hidden</option>
+            <option value="collapse">Collapse</option>
+        </select>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+                const select = document.getElementById("gm-visibility");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getVisibility() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const base =
+                        first.style.visibility ||
+                        getComputedStyle(first).visibility;
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v =
+                                el.style.visibility ||
+                                getComputedStyle(el).visibility;
+                            return v === base;
+                        });
+                        if (!same) return "";
+                    }
+
+                    return base;
+                }
+
+                function applyVisibility() {
+                    const value = select.value;
+                    getActiveObjects().forEach(el => {
+                        if (!value) {
+                            el.style.removeProperty("visibility");
+                        } else {
+                            el.style.visibility = value;
+                        }
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === select) return;
+                    select.value = getVisibility();
+                }
+
+                /* ================= EVENTS ================= */
+
+                select.addEventListener("change", applyVisibility);
+
+                document.addEventListener("click", () => {
+                    requestAnimationFrame(updateUI);
+                }, true);
+
+                document.addEventListener("gm-selection-change", () => {
+                    requestAnimationFrame(updateUI);
+                });
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+    
+</div>

@@ -1,0 +1,190 @@
+<div class="gm-menu-section gm-content-box-menu">
+    <div class="gm-menu-title">Filter</div>
+
+    <!-- FILTER SHORTHAND -->
+    <div class="gm-menu-row">
+        <label for="gm-filter">Filter</label>
+        <input type="text" id="gm-filter" placeholder="blur(4px) brightness(120%)">
+    </div>
+
+    <!-- BLUR -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-blur">Blur</label>
+        <input type="text" id="gm-filter-blur" placeholder="px">
+    </div>
+
+    <!-- BRIGHTNESS -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-brightness">Brightness</label>
+        <input type="text" id="gm-filter-brightness" placeholder="% | number">
+    </div>
+
+    <!-- CONTRAST -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-contrast">Contrast</label>
+        <input type="text" id="gm-filter-contrast" placeholder="% | number">
+    </div>
+
+    <!-- GRAYSCALE -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-grayscale">Grayscale</label>
+        <input type="text" id="gm-filter-grayscale" placeholder="%">
+    </div>
+
+    <!-- INVERT -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-invert">Invert</label>
+        <input type="text" id="gm-filter-invert" placeholder="%">
+    </div>
+
+    <!-- OPACITY -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-opacity">Opacity</label>
+        <input type="text" id="gm-filter-opacity" placeholder="%">
+    </div>
+
+    <!-- SATURATE -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-saturate">Saturate</label>
+        <input type="text" id="gm-filter-saturate" placeholder="% | number">
+    </div>
+
+    <!-- SEPIA -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-sepia">Sepia</label>
+        <input type="text" id="gm-filter-sepia" placeholder="%">
+    </div>
+
+    <!-- HUE ROTATE -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-hue-rotate">Hue rotate</label>
+        <input type="text" id="gm-filter-hue-rotate" placeholder="deg">
+    </div>
+
+    <!-- DROP SHADOW -->
+    <div class="gm-menu-row">
+        <label for="gm-filter-drop-shadow">Drop shadow</label>
+        <input type="text" id="gm-filter-drop-shadow" placeholder="0 4px 10px rgba(0,0,0,.3)">
+    </div>
+    <script>
+        (function () {
+            const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+            function getActiveObjects() {
+                return document.querySelectorAll(ACTIVE_SELECTOR);
+            }
+
+            // Refs
+            const inputShorthand = document.getElementById("gm-filter");
+
+            const filters = {
+                blur: document.getElementById("gm-filter-blur"),
+                brightness: document.getElementById("gm-filter-brightness"),
+                contrast: document.getElementById("gm-filter-contrast"),
+                grayscale: document.getElementById("gm-filter-grayscale"),
+                invert: document.getElementById("gm-filter-invert"),
+                opacity: document.getElementById("gm-filter-opacity"),
+                saturate: document.getElementById("gm-filter-saturate"),
+                sepia: document.getElementById("gm-filter-sepia"),
+                "hue-rotate": document.getElementById("gm-filter-hue-rotate"),
+                "drop-shadow": document.getElementById("gm-filter-drop-shadow")
+            };
+
+            // =========================================
+            // PARSE FILTER STRING → object
+            // =========================================
+            function parseFilterString(str) {
+                const obj = {};
+                str.match(/(\w+-?\w*)\(([^)]+)\)/g)?.forEach(fn => {
+                    const [_, name, value] = fn.match(/(\w+-?\w*)\(([^)]+)\)/);
+                    obj[name] = value.trim();
+                });
+                return obj;
+            }
+
+            // =========================================
+            // BUILD FILTER STRING dari object
+            // =========================================
+            function buildFilterString(obj) {
+                return Object.entries(obj).map(([k, v]) => `${k}(${v})`).join(" ");
+            }
+
+            // =========================================
+            // Baca filter dari active object (inline / computed)
+            // Multi-select: kosong jika beda
+            // =========================================
+            function getActiveFilter() {
+                const actives = getActiveObjects();
+                if (!actives.length) return "";
+
+                const firstVal = actives[0].style.filter || getComputedStyle(actives[0]).filter || "";
+                if (actives.length === 1) return firstVal;
+
+                const same = [...actives].every(el => {
+                    const val = el.style.filter || getComputedStyle(el).filter || "";
+                    return val === firstVal;
+                });
+                return same ? firstVal : "";
+            }
+
+            // =========================================
+            // Update all input fields dari active object
+            // =========================================
+            function updateFilterUI() {
+                const filterStr = getActiveFilter();
+                inputShorthand.value = filterStr;
+
+                const parsed = parseFilterString(filterStr);
+                Object.entries(filters).forEach(([key, input]) => {
+                    input.value = parsed[key] || "";
+                });
+            }
+
+            // =========================================
+            // APPLY FILTER STRING ke semua active object
+            // =========================================
+            function applyFilterString(str) {
+                const actives = getActiveObjects();
+                actives.forEach(el => {
+                    el.style.filter = str;
+                });
+                updateFilterUI();
+            }
+
+            // =========================================
+            // EVENT: shorthand input
+            // =========================================
+            inputShorthand.addEventListener("keydown", e => {
+                if (e.key !== "Enter") return;
+                applyFilterString(e.target.value.trim());
+            });
+
+            // =========================================
+            // EVENT: individual filters
+            // =========================================
+            Object.entries(filters).forEach(([key, input]) => {
+                input.addEventListener("keydown", e => {
+                    if (e.key !== "Enter") return;
+
+                    const current = parseFilterString(getActiveFilter());
+                    current[key] = input.value.trim() || undefined;
+
+                    const filterStr = buildFilterString(current);
+                    applyFilterString(filterStr);
+                });
+            });
+
+            // =========================================
+            // OBSERVER / SELECTION CHANGE
+            // =========================================
+            
+            
+
+            window.addEventListener('gm-active-tick', updateFilterUI);
+
+            // init
+            updateFilterUI();
+
+        })();
+    </script>
+</div>

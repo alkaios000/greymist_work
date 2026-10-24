@@ -1,0 +1,56 @@
+
+  /* GENERAL MENU & FLEX MENU */
+
+  .gm-display-flex-group {
+    padding: 4px 6px;
+    border-top: 1px solid #d8d8d8;
+    margin-bottom: 6px;
+  }
+
+  .gm-display-flex-group h4 {
+    font-size: 0.75em;
+    font-weight: 600;
+    color: #666;
+    margin: 4px 0;
+  }
+
+  .gm-display-flex-group label {
+    font-size: 0.75em;
+    color: #333;
+    margin: 2px 0;
+    display: block;
+  }
+
+  .gm-display-flex-group input,
+  .gm-display-flex-group select {
+    width: 100%;
+    padding: 2px 4px;
+    font-size: 0.75em;
+    border: 0.5px solid #d6d6d6;
+    border-radius: 3px;
+    outline: none;
+    box-sizing: border-box;
+    box-shadow: 0 0 1px #eee;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .gm-display-flex-group input:hover,
+  .gm-display-flex-group select:hover {
+    box-shadow: 0 0 2px #5e94bd;
+  }
+
+  .gm-display-flex-group input:focus,
+  .gm-display-flex-group select:focus {
+    border-color: #0078ff;
+    box-shadow: 0 0 2px rgba(156, 202, 255, 0.2);
+  }
+
+  /* Row pair untuk dua input berdampingan */
+  .gm-row-pair {
+    display: flex;
+    gap: 4px;
+  }
+
+  .gm-row-pair>div {
+    flex: 1;
+  }

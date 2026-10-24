@@ -1,0 +1,16 @@
+/* FONT STYLE */
+
+/* normal */
+.normal {
+    font-style: normal;
+}
+
+/* miring */
+.i {
+    font-style: italic;
+}
+
+/* text dimiringkan secara paksa jika tidak ada property italic */
+.o {
+    font-style: oblique;
+}

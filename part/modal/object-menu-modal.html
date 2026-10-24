@@ -1,0 +1,206 @@
+<!-- RIGHT CLICK BEHAVIOUR -->
+
+<!-- Info Object Modal -->
+<div class="gm-object-info-modal">
+   <div class="gm-object-info-content">
+      <span class="gm-object-tag"></span>
+      <input type="text" class="gm-object-prop-value">
+   </div>
+</div>
+
+<!-- Object Menu -->
+<ul class="gm-object-menu">
+   <!-- Menu untuk object aktif -->
+   <li class="gm-menu-item gm-active-menu gm-copy-object">Copy Object</li>
+   <li class="gm-menu-item gm-active-menu gm-paste-object">Paste Object</li>
+   <li class="gm-menu-item gm-active-menu gm-cut-object">Cut Object</li>
+   <li class="gm-menu-item gm-active-menu gm-delete-object">Delete Object</li>
+   <li class="gm-menu-item gm-active-menu gm-select-parent">Select Parent</li>
+   <li class="gm-menu-item gm-active-menu gm-save-component" id="gmSaveComponentMenuItem" onclick="if(window.GMComponentManager) window.GMComponentManager.openSaveModal();">
+      <i class="fa-solid fa-cube" style="color: #3182ce; margin-right: 6px; font-size: 13px;"></i> Save as Component
+   </li>
+   <script>
+      document.addEventListener('click', function(e) {
+         if (e.target.closest('.gm-save-component')) {
+            e.preventDefault();
+            if (window.GMComponentManager && typeof window.GMComponentManager.openSaveModal === 'function') {
+               window.GMComponentManager.openSaveModal();
+            }
+         }
+      }, true); // capture phase
+   </script>
+   <script>
+      (function () {
+
+         /* ===============================
+            CLEAR & SET GM-ACTIVE
+         =============================== */
+         function setGmActive(target) {
+            document.querySelectorAll('.gm-object.gm-active')
+               .forEach(el => el.classList.remove('gm-active'));
+
+            if (target) {
+               target.classList.add('gm-active');
+            }
+         }
+
+         /* ===============================
+            FIND REAL DOM WRAPPER
+         =============================== */
+         function findParentGmObject(active) {
+            if (!active) return null;
+
+            let node = active.parentElement;
+
+            while (node && node !== document.body) {
+               if (
+                  node.classList &&
+                  node.classList.contains('gm-object')
+               ) {
+                  return node; // ← pembungkus nyata di DOM
+               }
+               node = node.parentElement;
+            }
+
+            return null;
+         }
+
+         /* ===============================
+            SELECT PARENT HANDLER
+         =============================== */
+         document.addEventListener('click', function (e) {
+
+            const btn = e.target.closest('.gm-select-parent');
+            if (!btn) return;
+
+            e.preventDefault();
+            //  e.stopPropagation();
+
+            const active = document.querySelector('.gm-object.gm-active');
+            if (!active) return;
+
+            const parentObject = findParentGmObject(active);
+            if (!parentObject || parentObject === active) return;
+
+            setGmActive(parentObject);
+
+         }, true); // capture phase
+
+      })();
+   </script>
+
+   <li class="gm-menu-item gm-active-menu has-submenu gm-edit">
+      Edit &raquo;
+      <ul class="gm-submenu">
+         <li class="gm-menu-item gm-make-as-link">Make as link</li>
+      </ul>
+   </li>
+
+   <li class="gm-menu-item gm-active-menu has-submenu gm-edit">
+      View &raquo;
+      <ul class="gm-submenu">
+         <li class="gm-menu-item gm-select-parent">Select Parent</li>
+         <li class="gm-menu-item gm-add-child">Add Child</li>
+      </ul>
+   </li>
+   <li class="gm-menu-item gm-active-menu has-submenu gm-edit">
+      Edit Pseudo Class &raquo;
+      <ul class="gm-submenu">
+         <li class="gm-menu-item gm-active-menu has-submenu gm-edit">Hover &raquo;</li>
+         <li class="gm-menu-item" id="gm-Active-object">Active</li>
+         <li class="gm-menu-item" id="gm-Focus-object">Focus</li>
+      </ul>
+   </li>
+
+   <!-- Menu untuk tidak ada object aktif -->
+   <li class="gm-menu-item gm-no-active-menu gm-body-properties">Body Properties</li>
+   <li class="gm-menu-item gm-no-active-menu gm-create-modal">Create Modal</li>
+   <li class="gm-menu-item gm-no-active-menu gm-view">
+      View &raquo;
+      <ul class="gm-submenu">
+         <li class="gm-menu-item gm-option1">Option 1</li>
+         <li class="gm-menu-item gm-option2">Option 2</li>
+      </ul>
+   </li>
+</ul>
+
+<style>
+   /* ===== Canvas / Editor ===== */
+   .gm-main {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+   }
+
+   /* ===== Info Modal ===== */
+   .gm-object-info-modal {
+      position: fixed !important;
+      display: none;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 13px;
+      z-index: 999999 !important;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+      pointer-events: auto;
+   }
+
+   .gm-object-info-modal input {
+      font-size: 12px;
+      padding: 2px 4px;
+      width: 120px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-left: 6px;
+   }
+
+   /* ===== Context Menu ===== */
+   .gm-object-menu {
+      position: fixed !important;
+      display: none;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+      min-width: 200px;
+      font-size: 13px;
+      z-index: 999999 !important;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      pointer-events: auto;
+   }
+
+   .gm-menu-item {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+      position: relative;
+   }
+
+   .gm-menu-item:hover {
+      background: #f0f0f0;
+   }
+
+   /* Nested submenu */
+   .gm-submenu {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 100%;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      min-width: 180px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      z-index: 1000000 !important;
+   }
+
+   .gm-menu-item.gm-edit.open>.gm-submenu,
+   .gm-menu-item.gm-view.open>.gm-submenu {
+      display: block;
+   }
+</style>

@@ -1,0 +1,7 @@
+/* OBJECT FIT */
+
+.of-fill { object-fit: fill; }       /* Mengisi seluruh area tanpa mempertahankan rasio */
+.of-contain { object-fit: contain; } /* Sesuai dengan wadah tanpa memotong */
+.of-cover { object-fit: cover; }     /* Menutupi wadah dengan tetap mempertahankan rasio */
+.of-none { object-fit: none; }       /* Tidak ada penyesuaian ukuran */
+.of-scale { object-fit: scale-down; } /* Menggunakan ukuran terkecil antara `none` dan `contain` */

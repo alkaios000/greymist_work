@@ -1,0 +1,436 @@
+<div class="gm-menu-section gm-content-box-menu">
+    <div class="gm-menu-title">Box Shadow</div>
+
+    <!-- FULL BOX SHADOW -->
+    <div class="gm-menu-row">
+        <label for="gm-box-shadow">Box shadow</label>
+        <input type="text" id="gm-box-shadow" placeholder="x y blur spread color / inset">
+        <script>
+            (function () {
+                const input = document.getElementById("gm-box-shadow");
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                // ======================
+                // Helpers
+                // ======================
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getActiveBoxShadow() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return "";
+
+                    const first = actives[0];
+                    const style = getComputedStyle(first);
+                    let value = first.style.boxShadow || style.boxShadow;
+
+                    // multi-select: cek apakah semua sama
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const val = el.style.boxShadow || getComputedStyle(el).boxShadow;
+                            return val === value;
+                        });
+                        if (!same) value = "";
+                    }
+
+                    return value;
+                }
+
+                // format box-shadow untuk input: warna di belakang
+                function formatBoxShadowForInput(value) {
+                    if (!value) return "";
+                    // ambil warna (rgb/rgba/hex)
+                    const colorMatch = value.match(/(rgba?\([^\)]+\)|#[0-9a-fA-F]{3,6})/);
+                    if (!colorMatch) return value;
+                    const color = colorMatch[0];
+                    const rest = value.replace(color, "").trim();
+                    return rest + " " + color;
+                }
+
+                function applyBoxShadow(value) {
+                    getActiveObjects().forEach(el => {
+                        el.style.boxShadow = value;
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    if (document.activeElement === input) return;
+                    const val = getActiveBoxShadow();
+                    input.value = formatBoxShadowForInput(val);
+                }
+
+                // ======================
+                // Events
+                // ======================
+                input.addEventListener("keydown", e => {
+                    if (e.key !== "Enter") return;
+                    applyBoxShadow(input.value.trim());
+                });
+
+                // ======================
+                // Observers
+                // ======================
+                
+                
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                // ======================
+                // Init
+                // ======================
+                updateUI();
+
+            })();
+        </script>
+    </div>
+
+    <!-- SHADOW VALUE PAIR -->
+    <div class="gm-menu-row gm-row-pair">
+        <div class="gm-menu-row">
+            <label for="gm-shadow-x">X</label>
+            <input type="text" id="gm-shadow-x" placeholder="0px">
+        </div>
+        <div class="gm-menu-row">
+            <label for="gm-shadow-y">Y</label>
+            <input type="text" id="gm-shadow-y" placeholder="4px">
+        </div>
+        <div class="gm-menu-row">
+            <label for="gm-shadow-blur">Blur</label>
+            <input type="text" id="gm-shadow-blur" placeholder="10px">
+        </div>
+        <div class="gm-menu-row">
+            <label for="gm-shadow-spread">Spread</label>
+            <input type="text" id="gm-shadow-spread" placeholder="0px">
+        </div>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                const inputX = document.getElementById("gm-shadow-x");
+                const inputY = document.getElementById("gm-shadow-y");
+                const inputBlur = document.getElementById("gm-shadow-blur");
+                const inputSpread = document.getElementById("gm-shadow-spread");
+
+                // ambil semua active object
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // baca shorthand dari object aktif
+                function getActiveBoxShadowParts() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return { x: "", y: "", blur: "", spread: "" };
+
+                    const first = actives[0];
+                    let value = first.style.boxShadow || getComputedStyle(first).boxShadow;
+
+                    if (!value || value === "none") return { x: "", y: "", blur: "", spread: "" };
+
+                    // parsing: ambil x y blur spread, abaikan warna / inset
+                    const parts = value.match(/(-?\d+px|-?\d+em|-?\d+rem|-?\d+%)/g) || [];
+                    const [x = "", y = "", blur = "", spread = ""] = parts;
+
+                    // multi-select: cek apakah semua sama
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            let v = el.style.boxShadow || getComputedStyle(el).boxShadow;
+                            return v === value;
+                        });
+                        if (!same) return { x: "", y: "", blur: "", spread: "" };
+                    }
+
+                    return { x: x || "", y: y || "", blur: blur || "", spread: spread || "" };
+                }
+
+                // gabungkan input single menjadi shorthand
+                function getBoxShadowFromInputs() {
+                    const parts = [
+                        inputX.value.trim() || "0px",
+                        inputY.value.trim() || "0px",
+                        inputBlur.value.trim() || "0px",
+                        inputSpread.value.trim() || "0px"
+                    ];
+                    return parts.join(" ");
+                }
+
+                // apply ke semua object aktif
+                function applyBoxShadowFromInputs() {
+                    const value = getBoxShadowFromInputs();
+                    getActiveObjects().forEach(el => {
+                        el.style.boxShadow = value;
+                    });
+                    updateUI();
+                }
+
+                // update input single dari object aktif
+                function updateUI() {
+                    const parts = getActiveBoxShadowParts();
+                    if (document.activeElement !== inputX) inputX.value = parts.x;
+                    if (document.activeElement !== inputY) inputY.value = parts.y;
+                    if (document.activeElement !== inputBlur) inputBlur.value = parts.blur;
+                    if (document.activeElement !== inputSpread) inputSpread.value = parts.spread;
+                }
+
+                // ======================
+                // Events
+                // ======================
+                [inputX, inputY, inputBlur, inputSpread].forEach(inp => {
+                    inp.addEventListener("keydown", e => {
+                        if (e.key === "Enter") {
+                            applyBoxShadowFromInputs();
+                        }
+                    });
+                    inp.addEventListener("blur", applyBoxShadowFromInputs);
+                });
+
+                // ======================
+                // Observers
+                // ======================
+                
+                
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                // init
+                updateUI();
+
+            })();
+        </script>
+    </div>
+
+    <!-- SHADOW COLOR -->
+    <div class="gm-menu-row">
+        <label>Shadow color</label>
+        <div class="gm-row-pair gm-menu-row">
+            <!-- BELUM SELESAI -->
+            <input type="color" class="gm-shadow-color" >
+            <input type="text" class="gm-shadow-color-input" placeholder="rgba() / var(--shadow) / linear-gradient()">
+        </div>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                const inputX = document.getElementById("gm-shadow-x");
+                const inputY = document.getElementById("gm-shadow-y");
+                const inputBlur = document.getElementById("gm-shadow-blur");
+                const inputSpread = document.getElementById("gm-shadow-spread");
+
+                const colorPicker = document.querySelector(".gm-shadow-color");
+                const colorInput = document.querySelector(".gm-shadow-color-input");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                // baca box-shadow object pertama
+                function getActiveBoxShadowParts() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return { x: "", y: "", blur: "", spread: "", color: "#000000" };
+
+                    const first = actives[0];
+                    const styleValue = first.style.boxShadow || getComputedStyle(first).boxShadow;
+
+                    if (!styleValue || styleValue === "none") return { x: "", y: "", blur: "", spread: "", color: "#000000" };
+
+                    // extract numbers
+                    const nums = styleValue.match(/(-?\d+px|-?\d+em|-?\d+rem|-?\d+%)/g) || [];
+                    const [x = "", y = "", blur = "", spread = ""] = nums;
+
+                    // extract color
+                    const matchColor = styleValue.match(/(rgba?\([^\)]+\)|#[0-9a-fA-F]{3,6})/);
+                    const color = matchColor ? matchColor[0] : "#000000";
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v = el.style.boxShadow || getComputedStyle(el).boxShadow;
+                            return v === styleValue;
+                        });
+                        if (!same) return { x: "", y: "", blur: "", spread: "", color: "#000000" };
+                    }
+
+                    return { x: x || "", y: y || "", blur: blur || "", spread: spread || "", color };
+                }
+
+                function getBoxShadowFromInputs() {
+                    const parts = [
+                        inputX.value.trim() || "0px",
+                        inputY.value.trim() || "0px",
+                        inputBlur.value.trim() || "0px",
+                        inputSpread.value.trim() || "0px"
+                    ];
+                    const color = colorInput.value.trim() || "#000000";
+                    return `${parts.join(" ")} ${color}`;
+                }
+
+                function applyBoxShadowFromInputs() {
+                    const value = getBoxShadowFromInputs();
+                    getActiveObjects().forEach(el => {
+                        el.style.boxShadow = value;
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    const parts = getActiveBoxShadowParts();
+                    if (document.activeElement !== inputX) inputX.value = parts.x;
+                    if (document.activeElement !== inputY) inputY.value = parts.y;
+                    if (document.activeElement !== inputBlur) inputBlur.value = parts.blur;
+                    if (document.activeElement !== inputSpread) inputSpread.value = parts.spread;
+                    if (document.activeElement !== colorInput) colorInput.value = parts.color;
+                    if (document.activeElement !== colorPicker) colorPicker.value = parts.color;
+                }
+
+                // ======================
+                // Events
+                // ======================
+                [inputX, inputY, inputBlur, inputSpread].forEach(inp => {
+                    inp.addEventListener("keydown", e => {
+                        if (e.key === "Enter") applyBoxShadowFromInputs();
+                    });
+                    inp.addEventListener("blur", applyBoxShadowFromInputs);
+                });
+
+                colorPicker.addEventListener("input", e => {
+                    applyBoxShadowFromInputs();
+                });
+                colorInput.addEventListener("keydown", e => {
+                    if (e.key === "Enter") applyBoxShadowFromInputs();
+                });
+                colorInput.addEventListener("blur", applyBoxShadowFromInputs);
+
+                document.addEventListener("click", e => {
+                    if (e.target.closest(ACTIVE_SELECTOR)) requestAnimationFrame(updateUI);
+                }, true);
+
+                
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+    </div>
+
+    <!-- INSET -->
+    <div class="gm-menu-row gm-row-pair" style="align-items: center;">
+        <input type="checkbox" id="gm-shadow-inset">
+        <label for="gm-shadow-inset" style="margin: 0;">Inset</label>
+        <script>
+            (function () {
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                const inputX = document.getElementById("gm-shadow-x");
+                const inputY = document.getElementById("gm-shadow-y");
+                const inputBlur = document.getElementById("gm-shadow-blur");
+                const inputSpread = document.getElementById("gm-shadow-spread");
+
+                const colorPicker = document.querySelector(".gm-shadow-color");
+                const colorInput = document.querySelector(".gm-shadow-color-input");
+
+                const insetCheckbox = document.getElementById("gm-shadow-inset");
+
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                function getActiveBoxShadowParts() {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return { x: "", y: "", blur: "", spread: "", color: "#000000", inset: false };
+
+                    const first = actives[0];
+                    const styleValue = first.style.boxShadow || getComputedStyle(first).boxShadow;
+
+                    if (!styleValue || styleValue === "none") return { x: "", y: "", blur: "", spread: "", color: "#000000", inset: false };
+
+                    // detect inset
+                    const inset = styleValue.includes("inset");
+
+                    // extract numbers
+                    const nums = styleValue.match(/(-?\d+px|-?\d+em|-?\d+rem|-?\d+%)/g) || [];
+                    const [x = "", y = "", blur = "", spread = ""] = nums;
+
+                    // extract color
+                    const matchColor = styleValue.match(/(rgba?\([^\)]+\)|#[0-9a-fA-F]{3,6})/);
+                    const color = matchColor ? matchColor[0] : "#000000";
+
+                    // multi-select check
+                    if (actives.length > 1) {
+                        const same = [...actives].every(el => {
+                            const v = el.style.boxShadow || getComputedStyle(el).boxShadow;
+                            return v === styleValue;
+                        });
+                        if (!same) return { x: "", y: "", blur: "", spread: "", color: "#000000", inset: false };
+                    }
+
+                    return { x: x || "", y: y || "", blur: blur || "", spread: spread || "", color, inset };
+                }
+
+                function getBoxShadowFromInputs() {
+                    const parts = [
+                        inputX.value.trim() || "0px",
+                        inputY.value.trim() || "0px",
+                        inputBlur.value.trim() || "0px",
+                        inputSpread.value.trim() || "0px"
+                    ];
+                    const color = colorInput.value.trim() || "#000000";
+                    return (insetCheckbox.checked ? "inset " : "") + parts.join(" ") + " " + color;
+                }
+
+                function applyBoxShadowFromInputs() {
+                    const value = getBoxShadowFromInputs();
+                    getActiveObjects().forEach(el => {
+                        el.style.boxShadow = value;
+                    });
+                    updateUI();
+                }
+
+                function updateUI() {
+                    const parts = getActiveBoxShadowParts();
+                    if (document.activeElement !== inputX) inputX.value = parts.x;
+                    if (document.activeElement !== inputY) inputY.value = parts.y;
+                    if (document.activeElement !== inputBlur) inputBlur.value = parts.blur;
+                    if (document.activeElement !== inputSpread) inputSpread.value = parts.spread;
+                    if (document.activeElement !== colorInput) colorInput.value = parts.color;
+                    if (document.activeElement !== colorPicker) colorPicker.value = parts.color;
+                    if (document.activeElement !== insetCheckbox) insetCheckbox.checked = parts.inset;
+                }
+
+                // ======================
+                // Events
+                // ======================
+                [inputX, inputY, inputBlur, inputSpread].forEach(inp => {
+                    inp.addEventListener("keydown", e => {
+                        if (e.key === "Enter") applyBoxShadowFromInputs();
+                    });
+                    inp.addEventListener("blur", applyBoxShadowFromInputs);
+                });
+
+                [colorPicker, colorInput].forEach(el => {
+                    el.addEventListener("input", applyBoxShadowFromInputs);
+                    if (el === colorInput) {
+                        el.addEventListener("keydown", e => {
+                            if (e.key === "Enter") applyBoxShadowFromInputs();
+                        });
+                        el.addEventListener("blur", applyBoxShadowFromInputs);
+                    }
+                });
+
+                insetCheckbox.addEventListener("change", applyBoxShadowFromInputs);
+
+                document.addEventListener("click", e => {
+                    if (e.target.closest(ACTIVE_SELECTOR)) requestAnimationFrame(updateUI);
+                }, true);
+
+                
+
+                window.addEventListener('gm-active-tick', updateUI);
+
+                updateUI();
+            })();
+        </script>
+
+    </div>
+</div>

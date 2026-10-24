@@ -1,0 +1,44 @@
+<!-- Style : DOM-page.css -->
+<!-- JS : DOM-load.js -->
+<div class="gm-dom-wrapper" id="gm-dom-wrapper">
+    <!-- Header / Toolbar Pro -->
+    <div class="gm-dom-toolbar">
+        <div class="gm-dom-search-box">
+            <i class="fa-solid fa-magnifying-glass gm-dom-search-icon"></i>
+            <input type="text" class="gm-dom-search" id="gm-dom-search" placeholder="Cari tag, id, class..." autocomplete="off">
+            <button type="button" class="gm-dom-search-clear" id="gm-dom-search-clear" title="Bersihkan pencarian" style="display: none;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        
+        <div class="gm-dom-actions">
+            <button type="button" class="gm-dom-btn-tool" id="gm-dom-expand-all" title="Buka Semua Folder (Expand)">
+                <i class="fa-solid fa-angles-down"></i>
+            </button>
+            <button type="button" class="gm-dom-btn-tool" id="gm-dom-collapse-all" title="Tutup Semua Folder (Collapse)">
+                <i class="fa-solid fa-angles-up"></i>
+            </button>
+            <button type="button" class="gm-dom-btn-tool gm-dom-btn-locate" id="gm-dom-locate-active" title="Fokus / Auto-Scroll ke Objek Aktif">
+                <i class="fa-solid fa-crosshairs"></i>
+            </button>
+            <span class="gm-dom-node-count" id="gm-dom-node-count" title="Jumlah Elemen DOM">0</span>
+        </div>
+    </div>
+
+    <!-- Tree View Scroll Container -->
+    <div class="gm-DOM-cont" id="gm-DOM-cont">
+        <div id="tree" class="gm-tree-root"></div>
+        <div class="gm-dom-empty-state" id="gm-dom-empty-state" style="display: none;">
+            <i class="fa-regular fa-folder-open"></i>
+            <p>Tidak ada elemen yang sesuai</p>
+        </div>
+    </div>
+
+    <!-- Bottom Breadcrumb / Path Status Bar -->
+    <div class="gm-dom-breadcrumb-bar" id="gm-dom-breadcrumb-bar">
+        <span class="gm-dom-bc-label" title="Hierarki Objek"><i class="fa-solid fa-layer-group"></i></span>
+        <div class="gm-dom-breadcrumbs" id="gm-dom-breadcrumbs">
+            <span class="gm-bc-item gm-bc-empty">Belum ada objek aktif</span>
+        </div>
+    </div>
+</div>

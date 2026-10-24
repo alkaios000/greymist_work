@@ -1,0 +1,73 @@
+<!-- Kontainer utama -->
+<div class="gm-main" id="gm-main">
+   <?php include 'main/frame.html' ?>
+   
+   <!-- Mode Interaksi Toggle (Mengambang) -->
+   <button class="gm-interaction-toggle" id="gm-interaction-toggle" title="Interaction Mode (Disable Edit, Click Action Without Alt)">
+     <i class="fas fa-mouse-pointer"></i>
+   </button>
+
+   <!-- Mode Full Height Toggle (Mengambang) -->
+   <button class="gm-full-height-toggle" id="gm-full-height-toggle" title="Mode Full Height (Lihat Semua Konten Tanpa Scroll)">
+     <i class="fa-solid fa-arrows-up-down fas fa-arrows-alt-v"></i>
+   </button>
+
+   <style>
+     .gm-interaction-toggle,
+     .gm-full-height-toggle {
+       position: absolute;
+       top: 105px;
+       z-index: 1000;
+       width: 34px;
+       height: 34px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       background: #ffffff;
+       border: 1px solid #d8d8d8;
+       border-radius: 6px;
+       color: #555555;
+       cursor: pointer;
+       font-size: 13px;
+       box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+       transition: all 0.2s ease, transform 0.3s ease-in-out;
+       box-sizing: border-box;
+     }
+     .gm-interaction-toggle {
+       left: 15px;
+     }
+     .gm-full-height-toggle {
+       left: 55px;
+     }
+     .gm-interaction-toggle:hover,
+     .gm-full-height-toggle:hover {
+       background: #e8f0fe;
+       color: #0078ff;
+       border-color: #0078ff;
+     }
+     .gm-interaction-toggle.on,
+     .gm-full-height-toggle.on {
+       background: #0078ff;
+       color: #ffffff;
+       border-color: #0078ff;
+       box-shadow: 0 0 6px rgba(0, 120, 255, 0.4);
+     }
+     body.gm-frame-hidden .gm-interaction-toggle,
+     body.gm-frame-hidden .gm-full-height-toggle {
+       transform: translateY(-90px);
+     }
+     body.gm-fullscreen-preview .gm-interaction-toggle,
+     body.gm-fullscreen-preview .gm-full-height-toggle,
+     body.gm-fullscreen-preview #gm-interaction-toggle,
+     body.gm-fullscreen-preview #gm-full-height-toggle {
+       display: none !important;
+       visibility: hidden !important;
+       opacity: 0 !important;
+       pointer-events: none !important;
+       z-index: -9999 !important;
+     }
+   </style>
+
+   <?php include 'main/demon-core.html' ?>
+</div>
+

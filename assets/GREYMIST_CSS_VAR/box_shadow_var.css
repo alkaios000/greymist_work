@@ -1,0 +1,34 @@
+/* BOX SHADOW */
+
+/* Tanpa bayangan */
+.bs-none { box-shadow: none; }
+
+/* Bayangan kecil */
+.bs-sm { box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1); }
+
+/* Bayangan sedang */
+.bs-md { box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2); }
+
+/* Bayangan besar */
+.bs-lg { box-shadow: 6px 6px 15px rgba(0, 0, 0, 0.3); }
+
+/* Bayangan ekstra besar */
+.bs-xl { box-shadow: 10px 10px 25px rgba(0, 0, 0, 0.4); }
+
+/* Bayangan lembut */
+.bs-soft { box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15); }
+
+/* Bayangan dalam (inset) */
+.bs-inset { box-shadow: inset 4px 4px 10px rgba(0, 0, 0, 0.4); }
+
+/* Bayangan atas */
+.bs-top { box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.2); }
+
+/* Bayangan bawah */
+.bs-bottom { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); }
+
+/* Bayangan kiri */
+.bs-left { box-shadow: -4px 0 10px rgba(0, 0, 0, 0.3); }
+
+/* Bayangan kanan */
+.bs-right { box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2); }

@@ -1,0 +1,42 @@
+/* FLEX POSITIONING */
+
+/* Justify Content (Posisi Elemen di Sumbu Utama) */
+.jc-s { justify-content: start; }  /* Elemen di awal (default) */
+.jc-e { justify-content: end; }  /* Elemen di akhir */
+.jc-c { justify-content: center; }  /* Elemen di tengah */
+.jc-sb { justify-content: space-between; }  /* Spasi antar elemen, tidak di tepi */
+.jc-sa { justify-content: space-around; }  /* Spasi di antara dan di tepi */
+.jc-se { justify-content: space-evenly; }  /* Spasi rata di seluruh elemen */
+
+/* Align Items (Posisi Elemen di Sumbu Silang) */
+.ai-s { align-items: start; }  /* Elemen di atas */
+.ai-e { align-items: end; }  /* Elemen di bawah */
+.ai-c { align-items: center; }  /* Elemen sejajar di tengah */
+.ai-b { align-items: baseline; }  /* Sejajar berdasarkan teks */
+.ai-sr { align-items: stretch; }  /* Elemen meluas ke tinggi maksimal */
+
+/* Align Self (Posisi Individu di Sumbu Silang) */
+.as-a { align-self: auto; }  /* Mengikuti `align-items` container */
+.as-s { align-self: start; }  /* Elemen di atas */
+.as-e { align-self: end; }  /* Elemen di bawah */
+.as-c { align-self: center; }  /* Elemen sejajar di tengah */
+.as-b { align-self: baseline; }  /* Sejajar berdasarkan teks */
+.as-sr { align-self: stretch; }  /* Elemen meluas ke tinggi maksimal */
+
+/* Align Content (Posisi Grup di Sumbu Silang) */
+.ac-s { align-content: start; }  /* Grup elemen di atas */
+.ac-e { align-content: end; }  /* Grup elemen di bawah */
+.ac-c { align-content: center; }  /* Grup elemen di tengah */
+.ac-sb { align-content: space-between; }  /* Spasi antar grup, tidak di tepi */
+.ac-sa { align-content: space-around; }  /* Spasi di antara dan di tepi */
+.ac-se { align-content: space-evenly; }  /* Spasi rata di seluruh grup */
+.ac-sr { align-content: stretch; }  /* Grup elemen meluas maksimal */
+
+/* Order (Urutan Elemen dalam Flexbox) */
+.order-0 { order: 0; }  /* Urutan default */
+.order-1 { order: 1; }  /* Elemen setelah default */
+.order-2 { order: 2; }
+.order-3 { order: 3; }
+.order--1 { order: -1; }  /* Elemen dipindahkan ke awal */
+.order--2 { order: -2; }
+.order--3 { order: -3; }

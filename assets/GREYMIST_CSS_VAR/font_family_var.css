@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Moon+Dance&family=Oswald:wght@200..700&family=Poppins&family=Raleway:ital,wght@0,100..900;1,100..900&family=Rubik:ital@0;1&family=Work+Sans:ital@0;1&display=swap');
+
+.poppins {
+    font-family: "Poppins", sans-serif;
+}
+
+.moon-dance {
+    font-family: "Moon Dance", cursive;
+}
+
+.oswald {
+    font-family: "Oswald", sans-serif;
+}
+
+.raleway {
+    font-family: "Raleway", sans-serif;
+}
+
+.rubik {
+    font-family: "Rubik", sans-serif;
+}
+
+.work-sans {
+    font-family: "Work Sans", sans-serif;
+}

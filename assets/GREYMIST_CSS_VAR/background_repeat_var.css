@@ -1,0 +1,25 @@
+/* BACKGROUND REPEAT */
+
+.bg-r {
+    background-repeat: repeat;
+}
+
+.br-r-none {
+    background-repeat: no-repeat;
+}
+
+.bg-r-x {
+    background-repeat: repeat-x;
+}
+
+.bg-r-y {
+    background-repeat: repeat-y;
+}
+
+.bg-r-space {
+    background-repeat: space;
+}
+
+.bg-r-round {
+    background-repeat: round;
+}

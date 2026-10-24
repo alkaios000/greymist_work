@@ -1,0 +1,583 @@
+<!-- Menu Frame -->
+<div class="gm-frame-menu" id="gm-frame-menu">
+  <div class="gm-frame-thumbnails" id="gm-frame-thumbnails">
+
+
+  </div>
+
+  <!-- button frame action -->
+  <button class="gm-add-frame-btn" id="gm-add-frame-btn">+</button>
+  <button class="gm-hide-frame-btn" id="gm-hide-frame-btn"><i class="fas fa-angle-up"></i></button>
+</div>
+
+<script>
+  /* ===============================
+     GLOBAL STATE & INTERACTION MODE
+  ================================ */
+  let activeFrameId = null;
+  let saveTimer = null;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const interactionToggle = document.getElementById('gm-interaction-toggle');
+    if(interactionToggle) {
+      // Load saved state
+      const isInteractionMode = localStorage.getItem('gm_interaction_mode_on') === 'true';
+      if (isInteractionMode) {
+        document.body.classList.add('gm-interaction-mode-on');
+        interactionToggle.classList.add('on');
+        interactionToggle.innerHTML = '<i class="fas fa-hand-pointer"></i>';
+      }
+
+      interactionToggle.addEventListener('click', () => {
+        document.body.classList.toggle('gm-interaction-mode-on');
+        const isOn = document.body.classList.contains('gm-interaction-mode-on');
+        localStorage.setItem('gm_interaction_mode_on', isOn);
+        
+        if(isOn) {
+          interactionToggle.classList.add('on');
+          interactionToggle.innerHTML = '<i class="fas fa-hand-pointer"></i>';
+        } else {
+          interactionToggle.classList.remove('on');
+          interactionToggle.innerHTML = '<i class="fas fa-mouse-pointer"></i>';
+        }
+      });
+    }
+  });
+</script>
+
+<script>
+  /* ===============================
+     INIT OBJECT HASIL LOAD
+     (tidak pasang drop di sini)
+  ================================ */
+  function initLoadedObjects(root) {
+    if (!root) return;
+
+    // init semua object hasil load agar siap dimasuki
+    root.querySelectorAll(".gm-object").forEach(obj => {
+      obj.dataset.gmReady = "1";
+    });
+    if (root.classList && root.classList.contains("gm-object")) {
+      root.dataset.gmReady = "1";
+    }
+  }
+  window.initLoadedObjects = initLoadedObjects;
+</script>
+
+<script>
+  /* ===============================
+     FRAME SWITCH
+  ================================ */
+
+  function activateFrame(frameId) {
+    activeFrameId = frameId;
+
+    document.querySelectorAll(".gm-object-core").forEach(c => {
+      c.classList.remove("actived");
+      c.style.display = "none";
+    });
+
+    document.querySelectorAll(".gm-frame-thumbnail")
+      .forEach(t => t.classList.remove("actived"));
+
+    const core = document.getElementById(`object-core-${frameId}`);
+    const thumb = document.querySelector(
+      `.gm-frame-thumbnail[data-frame="${frameId}"]`
+    );
+
+    if (!core) return;
+
+    core.classList.add("actived");
+    core.style.display = "block";
+    if (thumb) thumb.classList.add("actived");
+
+    initLoadedObjects(core);
+    if (typeof fitAllCores === "function") fitAllCores();
+  }
+
+
+  /* ===============================
+     CREATE FRAME UI
+  ================================ */
+  function createFrameUI(frame, active) {
+
+    const core = document.createElement("div");
+    core.className = "gm-object-core";
+    core.id = `object-core-${frame.frame_id}`;
+    core.dataset.frame = frame.frame_id;
+    core.innerHTML = frame.core_content || "";
+    core.contentEditable = false;
+
+    preview.appendChild(core);
+    initLoadedObjects(core);
+
+    const thumb = document.createElement("div");
+    thumb.className = "gm-frame-thumbnail";
+    thumb.dataset.frame = frame.frame_id;
+    if (active) thumb.classList.add("actived");
+
+    thumb.innerHTML = `
+    <div class="gm-preview-box"></div>
+    <div class="gm-frame-name">${frame.frame_name}</div>
+  `;
+
+    thumb.onclick = () => activateFrame(frame.frame_id);
+    thumbnails.appendChild(thumb);
+
+    if (active) {
+      activeFrameId = frame.frame_id;
+      core.classList.add("actived");
+    }
+
+    // Generate initial thumbnail
+    setTimeout(() => {
+      if (typeof updateThumbnail === 'function') updateThumbnail(frame.frame_id);
+    }, 500);
+  }
+
+  /* ===============================
+     UPDATE THUMBNAIL
+  ================================ */
+  function updateThumbnail(frameId) {
+    const core = document.getElementById(`object-core-${frameId}`);
+    const thumbBox = document.querySelector(`.gm-frame-thumbnail[data-frame="${frameId}"] .gm-preview-box`);
+    if (!core || !thumbBox) return;
+
+    // Clone core content
+    const clone = core.cloneNode(true);
+
+    // Remove active styles and previews
+    clone.querySelectorAll('.gm-active').forEach(el => el.classList.remove('gm-active'));
+    clone.querySelectorAll('.gm-drop-hover').forEach(el => el.classList.remove('gm-drop-hover'));
+    clone.querySelectorAll('.gm-drag-preview, [data-preview], .gm-live-preview').forEach(el => el.remove());
+
+    // Hentikan animasi berulang di thumbnail dengan mempercepat durasinya ke 0.001s (langsung ke hasil akhir)
+    clone.querySelectorAll('.gm-anim-base').forEach(el => {
+        el.style.setProperty('animation-duration', '0.001s', 'important');
+        el.style.setProperty('animation-delay', '0s', 'important');
+    });
+
+    const wrapper = document.createElement('div');
+    // Gunakan dimensi asli dari core, jangan hardcode 1920x1080
+    // Karena .gm-object-core ukurannya 100vw/100vh, ini akan meng-copy dimensi pastinya
+    const coreW = core.clientWidth || window.innerWidth;
+    const coreH = core.clientHeight || window.innerHeight;
+
+    wrapper.style.width = coreW + 'px';
+    wrapper.style.height = coreH + 'px';
+    wrapper.style.transformOrigin = 'center center';
+
+    // Hitung rasio agar fit sempurna di dalam box
+    const bw = thumbBox.clientWidth || 107;
+    const bh = thumbBox.clientHeight || 60;
+    const scale = Math.min(bw / coreW, bh / coreH);
+
+    wrapper.style.position = 'absolute';
+    wrapper.style.top = '50%';
+    wrapper.style.left = '50%';
+    wrapper.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+    wrapper.style.pointerEvents = 'none';
+    wrapper.style.overflow = 'hidden';
+    wrapper.style.background = '#fff';
+
+    while (clone.firstChild) {
+      wrapper.appendChild(clone.firstChild);
+    }
+
+    thumbBox.innerHTML = '';
+    thumbBox.appendChild(wrapper);
+  }
+</script>
+
+<script>
+  /* =====================================
+     DROP SYSTEM (CORE & OBJECT ONLY)
+  ===================================== */
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const preview = document.getElementById("gm-frame-preview");
+    if (!preview) return;
+
+    preview.addEventListener("dragover", e => {
+      const core = e.target.closest(".gm-object-core");
+      if (!core || !core.classList.contains("actived")) return;
+
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "copy";
+    });
+
+    preview.addEventListener("drop", e => {
+      const core = e.target.closest(".gm-object-core");
+      if (!core || !core.classList.contains("actived")) return;
+
+      e.preventDefault();
+
+      const type = e.dataTransfer.getData("text/plain");
+      if (!type) return;
+
+      // target paling dalam yang valid
+      let container =
+        e.target.closest(".gm-object") ||
+        core;
+
+      let newEl;
+
+      if (type === "icon") {
+        const name = e.dataTransfer.getData("icon-name");
+        const cat = e.dataTransfer.getData("icon-category");
+
+        newEl = document.createElement("i");
+        newEl.className = `fa-${cat} fa-${name} gm-object`;
+        newEl.style.fontSize = "2em";
+        container.appendChild(newEl);
+        initLoadedObjects(newEl);
+      } else if (type === "template") {
+        const html = e.dataTransfer.getData("template-html") || localStorage.getItem("gm_drag_template");
+        if (html) {
+            const tempDiv = document.createElement("div");
+            tempDiv.innerHTML = html.trim();
+            Array.from(tempDiv.children).forEach(el => {
+                container.appendChild(el);
+                if (typeof initLoadedObjects === "function") initLoadedObjects(el);
+            });
+        }
+      } else {
+        newEl = createElementByType(type);
+        newEl.classList.add("gm-object");
+        container.appendChild(newEl);
+        initLoadedObjects(newEl);
+      }
+      if (typeof scheduleSave === "function") scheduleSave();
+    });
+
+    // Handle template drop on thumbnail list to create new frames
+    const thumbnailsList = document.getElementById("gm-frame-thumbnails");
+    if (thumbnailsList) {
+        thumbnailsList.addEventListener("dragover", e => {
+            const type = e.dataTransfer.types ? (e.dataTransfer.types.includes("text/plain") || e.dataTransfer.types.includes("template")) : true;
+            // Kita cegah default kalau mau custom drop
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "copy";
+        }, { capture: true });
+
+        thumbnailsList.addEventListener("drop", e => {
+            const type = e.dataTransfer.getData("text/plain");
+            if (type === "template") {
+                e.preventDefault();
+                e.stopPropagation(); // Hentikan dari SortableJS
+                
+                const html = e.dataTransfer.getData("template-html") || localStorage.getItem("gm_drag_template");
+                const projectId = document.getElementById("project_id").value;
+
+                if (!html) return;
+
+                fetch("api/add_frame.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: "project_id=" + encodeURIComponent(projectId)
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if (res.status === "OK") {
+                        if (typeof createFrameUI === "function") {
+                            createFrameUI(res.frame, false);
+                        }
+
+                        const newCore = document.getElementById("object-core-" + res.frame.frame_id);
+                        if (newCore) {
+                            const tempDiv = document.createElement("div");
+                            tempDiv.innerHTML = html.trim();
+                            Array.from(tempDiv.children).forEach(el => {
+                                newCore.appendChild(el);
+                                if (typeof initLoadedObjects === "function") initLoadedObjects(el);
+                            });
+                        }
+
+                        setTimeout(() => {
+                            const newThumb = document.querySelector(`.gm-frame-thumbnail[data-frame="${res.frame.frame_id}"]`);
+                            if(newThumb) newThumb.click();
+                            if (typeof scheduleSave === "function") scheduleSave();
+                        }, 100);
+                    }
+                });
+            }
+        }, { capture: true });
+    }
+
+  });
+</script>
+
+<script>
+  (function () {
+
+    let saveTimer = null;
+    const SAVE_DELAY = 500; // ms (aman & sinkron)
+
+    /* =====================================
+       COLLECT STATE
+       ===================================== */
+    function collectProjectState() {
+      // NEW: Sinkronkan breakpoint yang sedang aktif
+      if (typeof window.syncCurrentBreakpoint === 'function') {
+        window.syncCurrentBreakpoint();
+      }
+
+      const frames = [];
+
+      // Iterasi dari thumbnail (yang sudah di-swap oleh user) bukan dari core
+      // agar sort_order yang tersimpan sesuai urutan visual yang user lihat
+      // Pastikan breakpoint disinkronisasi sebelum membuat clone untuk disimpan
+      if (typeof window.syncCurrentBreakpoint === 'function') {
+        window.syncCurrentBreakpoint();
+      }
+
+      const thumbnails = document.querySelectorAll(".gm-frame-thumbnail");
+      thumbnails.forEach(thumb => {
+        const frameId = thumb.dataset.frame;
+        if (!frameId) return;
+
+        const nameEl = thumb.querySelector(".gm-frame-name");
+        const core = document.getElementById(`object-core-${frameId}`);
+        if (!core) return;
+
+        // Kloning core agar tidak merusak tampilan live
+        const clone = core.cloneNode(true);
+
+        // Normalisasi inline styles kembali ke Desktop
+        clone.querySelectorAll('.gm-object').forEach(el => {
+           const desktopStyle = el.dataset.bpDesktop || el.style.cssText;
+           el.style.cssText = desktopStyle;
+        });
+
+        frames.push({
+          frame_id: frameId,
+          frame_name: nameEl ? nameEl.textContent.trim() : "",
+          core_content: clone.innerHTML
+        });
+      });
+
+      return frames;
+    }
+
+    /* =====================================
+       SAVE (DEBOUNCED)
+       ===================================== */
+    function requestSave() {
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(saveProject, SAVE_DELAY);
+    }
+
+    function saveProject() {
+      const syncIcon = document.getElementById("gm-cloud-sync");
+      if(syncIcon) {
+          syncIcon.style.color = "#ffa500"; // Orange (saving)
+          syncIcon.classList.add("fa-fade");
+      }
+      const frames = collectProjectState();
+      if (!frames.length) return;
+
+      fetch("api/save_project.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ frames })
+      })
+        .then(r => r.json())
+        .then(() => flashSaved())
+        .catch(() => {
+           if(syncIcon) {
+               syncIcon.style.color = "#f44336"; // Red (error)
+               syncIcon.classList.remove("fa-fade");
+           }
+        });
+    }
+
+    function flashSaved() {
+      const syncIcon = document.getElementById("gm-cloud-sync");
+      if(syncIcon) {
+          syncIcon.style.color = "#4caf50"; // Green (synced)
+          syncIcon.classList.remove("fa-fade");
+      }
+    }
+
+    /* =====================================
+       OBSERVER (AUTO SYNC)
+       ===================================== */
+    const observer = new MutationObserver(mutations => {
+      let needsThumbUpdate = null;
+      for (const m of mutations) {
+        // Abaikan perubahan outline (visual feedback dari flashSaved) pada gm-object-core
+        if (m.target.classList.contains("gm-object-core") && m.attributeName === "style") {
+            continue;
+        }
+        
+        requestSave();
+        const syncIcon = document.getElementById("gm-cloud-sync");
+        if(syncIcon) {
+            syncIcon.style.color = "#999"; // Gray (pending)
+            syncIcon.classList.remove("fa-fade");
+        }
+        needsThumbUpdate = m.target.closest('.gm-object-core');
+        break;
+      }
+      if (needsThumbUpdate) {
+        clearTimeout(needsThumbUpdate.thumbTimer);
+        needsThumbUpdate.thumbTimer = setTimeout(() => {
+          if (typeof updateThumbnail === 'function') updateThumbnail(needsThumbUpdate.dataset.frame);
+        }, 500);
+
+        if (document.body.classList.contains('gm-full-height-mode') && typeof fitAllCores === 'function') {
+          clearTimeout(window._fitCoreTimer);
+          window._fitCoreTimer = setTimeout(fitAllCores, 120);
+        }
+      }
+    });
+
+    function observeAllCores() {
+      document.querySelectorAll(".gm-object-core").forEach(core => {
+        observer.observe(core, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+          attributes: true
+        });
+      });
+    }
+
+    /* =====================================
+       START OBSERVE WHEN READY
+       ===================================== */
+    function waitUntilReady() {
+      const cores = document.querySelectorAll(".gm-object-core");
+      if (!cores.length) {
+        requestAnimationFrame(waitUntilReady);
+        return;
+      }
+      observeAllCores();
+      console.log("✅ Auto-save aktif & sinkron");
+    }
+
+    waitUntilReady();
+
+  })();
+</script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const params = new URLSearchParams(location.search);
+    const projectId = params.get("project_id");
+
+    window.preview = document.getElementById("gm-frame-preview");
+    window.thumbnails = document.getElementById("gm-frame-thumbnails");
+
+    fetch(`api/get_frames.php?project_id=${projectId}`)
+      .then(r => r.json())
+      .then(frames => {
+        if (!frames.length) return;
+
+        frames.forEach((f, i) => createFrameUI(f, i === 0));
+        activateFrame(frames[0].frame_id);
+      });
+
+  });
+</script>
+<script>
+  (function () {
+
+    /* ===============================
+       FORCE BROWSER ALLOW DROP
+       =============================== */
+
+    document.addEventListener("dragover", function (e) {
+      e.preventDefault();               // 🔥 WAJIB
+    }, true); // 🔥 CAPTURE PHASE
+
+    document.addEventListener("drop", function (e) {
+      const target = e.target.closest(".gm-object-core, .gm-object");
+      // Jika bukan di area canvas, biarkan event jalan terus ke handler lain (misal thumbnail list)
+      if (!target) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const type = e.dataTransfer.getData("text/plain");
+      if (!type) return;
+
+      if (type === "template") {
+          const html = e.dataTransfer.getData("template-html") || localStorage.getItem("gm_drag_template");
+          if (html) {
+              const tempDiv = document.createElement("div");
+              tempDiv.innerHTML = html.trim();
+              Array.from(tempDiv.children).forEach(el => {
+                  target.appendChild(el);
+                  if (typeof initLoadedObjects === "function") initLoadedObjects(el);
+              });
+          }
+          console.log("✅ TEMPLATE DROP MASUK:", target);
+          return;
+      }
+
+      if (type === "icon") {
+        const name = e.dataTransfer.getData("icon-name");
+        const cat = e.dataTransfer.getData("icon-category");
+        const newEl = document.createElement("i");
+        newEl.className = `fa-${cat} fa-${name} gm-object`;
+        newEl.style.fontSize = "2em";
+        target.appendChild(newEl);
+        if (typeof initLoadedObjects === "function") initLoadedObjects(newEl);
+        console.log("✅ ICON DROP MASUK:", target);
+        return;
+      }
+
+      const el = createElementByType(type);
+      if(el) {
+          el.classList.add("gm-object");
+          target.appendChild(el);
+          if (typeof initLoadedObjects === "function") initLoadedObjects(el);
+          console.log("✅ DROP MASUK:", target);
+      }
+
+    }, true); // 🔥 CAPTURE PHASE
+
+  })();
+</script>
+
+<script>
+  /* =====================================
+     SIMULATE CLICK FIRST FRAME ON LOAD
+  ===================================== */
+
+  document.addEventListener("DOMContentLoaded", () => {
+
+    const waitUntilReady = setInterval(() => {
+
+      const firstThumb = document.querySelector(".gm-frame-thumbnail");
+      const firstCore = document.querySelector(".gm-object-core");
+
+      // pastikan UI frame & core sudah ada
+      if (!firstThumb || !firstCore) return;
+
+      clearInterval(waitUntilReady);
+
+      // 🔥 SIMULASI KLIK ASLI
+      firstThumb.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+          view: window
+        })
+      );
+
+      // 🔒 jaga-jaga: pastikan core tampil
+      firstCore.style.display = "block";
+
+    }, 30); // polling ringan, aman
+
+  });
+</script>
+
+<script>
+  window.API_BASE =
+    "Greymist_framework/Greymist (version 0.7 - Database and Core Bug Fix)/api/";
+</script>

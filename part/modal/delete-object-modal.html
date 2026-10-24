@@ -1,0 +1,56 @@
+<!-- kurang close icon, dan ketika di klick di overlay akan menutup modal. supaya user bisa cancel pada aksi delete object with child -->
+
+<!-- Modal Delete Object With Child -->
+<div class="gm-popup-overlay" style="display:none;">
+  <div class="gm-popup">
+    <p>Beberapa object memiliki child. Pilih aksi:</p>
+    <button class="gm-delete-this">Delete this only</button>
+    <button class="gm-delete-all">Delete all including child</button>
+  </div>
+</div>
+
+<style>
+  .gm-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 10002;
+  }
+  .gm-popup {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  .gm-popup button {
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .gm-delete-this {
+    background: #16477c;
+    color: #ffffff;
+  }
+  .gm-delete-this:hover {
+    background: #3f76c3;
+  }
+  .gm-delete-all {
+    background: #16477c;
+    color: #ffffff;
+  }
+  .gm-delete-all:hover {
+    background: #3f76c3;
+  }
+</style>

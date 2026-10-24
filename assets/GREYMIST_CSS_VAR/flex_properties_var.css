@@ -1,0 +1,32 @@
+/* FLEX PROPERTIES */
+
+/* Flex Grow (Peregangan Elemen) */
+.fg-0 { flex-grow: 0; }  /* Tidak tumbuh, hanya sesuai ukuran awal */
+.fg-1 { flex-grow: 1; }  /* Tumbuh dan mengisi ruang kosong */
+.fg-2 { flex-grow: 2; }  /* Tumbuh 2x lebih besar dari `fg-1` */
+
+/* Flex Shrink (Penyusutan Elemen) */
+.fs-0 { flex-shrink: 0; }  /* Tidak menyusut saat container mengecil */
+.fs-1 { flex-shrink: 1; }  /* Menyusut sesuai aturan default */
+.fs-2 { flex-shrink: 2; }  /* Menyusut 2x lebih cepat dari `fs-1` */
+
+/* Flex Basis (Ukuran Awal Sebelum Grow/Shrink) */
+.fb-a { flex-basis: auto; }  /* Ukuran berdasarkan konten */
+.fb-0 { flex-basis: 0; }  /* Mengabaikan ukuran konten */
+.fb-50 { flex-basis: 50px; }  /* Ukuran awal 50px */
+.fb-100 { flex-basis: 100px; }  /* Ukuran awal 100px */
+.fb-25p { flex-basis: 25%; }  /* Ukuran awal 25% */
+.fb-50p { flex-basis: 50%; }  /* Ukuran awal 50% */
+
+/* Flex Direction (Arah Susunan) */
+.fd-r { flex-direction: row; }  /* Susunan horizontal (default) */
+.fd-rr { flex-direction: row-reverse; }  /* Urutan baris terbalik */
+.fd-c { flex-direction: column; }  /* Susunan vertikal */
+.fd-cr { flex-direction: column-reverse; }  /* Urutan kolom terbalik */
+
+/* Flex Wrap (Pindah Baris Saat Penuh) */
+.fw-n { flex-wrap: nowrap; }  /* Tidak pindah baris (default) */
+.fw-w { flex-wrap: wrap; }  /* Pindah baris jika penuh */
+.fw-wr { flex-wrap: wrap-reverse; }  /* Pindah baris terbalik */
+
+

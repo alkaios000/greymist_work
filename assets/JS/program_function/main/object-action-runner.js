@@ -1,0 +1,104 @@
+document.addEventListener("DOMContentLoaded", () => {
+
+    window.runObjectAction = function(el) {
+        if (!el || !el.dataset.actionType) return;
+        
+        const type = el.dataset.actionType;
+        
+        if (type === "goto") {
+            const targetId = el.dataset.actionTarget;
+            if(targetId) {
+                const thumb = document.querySelector(`.gm-frame-thumbnail[data-frame="${targetId}"]`);
+                if (thumb) {
+                    thumb.click();
+                } else if (typeof window.activateFrame === "function") {
+                    window.activateFrame(targetId);
+                }
+            }
+        } else if (type === "scroll") {
+            const scrollId = el.dataset.actionScrollTarget;
+            if(scrollId) {
+                // Gunakan class atau id dari preview jika dibutuhkan, atau query di document
+                // Tapi ini dijalankan di Main Editor
+                let scrollEl = document.getElementById(scrollId) || document.querySelector("." + scrollId);
+                // Jika tidak ketemu di global, cari di dalam active core
+                if (!scrollEl) {
+                    const activeCore = document.querySelector(".gm-object-core.actived");
+                    if (activeCore) {
+                        scrollEl = activeCore.querySelector("#" + scrollId) || activeCore.querySelector("." + scrollId);
+                    }
+                }
+                if (scrollEl) {
+                    scrollEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                }
+            }
+        } else if (type === "modal") {
+            showModalPreview(el);
+        }
+    };
+
+    function showModalPreview(el) {
+        // Hapus modal lama jika ada
+        let existing = document.getElementById("gm-test-action-modal");
+        if(existing) existing.remove();
+
+        const title = el.dataset.actionModalTitle || "Modal Title";
+        const content = el.dataset.actionModalContent || "Modal Content";
+        const image = el.dataset.actionModalImage || "";
+        const width = el.dataset.actionModalWidth || "400px";
+        const bg = el.dataset.actionModalBg || "#ffffff";
+        const color = el.dataset.actionModalColor || "#333333";
+
+        const overlay = document.createElement("div");
+        overlay.id = "gm-test-action-modal";
+        Object.assign(overlay.style, {
+            position: "fixed",
+            top: "0", left: "0", width: "100vw", height: "100vh",
+            backgroundColor: "rgba(0,0,0,0.5)",
+            display: "flex", justifyContent: "center", alignItems: "center",
+            zIndex: "999999"
+        });
+
+        const modal = document.createElement("div");
+        Object.assign(modal.style, {
+            width: width,
+            backgroundColor: bg,
+            color: color,
+            padding: "20px",
+            borderRadius: "8px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+            fontFamily: "poppins, Arial, sans-serif"
+        });
+
+        const imageHtml = image ? `<img src="${image}" style="max-width: 100%; border-radius: 4px; margin-bottom: 15px; display: block;">` : "";
+
+        modal.innerHTML = `
+            <h2 style="margin-top:0; margin-bottom: 15px;">${title}</h2>
+            ${imageHtml}
+            <div style="margin-bottom: 20px; white-space: pre-wrap;">${content}</div>
+            <div style="text-align: right;">
+                <button class="gm-close-test-modal" style="padding: 8px 16px; cursor: pointer; border: none; border-radius: 4px; background: #0078ff; color: white;">Tutup</button>
+            </div>
+        `;
+
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        overlay.querySelector(".gm-close-test-modal").addEventListener("click", () => {
+            overlay.remove();
+        });
+    }
+
+    // Intercept Alt + Click (atau saat mode interaksi aktif) pada seluruh dokumen
+    document.addEventListener("click", (e) => {
+        const isInteractionMode = document.body.classList.contains('gm-interaction-mode-on');
+        if (e.altKey || isInteractionMode) {
+            const obj = e.target.closest("[data-action-type]");
+            if (obj) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.runObjectAction(obj);
+            }
+        }
+    }, true); // Capture phase agar menangkap event lebih dulu
+});

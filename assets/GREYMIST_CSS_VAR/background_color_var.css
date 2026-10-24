@@ -1,0 +1,114 @@
+/* BACKGROUND VAR */
+
+.bg-white {
+    background: white;
+}
+
+.bg-black {
+    background: black;
+}
+
+/* BLUE */
+.bg-blue-light {
+    background: #a6caff;
+}
+
+.bg-blue {
+    background: #2c6dc2;
+}
+
+.bg-blue-dark {
+    background: #0e4086;
+}
+
+.bg-blue-darker {
+    background: #072656;
+}
+
+.bg-blue-deep {
+    background: #021636;
+}
+
+/* RED */
+.bg-red-light {
+    background: #ff7f7f;
+}
+
+.bg-red {
+    background: #e3342f;
+}
+
+.bg-red-dark {
+    background: #cc1f1a;
+}
+
+.bg-red-darker {
+    background: #991b1b;
+}
+
+.bg-red-deep {
+    background: #660000;
+}
+
+/* GREEN */
+.bg-green-light {
+    background: #86efac;
+}
+
+.bg-green {
+    background: #38a169;
+}
+
+.bg-green-dark {
+    background: #2f855a;
+}
+
+.bg-green-darker {
+    background: #276749;
+}
+
+.bg-green-deep {
+    background: #1d4531;
+}
+
+/* YELLOW */
+.bg-yellow-light {
+    background: #ffed85;
+}
+
+.bg-yellow {
+    background: #ffed4a;
+}
+
+.bg-yellow-dark {
+    background: #d4b106;
+}
+
+.bg-yellow-darker {
+    background: #a38400;
+}
+
+.bg-yellow-deep {
+    background: #6d5700;
+}
+
+/* GRAY */
+.bg-gray-light {
+    background: #dfe4ed;
+}
+
+.bg-gray {
+    background: #c0c8d1;
+}
+
+.bg-gray-dark {
+    background: #6b7280;
+}
+
+.bg-gray-darker {
+    background: #4b5563;
+}
+
+.bg-gray-deep {
+    background: #1f2937;
+}

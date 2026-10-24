@@ -1,0 +1,236 @@
+<div class="gm-menu-section gm-content-box-menu">
+    <div class="gm-menu-title">Box Settings</div>
+
+    <!-- BOX SIZING -->
+    <div class="gm-menu-row">
+        <label for="gm-box-sizing">Box sizing</label>
+        <select id="gm-box-sizing">
+            <option value="">-</option>
+            <option value="content-box">content-box</option>
+            <option value="border-box">border-box</option>
+            <option value="inherit">inherit</option>
+        </select>
+        <script>
+            (function () {
+
+                /* ===============================
+                   CONFIG
+                ================================ */
+                const SELECT_ID = "gm-box-sizing";
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                const boxSizingSelect = document.getElementById(SELECT_ID);
+                if (!boxSizingSelect) return;
+
+                /* ===============================
+                   HELPERS
+                ================================ */
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                /* ===============================
+                   APPLY (WRITE INLINE)
+                ================================ */
+                function setBoxSizingToActive(value) {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return;
+
+                    actives.forEach(el => {
+                        if (value) {
+                            el.style.boxSizing = value;
+                        } else {
+                            el.style.removeProperty("box-sizing");
+                        }
+                    });
+                }
+
+                /* ===============================
+                   SYNC UI (READ COMPUTED)
+                ================================ */
+                function syncBoxSizingUI() {
+                    // jangan ganggu saat user sedang interaksi
+                    if (document.activeElement === boxSizingSelect) return;
+
+                    const actives = getActiveObjects();
+
+                    // ❌ tidak ada selection
+                    if (!actives.length) {
+                        boxSizingSelect.value = "";
+                        return;
+                    }
+
+                    const firstValue = getComputedStyle(actives[0]).boxSizing;
+
+                    // multi-select: cek apakah semua sama
+                    for (let el of actives) {
+                        if (getComputedStyle(el).boxSizing !== firstValue) {
+                            boxSizingSelect.value = "";
+                            return;
+                        }
+                    }
+
+                    boxSizingSelect.value = firstValue || "";
+                }
+
+                /* ===============================
+                   SAFE SYNC (ANTI RACE)
+                ================================ */
+                function safeSync() {
+                    // tunggu selection Greymist settle
+                    requestAnimationFrame(() => {
+                        setTimeout(syncBoxSizingUI, 0);
+                    });
+                }
+
+                /* ===============================
+                   INPUT HANDLING
+                ================================ */
+                boxSizingSelect.addEventListener("change", e => {
+                    setBoxSizingToActive(e.target.value);
+                    safeSync();
+                });
+
+                /* ===============================
+                   SELECTION CHANGE HOOK
+                ================================ */
+
+                // ✔ kalau Greymist punya event ini (DISARANKAN)
+                document.addEventListener("gm-selection-change", safeSync);
+
+                // ✔ fallback aman (capture phase)
+                document.addEventListener("click", safeSync, true);
+
+                /* ===============================
+                   INIT
+                ================================ */
+                safeSync();
+
+                // expose untuk debug (optional)
+                window.gm_syncBoxSizing = syncBoxSizingUI;
+
+            })();
+        </script>
+    </div>
+
+    <!-- CURSOR -->
+    <div class="gm-menu-row">
+        <label for="gm-cursor">Cursor</label>
+        <select id="gm-cursor">
+            <option value="">-</option>
+            <option value="auto">Auto</option>
+            <option value="default">Default</option>
+            <option value="pointer">Pointer</option>
+            <option value="text">Text</option>
+            <option value="move">Move</option>
+            <option value="crosshair">Crosshair</option>
+            <option value="grab">Grab</option>
+            <option value="grabbing">Grabbing</option>
+            <option value="wait">Wait</option>
+            <option value="progress">Progress</option>
+            <option value="not-allowed">Not allowed</option>
+            <option value="help">Help</option>
+            <option value="zoom-in">Zoom in</option>
+            <option value="zoom-out">Zoom out</option>
+            <option value="col-resize">Col resize</option>
+            <option value="row-resize">Row resize</option>
+        </select>
+        <script>
+            (function () {
+
+                /* ===============================
+                   CONFIG
+                ================================ */
+                const SELECT_ID = "gm-cursor";
+                const ACTIVE_SELECTOR = ".gm-object.gm-active";
+
+                const cursorSelect = document.getElementById(SELECT_ID);
+                if (!cursorSelect) return;
+
+                /* ===============================
+                   HELPERS
+                ================================ */
+                function getActiveObjects() {
+                    return document.querySelectorAll(ACTIVE_SELECTOR);
+                }
+
+                /* ===============================
+                   APPLY (WRITE INLINE)
+                ================================ */
+                function setCursorToActive(value) {
+                    const actives = getActiveObjects();
+                    if (!actives.length) return;
+
+                    actives.forEach(el => {
+                        if (value) {
+                            el.style.cursor = value;
+                        } else {
+                            el.style.removeProperty("cursor");
+                        }
+                    });
+                }
+
+                /* ===============================
+                   SYNC UI (READ COMPUTED)
+                ================================ */
+                function syncCursorUI() {
+                    // jangan ganggu user saat sedang pilih
+                    if (document.activeElement === cursorSelect) return;
+
+                    const actives = getActiveObjects();
+
+                    // ❌ tidak ada selection
+                    if (!actives.length) {
+                        cursorSelect.value = "";
+                        return;
+                    }
+
+                    const firstValue = getComputedStyle(actives[0]).cursor;
+
+                    // multi-select mixed
+                    for (let el of actives) {
+                        if (getComputedStyle(el).cursor !== firstValue) {
+                            cursorSelect.value = "";
+                            return;
+                        }
+                    }
+
+                    cursorSelect.value = firstValue || "";
+                }
+
+                /* ===============================
+                   SAFE SYNC (ANTI RACE)
+                ================================ */
+                function safeSync() {
+                    requestAnimationFrame(() => {
+                        setTimeout(syncCursorUI, 0);
+                    });
+                }
+
+                /* ===============================
+                   INPUT HANDLING
+                ================================ */
+                cursorSelect.addEventListener("change", e => {
+                    setCursorToActive(e.target.value);
+                    safeSync();
+                });
+
+                /* ===============================
+                   SELECTION CHANGE HOOK
+                ================================ */
+                document.addEventListener("gm-selection-change", safeSync);
+                document.addEventListener("click", safeSync, true);
+
+                /* ===============================
+                   INIT
+                ================================ */
+                safeSync();
+
+                // debug helper (optional)
+                window.gm_syncCursor = syncCursorUI;
+
+            })();
+        </script>
+
+    </div>
+</div>

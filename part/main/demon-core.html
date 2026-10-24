@@ -1,0 +1,498 @@
+<!-- Area Preview untuk Object Core -->
+<div class="gm-breakpoint-toolbar" id="gm-breakpoint-toolbar"
+    style="position: absolute; top: 105px; left: 95px; z-index: 1000; display: flex; gap: 2px; background: #fff; padding: 3px; border: 1px solid #d8d8d8; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.15); transition: transform 0.3s ease-in-out; height: 34px; box-sizing: border-box;">
+    <!-- Buttons dynamically injected by renderBreakpointUI() -->
+</div>
+
+<style>
+    body.gm-fullscreen-preview #gm-breakpoint-toolbar,
+    body.gm-fullscreen-preview .gm-breakpoint-toolbar {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        z-index: -9999 !important;
+    }
+    .gm-bp-btn {
+        border: none;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        color: #555;
+        transition: all 0.2s;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+    }
+
+    .gm-bp-btn:hover {
+        background: #e8f0fe;
+        color: #0078ff;
+    }
+
+    .gm-bp-btn.active {
+        background: #0078ff;
+        color: #fff;
+        box-shadow: 0 0 6px rgba(0, 120, 255, 0.4);
+    }
+
+    body.gm-frame-hidden #gm-breakpoint-toolbar {
+        transform: translateY(-90px);
+    }
+</style>
+
+<div class="gm-frame-preview" id="gm-frame-preview">
+    <!-- gm-object-core akan di-inject lewat JS -->
+</div>
+
+<!-- Modal Add Breakpoint -->
+<div id="gm-bp-modal"
+    style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center; font-family: sans-serif;">
+    <div
+        style="background: #fff; padding: 20px; border-radius: 8px; width: 300px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+        <h3 style="margin-top: 0; font-size: 16px; margin-bottom: 15px; color: #333;">Tambah Breakpoint</h3>
+        <div style="margin-bottom: 10px;">
+            <label style="font-size: 12px; display: block; margin-bottom: 5px; color: #666;">Tipe Aturan</label>
+            <select id="gm-bp-type"
+                style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; outline: none;">
+                <option value="max">Max-Width (Untuk Layar Lebih Kecil)</option>
+                <option value="min">Min-Width (Untuk Layar Lebih Besar)</option>
+            </select>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="font-size: 12px; display: block; margin-bottom: 5px; color: #666;">Ukuran (px)</label>
+            <input type="number" id="gm-bp-val" placeholder="Misal: 1024"
+                style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; outline: none;">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button id="gm-bp-cancel"
+                style="padding: 6px 12px; border: none; background: #f0f0f0; border-radius: 4px; cursor: pointer; color: #333;">Batal</button>
+            <button id="gm-bp-save"
+                style="padding: 6px 12px; border: none; background: #0078ff; color: #fff; border-radius: 4px; cursor: pointer;">Simpan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Breakpoint Manager & Kalibrasi skala demon-core -->
+<script>
+    // 1. Inisialisasi Breakpoints
+    window.gmBreakpoints = [
+        { id: "desktop", name: "Desktop", rule: "base", widthValue: 1920, type: "base", isDefault: true }
+    ];
+    window.gmActiveBreakpoint = "desktop";
+
+    // Load custom breakpoints dari localStorage
+    const projParams = new URLSearchParams(location.search);
+    const projId = projParams.get("project_id");
+    const savedBpKey = `gm_custom_breakpoints_${projId}`;
+
+    // Fungsi Render UI (Otomatis urut)
+    window.renderBreakpointUI = function () {
+        const toolbar = document.getElementById('gm-breakpoint-toolbar');
+        if (!toolbar) return;
+
+        toolbar.innerHTML = "";
+
+        // Sort: min-width (ascending) -> base -> max-width (descending)
+        const minBp = window.gmBreakpoints.filter(b => b.type === 'min').sort((a, b) => a.widthValue - b.widthValue);
+        const baseBp = window.gmBreakpoints.filter(b => b.type === 'base');
+        const maxBp = window.gmBreakpoints.filter(b => b.type === 'max').sort((a, b) => b.widthValue - a.widthValue);
+
+        const sorted = [...minBp, ...baseBp, ...maxBp];
+
+        sorted.forEach(bp => {
+            const btn = document.createElement("button");
+            btn.className = `gm-bp-btn ${window.gmActiveBreakpoint === bp.id ? 'active' : ''}`;
+            btn.dataset.bp = bp.id;
+
+            let title = bp.name;
+            if (bp.type !== 'base') title += ` (${bp.rule})`;
+            btn.title = title;
+
+            // Icon
+            let iconClass = 'fa-desktop';
+            if (bp.widthValue <= 480) iconClass = 'fa-mobile-alt';
+            else if (bp.widthValue <= 1024 && bp.type === 'max') iconClass = 'fa-tablet-alt';
+
+            btn.innerHTML = `<i class="fas ${iconClass}"></i>`;
+            toolbar.appendChild(btn);
+        });
+
+        // Add button
+        const addBtn = document.createElement("button");
+        addBtn.className = "gm-bp-btn";
+        addBtn.id = "gm-bp-add";
+        addBtn.title = "Add Custom Breakpoint";
+        addBtn.innerHTML = `<i class="fas fa-plus"></i>`;
+        toolbar.appendChild(addBtn);
+    };
+
+    try {
+        const savedBp = localStorage.getItem(savedBpKey);
+        if (savedBp) {
+            const parsed = JSON.parse(savedBp);
+            // Upgrade format lama jika ada
+            const upgraded = parsed.map(p => {
+                if (!p.type) {
+                    const wVal = parseInt(p.width);
+                    return { id: p.id, name: p.name, rule: `max-width: ${p.width}`, widthValue: wVal, type: "max" };
+                }
+                return p;
+            });
+            window.gmBreakpoints.push(...upgraded);
+        }
+    } catch (e) { }
+
+    // Render awal
+    setTimeout(window.renderBreakpointUI, 50);
+
+    // Fungsi bantu untuk men-sinkronisasi inline style ke memori
+    window.syncCurrentBreakpoint = function () {
+        const bp = window.gmActiveBreakpoint;
+        document.querySelectorAll('.gm-object').forEach(el => {
+            if (!el.dataset.gmId) {
+                el.dataset.gmId = 'gm-' + Math.random().toString(36).substr(2, 9);
+            }
+            if (bp === "desktop") {
+                el.dataset.bpDesktop = el.style.cssText;
+            } else {
+                el.setAttribute(`data-bp-${bp}`, el.style.cssText);
+            }
+        });
+    };
+
+    // Fungsi untuk membangun Global Stylesheet berdasarkan rule terurut
+    window.generateResponsiveCSS = function () {
+        let css = "/* Auto-generated Responsive CSS */\n";
+
+        const objectMap = new Map();
+        document.querySelectorAll('.gm-object').forEach(el => {
+            if (el.dataset.gmId) objectMap.set(el.dataset.gmId, el);
+        });
+
+        // Base styles (Desktop)
+        objectMap.forEach((el, id) => {
+            const desktopStyle = el.dataset.bpDesktop;
+            if (desktopStyle) css += `[data-gm-id="${id}"] { ${desktopStyle} }\n`;
+        });
+
+        // Min-width media queries (Ascending)
+        const minBp = [...window.gmBreakpoints].filter(b => b.type === 'min').sort((a, b) => a.widthValue - b.widthValue);
+        minBp.forEach(bp => {
+            css += `\n@media (${bp.rule}) {\n`;
+            objectMap.forEach((el, id) => {
+                const bpStyle = el.getAttribute(`data-bp-${bp.id}`);
+                if (bpStyle) css += `  [data-gm-id="${id}"] { ${bpStyle} }\n`;
+            });
+            css += `}\n`;
+        });
+
+        // Max-width media queries (Descending)
+        const maxBp = [...window.gmBreakpoints].filter(b => b.type === 'max').sort((a, b) => b.widthValue - a.widthValue);
+        maxBp.forEach(bp => {
+            css += `\n@media (${bp.rule}) {\n`;
+            objectMap.forEach((el, id) => {
+                const bpStyle = el.getAttribute(`data-bp-${bp.id}`);
+                if (bpStyle) css += `  [data-gm-id="${id}"] { ${bpStyle} }\n`;
+            });
+            css += `}\n`;
+        });
+
+        let styleTag = document.getElementById("gm-responsive-css");
+        if (!styleTag) {
+            styleTag = document.createElement("style");
+            styleTag.id = "gm-responsive-css";
+            document.head.appendChild(styleTag);
+        }
+        styleTag.textContent = css;
+    };
+
+    window.switchBreakpoint = function (bpId) {
+        if (window.gmActiveBreakpoint === bpId) return;
+        window.syncCurrentBreakpoint();
+        window.generateResponsiveCSS();
+        window.gmActiveBreakpoint = bpId;
+
+        document.querySelectorAll('.gm-object').forEach(el => {
+            let newStyle = "";
+            if (bpId === 'desktop') {
+                newStyle = el.dataset.bpDesktop || "";
+            } else {
+                newStyle = el.getAttribute(`data-bp-${bpId}`) || "";
+            }
+            el.style.cssText = newStyle;
+        });
+
+        // Update UI Button active states
+        document.querySelectorAll('.gm-bp-btn').forEach(btn => {
+            if (btn.id !== 'gm-bp-add') {
+                btn.classList.toggle('active', btn.dataset.bp === bpId);
+            }
+        });
+
+        if (typeof fitAllCores === 'function') fitAllCores();
+        document.dispatchEvent(new Event("gm-selection-change"));
+    };
+
+    document.addEventListener("click", e => {
+        const btn = e.target.closest('.gm-bp-btn');
+        if (!btn) return;
+
+        if (btn.id === 'gm-bp-add') {
+            document.getElementById('gm-bp-modal').style.display = 'flex';
+            setTimeout(() => document.getElementById('gm-bp-val').focus(), 50);
+            return;
+        }
+
+        const bpId = btn.dataset.bp;
+        if (bpId) window.switchBreakpoint(bpId);
+    });
+
+    // Modal Events
+    document.getElementById('gm-bp-cancel').addEventListener('click', () => {
+        document.getElementById('gm-bp-modal').style.display = 'none';
+    });
+
+    document.getElementById('gm-bp-save').addEventListener('click', () => {
+        const type = document.getElementById('gm-bp-type').value;
+        const val = document.getElementById('gm-bp-val').value;
+
+        if (!val || val <= 0) {
+            alert("Masukkan ukuran pixel yang valid.");
+            return;
+        }
+
+        const w = parseInt(val);
+        const rule = type === 'max' ? `max-width: ${w}px` : `min-width: ${w}px`;
+        const id = "custom-" + Date.now();
+        const newBp = {
+            id,
+            name: "Custom",
+            rule: rule,
+            widthValue: w,
+            type: type
+        };
+        window.gmBreakpoints.push(newBp);
+
+        try {
+            const existing = JSON.parse(localStorage.getItem(savedBpKey) || "[]");
+            existing.push(newBp);
+            localStorage.setItem(savedBpKey, JSON.stringify(existing));
+        } catch (e) { }
+
+        window.renderBreakpointUI();
+        document.getElementById('gm-bp-modal').style.display = 'none';
+        document.getElementById('gm-bp-val').value = '';
+    });
+
+    function getCoreContentBottom(core) {
+        // Simpan transform dan transition asli
+        const originalTransform = core.style.transform;
+        const originalTransition = core.style.transition;
+        
+        // Matikan transisi dan transform sementara agar pengukuran posisi elemen 1:1 akurat
+        core.style.transition = 'none';
+        core.style.transform = 'none';
+        core.style.height = 'auto';
+        core.style.minHeight = '0px';
+        core.style.aspectRatio = 'auto';
+        core.style.overflow = 'visible';
+
+        const fakeBody = core.querySelector('body');
+        if (fakeBody) {
+            fakeBody.style.height = 'auto';
+            fakeBody.style.minHeight = '0px';
+        }
+        const fakeHtml = core.querySelector('html');
+        if (fakeHtml) {
+            fakeHtml.style.height = 'auto';
+            fakeHtml.style.minHeight = '0px';
+        }
+
+        // Force reflow agar DOM menghitung dimensi real
+        void core.offsetHeight;
+
+        const coreRect = core.getBoundingClientRect();
+        let maxBottom = core.scrollHeight || 0;
+
+        // Periksa semua elemen di dalam core untuk mendapatkan batas bawah paling ujung
+        const allDescendants = core.querySelectorAll('*');
+        allDescendants.forEach(el => {
+            if (el.nodeType !== 1) return;
+            if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'LINK') return;
+            if (el.classList.contains('gm-handler') || el.classList.contains('gm-label') || el.classList.contains('gm-outline') || el.classList.contains('ui-resizable-handle')) return;
+
+            // 1. Ukur posisi rendered bounding client rect
+            const r = el.getBoundingClientRect();
+            const bottomPos = r.bottom - coreRect.top;
+            if (bottomPos > maxBottom) {
+                maxBottom = bottomPos;
+            }
+
+            // 2. Ukur offsetTop chain (untuk posisi absolute/relatif terhadap core)
+            let offsetB = 0;
+            let curr = el;
+            while (curr && curr !== core) {
+                offsetB += (curr.offsetTop || 0);
+                curr = curr.offsetParent;
+            }
+            offsetB += (el.offsetHeight || 0);
+            if (offsetB > maxBottom) {
+                maxBottom = offsetB;
+            }
+
+            // 3. Jika elemen memiliki scrollHeight lebih besar (misal wrapper ber-overflow)
+            if (el.scrollHeight > el.clientHeight && el.style.overflow !== 'hidden') {
+                const scrollB = (r.top - coreRect.top) + el.scrollHeight;
+                if (scrollB > maxBottom) {
+                    maxBottom = scrollB;
+                }
+            }
+        });
+
+        // Kembalikan transisi & transform
+        core.style.transition = originalTransition;
+        core.style.transform = originalTransform;
+
+        // Pastikan minimal 1080px (standar 1080p) atau sepanjang konten yang overflow
+        return Math.ceil(Math.max(maxBottom, 1080));
+    }
+
+    function fitAllCores() {
+        const wrapper = document.querySelector('.gm-frame-preview');
+        if (!wrapper) return;
+
+        const isFullHeight = document.body.classList.contains('gm-full-height-mode');
+        let targetWidth = 1920;
+        let isResponsive = false;
+
+        if (window.gmActiveBreakpoint && window.gmActiveBreakpoint !== 'desktop') {
+            const bp = window.gmBreakpoints.find(b => b.id === window.gmActiveBreakpoint);
+            if (bp && bp.widthValue) {
+                targetWidth = bp.widthValue;
+                isResponsive = true;
+            }
+        }
+
+        document.querySelectorAll('.gm-object-core').forEach(core => {
+            if (core.style.display === 'none' && !core.classList.contains('actived')) return;
+
+            if (isResponsive) {
+                core.style.width = targetWidth + 'px';
+                core.style.minWidth = targetWidth + 'px';
+            } else {
+                core.style.width = '100vw';
+                core.style.minWidth = '100vw';
+            }
+
+            if (isFullHeight) {
+                // MODE FULL HEIGHT: Tampilkan semua overflow tanpa scrollbar khusus untuk demon-core
+                const totalContentH = getCoreContentBottom(core);
+
+                core.style.height = totalContentH + 'px';
+                core.style.minHeight = totalContentH + 'px';
+                core.style.aspectRatio = 'auto';
+                core.style.overflow = 'visible'; // Khusus Demon Core: overflow tampil semua tanpa scroll
+
+                const fakeBody = core.querySelector('body');
+                if (fakeBody) {
+                    fakeBody.style.width = targetWidth + 'px';
+                    fakeBody.style.height = totalContentH + 'px';
+                    fakeBody.style.minHeight = totalContentH + 'px';
+                }
+                const fakeHtml = core.querySelector('html');
+                if (fakeHtml) {
+                    fakeHtml.style.width = targetWidth + 'px';
+                    fakeHtml.style.height = totalContentH + 'px';
+                    fakeHtml.style.minHeight = totalContentH + 'px';
+                }
+
+                // Hitung skala agar seluruh lebar DAN tinggi konten pas di dalam canvas preview tanpa scroll
+                const availW = Math.max(wrapper.clientWidth - 40, 200);
+                const availH = Math.max(wrapper.clientHeight - 40, 200);
+
+                const scaleX = availW / targetWidth;
+                const scaleY = availH / totalContentH;
+                const scale = Math.min(scaleX, scaleY, 1);
+
+                core.style.transform = `scale(${scale})`;
+                const left = (wrapper.clientWidth - targetWidth * scale) / 2;
+                const top = (wrapper.clientHeight - totalContentH * scale) / 2;
+                core.style.left = `${left}px`;
+                core.style.top = `${top}px`;
+            } else {
+                // MODE NORMAL (1080p / 16:9 aspect ratio standar dengan scroll)
+                core.style.height = '';
+                core.style.minHeight = '';
+                core.style.aspectRatio = '';
+                core.style.overflow = 'auto';
+
+                const targetHeight = 1080;
+                const scaleX = wrapper.clientWidth / targetWidth;
+                const scaleY = wrapper.clientHeight / targetHeight;
+                const scale = isResponsive ? Math.min(scaleX, scaleY, 1) : scaleX;
+
+                core.style.transform = `scale(${scale})`;
+                const left = (wrapper.clientWidth - targetWidth * scale) / 2;
+                const top = (wrapper.clientHeight - targetHeight * scale) / 2;
+                core.style.left = `${left}px`;
+                core.style.top = `${top}px`;
+
+                const fakeBody = core.querySelector('body');
+                if (fakeBody) {
+                    fakeBody.style.width = targetWidth + 'px';
+                    fakeBody.style.height = targetHeight + 'px';
+                    fakeBody.style.minHeight = '';
+                }
+                const fakeHtml = core.querySelector('html');
+                if (fakeHtml) {
+                    fakeHtml.style.width = targetWidth + 'px';
+                    fakeHtml.style.height = targetHeight + 'px';
+                    fakeHtml.style.minHeight = '';
+                }
+            }
+        });
+    }
+
+    // Toggle Mode Full Height View
+    const fullHeightToggle = document.getElementById('gm-full-height-toggle');
+    if (fullHeightToggle) {
+        const isFullHeight = localStorage.getItem('gm_full_height_mode') === 'true';
+        if (isFullHeight) {
+            document.body.classList.add('gm-full-height-mode');
+            fullHeightToggle.classList.add('on');
+            fullHeightToggle.innerHTML = '<i class="fa-solid fa-compress fas fa-compress-arrows-alt" style="font-size: 14px; pointer-events: none;"></i>';
+            fullHeightToggle.title = 'Kembalikan Mode Normal (Fixed 1080p)';
+        }
+
+        fullHeightToggle.addEventListener('click', () => {
+            document.body.classList.toggle('gm-full-height-mode');
+            const isOn = document.body.classList.contains('gm-full-height-mode');
+            localStorage.setItem('gm_full_height_mode', isOn);
+
+            if (isOn) {
+                fullHeightToggle.classList.add('on');
+                fullHeightToggle.innerHTML = '<i class="fa-solid fa-compress fas fa-compress-arrows-alt" style="font-size: 14px; pointer-events: none;"></i>';
+                fullHeightToggle.title = 'Kembalikan Mode Normal (Fixed 1080p)';
+            } else {
+                fullHeightToggle.classList.remove('on');
+                fullHeightToggle.innerHTML = '<i class="fa-solid fa-arrows-up-down fas fa-arrows-alt-v" style="font-size: 14px; pointer-events: none;"></i>';
+                fullHeightToggle.title = 'Mode Full Height (Lihat Semua Konten Tanpa Scroll)';
+            }
+
+            fitAllCores();
+        });
+    }
+
+    window.fitAllCores = fitAllCores;
+    window.addEventListener('resize', fitAllCores);
+    document.addEventListener('gm-selection-change', () => {
+        if (document.body.classList.contains('gm-full-height-mode')) fitAllCores();
+    });
+    setTimeout(fitAllCores, 100);
+</script>

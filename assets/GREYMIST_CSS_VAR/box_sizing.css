@@ -1,0 +1,9 @@
+/* BOX SIZING */
+
+.box-content {
+    box-sizing: content-box;
+}
+
+.box-border {
+    box-sizing: border-box;
+}

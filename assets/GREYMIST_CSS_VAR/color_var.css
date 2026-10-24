@@ -1,0 +1,114 @@
+/* COLOR VAR */
+
+.t-white {
+    color: white;
+}
+
+.t-black {
+    color: black;
+}
+
+/* BLUE */
+.t-blue-light {
+    color: #a6caff;
+}
+
+.t-blue {
+    color: #2c6dc2;
+}
+
+.t-blue-dark {
+    color: #0e4086;
+}
+
+.t-blue-darker {
+    color: #072656;
+}
+
+.t-blue-deep {
+    color: #021636;
+}
+
+/* RED */
+.t-red-light {
+    color: #ff7f7f;
+}
+
+.t-red {
+    color: #e3342f;
+}
+
+.t-red-dark {
+    color: #cc1f1a;
+}
+
+.t-red-darker {
+    color: #991b1b;
+}
+
+.t-red-deep {
+    color: #660000;
+}
+
+/* GREEN */
+.t-green-light {
+    color: #86efac;
+}
+
+.t-green {
+    color: #38a169;
+}
+
+.t-green-dark {
+    color: #2f855a;
+}
+
+.t-green-darker {
+    color: #276749;
+}
+
+.t-green-deep {
+    color: #1d4531;
+}
+
+/* YELLOW */
+.t-yellow-light {
+    color: #ffed85;
+}
+
+.t-yellow {
+    color: #ffed4a;
+}
+
+.t-yellow-dark {
+    color: #d4b106;
+}
+
+.t-yellow-darker {
+    color: #a38400;
+}
+
+.t-yellow-deep {
+    color: #6d5700;
+}
+
+/* GRAY */
+.t-gray-light {
+    color: #d1d5db;
+}
+
+.t-gray {
+    color: #9ca3af;
+}
+
+.t-gray-dark {
+    color: #6b7280;
+}
+
+.t-gray-darker {
+    color: #4b5563;
+}
+
+.t-gray-deep {
+    color: #1f2937;
+}

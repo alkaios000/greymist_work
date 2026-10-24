@@ -1,0 +1,17 @@
+/* FLOAT */
+
+.f-l {
+    float: left;
+}
+
+/* Mengapung ke kiri */
+.f-r {
+    float: right;
+}
+
+/* Mengapung ke kanan */
+.f-none {
+    float: none;
+}
+
+/* Tidak mengapung */

@@ -1,0 +1,283 @@
+/* ==== Display Menu ==== */
+.gm-display-menu {
+  display: flex;
+  /* position: absolute; */
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  /* background: #f6f7f9; */
+  /* border: 1px solid #ddd; */
+  /* border-radius: 8px; */
+  padding: 6px 10px;
+  height: fit-content;
+  width: 100%;
+  /* flex-direction: column; */
+}
+
+.gm-display-label {
+  color: #555;
+  font-weight: 500;
+}
+
+.gm-display-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-direction: row;
+}
+
+/* Dropdown */
+.gm-display-select {
+  appearance: none;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 3px 26px 3px 8px;
+  font-size: 13px;
+  color: #333;
+  line-height: 1.2;
+  height: 24px;
+  min-width: 90px;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, #888 50%),
+    linear-gradient(135deg, #888 50%, transparent 50%);
+  background-position: calc(100% - 10px) 9px, calc(100% - 6px) 9px;
+  background-size: 4px 4px, 4px 4px;
+  background-repeat: no-repeat;
+}
+
+.gm-display-select:hover {
+  border-color: #999;
+}
+
+.gm-display-select:focus {
+  outline: none;
+  border-color: #666;
+}
+
+/* Advanced Button (gear) */
+.gm-advanced-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: 0.15s ease;
+  border-radius: 4px;
+}
+
+.gm-advanced-btn:hover {
+  color: #111;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+
+
+
+/* =============================
+   DISPLAY MODAL STYLING
+   ============================= */
+#gm-display-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 85vw;
+  height: 85vh;
+  transform: translate(-50%, -50%);
+  border: none;
+  border-radius: 16px;
+  padding: 0;
+  display: none;
+  flex-direction: column;
+  background: #f7f8fa;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.25);
+  z-index: 9999;
+  overflow: hidden;
+}
+
+#gm-display-modal[open] {
+  display: flex;
+  animation: gmModalFadeIn 0.2s ease;
+}
+
+@keyframes gmModalFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -48%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* HEADER */
+.gm-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+  color: rgb(0, 0, 0);
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  box-shadow: 0 0 10px rgb(197, 219, 234);
+}
+
+#gm-display-modal-close {
+  background: transparent;
+  border: none;
+  color: rgb(0, 0, 0);
+  font-size: 20px;
+  cursor: pointer;
+  line-height: 1;
+  transition: opacity 0.2s;
+}
+
+#gm-display-modal-close:hover {
+  opacity: 0.7;
+}
+
+/* BODY LAYOUT */
+.gm-modal-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1.2fr 2fr;
+  gap: 16px;
+  padding: 16px 20px;
+  overflow: hidden;
+}
+
+/* LEFT SIDE: PREVIEW */
+.gm-preview-section {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 12px;
+  width: 600px;
+  overflow: auto;
+  box-shadow: inset 0 0 0 1px #e5e7eb;
+}
+
+#gm-display-preview-box {
+  flex: 1;
+  width: 100vw;
+  overflow: auto;
+  padding: 16px;
+  overflow: auto;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+#gm-display-preview-box::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+#gm-display-preview-box::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 8px;
+}
+
+#gm-display-preview-box::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* INFO BAR */
+.gm-preview-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f3f4f6;
+  border-top: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  font-family: monospace;
+  font-size: 13px;
+  color: #374151;
+  width: 400px;
+  border-radius: 5px;
+}
+
+/* RIGHT SIDE: PANEL SETTINGS */
+.gm-settings-section {
+  background: #fff;
+  /* border-radius: 12px; */
+  /* padding: 0 5px; */
+  overflow-y: hidden;
+  height: fit-content;
+  /* box-shadow: inset 0 0 0 1px #e5e7eb; */
+}
+
+.gm-settings-section::-webkit-scrollbar {
+  width: 8px;
+}
+
+.gm-settings-section::-webkit-scrollbar-thumb {
+  background: #529fcc;
+  border-radius: 8px;
+}
+
+/* PANEL TOGGLING */
+.gm-display-panel {
+  display: none;
+}
+
+.gm-display-panel.active {
+  display: block;
+  height: 100vh;
+}
+
+/* ===== SCROLL & SMOOTHNESS ===== */
+.gm-display-panel[data-display="inline"] .gm-panel-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.gm-display-panel[data-display="inline"] .gm-panel-content::-webkit-scrollbar-thumb {
+  background: #bbb;
+  border-radius: 8px;
+  transition: background 0.3s ease;
+}
+
+.gm-display-panel[data-display="inline"] .gm-panel-content::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+
+/* display code */
+/* display code */
+.gm-cont-object-style-preview {
+  width: 100%;
+  height: 100px;
+  padding: 5px;
+  position: absolute;
+  background-color: white;
+  bottom: 0;
+  scroll-behavior: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.gm-object-style-preview {
+  display: flex;
+  width: 100%;
+  height: 90%;
+  background-color: rgb(224, 240, 255);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 0.5em;
+  overflow: auto;
+  color: rgb(88, 88, 88);
+}
+
+.gm-object-style-preview::-webkit-scrollbar {
+  width: 6px;
+}
+
+.gm-object-style-preview::-webkit-scrollbar-thumb {
+  background-color: #549cef;
+  border-radius: 4px;
+}

@@ -1,0 +1,91 @@
+<div class="gm-action-container" style="display: flex; flex-direction: row; gap: 15px; align-items: flex-start; flex-wrap: wrap;">
+    <!-- BLOCK 1: Action Type -->
+    <div class="gm-menu-section" style="width: 250px; padding: 0; margin: 0;">
+        <div class="gm-menu-title">Object Action</div>
+        <div class="gm-menu-row">
+            <div style="width: 100%;">
+                <label for="gm-action-type">Action Type</label>
+                <select id="gm-action-type" class="gm-object" style="width: 100%;">
+                    <option value="">-- None --</option>
+                    <option value="goto">Go to Page (Frame)</option>
+                    <option value="scroll">Scroll to ID</option>
+                    <option value="modal">Show Modal</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOCK 2: Goto Page UI -->
+    <div id="gm-action-goto-ui" class="gm-menu-section" style="display: none; width: 250px; padding: 0; margin: 0;">
+        <div class="gm-menu-title">Target Page</div>
+        <div class="gm-menu-row">
+            <div style="width: 100%;">
+                <label for="gm-action-goto-target">Target Frame</label>
+                <select id="gm-action-goto-target" class="gm-object" style="width: 100%;">
+                    <!-- Akan diisi otomatis oleh JS -->
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOCK 3: Scroll to ID UI -->
+    <div id="gm-action-scroll-ui" class="gm-menu-section" style="display: none; width: 250px; padding: 0; margin: 0;">
+        <div class="gm-menu-title">Scroll Target</div>
+        <div class="gm-menu-row">
+            <div style="width: 100%;">
+                <label for="gm-action-scroll-target">Element ID (e.g. section-1)</label>
+                <input type="text" id="gm-action-scroll-target" class="gm-object" placeholder="section-1" style="width: 100%;">
+            </div>
+        </div>
+    </div>
+
+    <!-- BLOCK 4: Modal UI -->
+    <div id="gm-action-modal-ui" style="display: none; flex-direction: row; gap: 15px; align-items: flex-start; flex-wrap: wrap;">
+        <!-- Modal Basic -->
+        <div class="gm-menu-section" style="width: 250px; padding: 0; margin: 0;">
+            <div class="gm-menu-title">Modal Content</div>
+            <div class="gm-menu-row">
+                <div style="width: 100%;">
+                    <label for="gm-action-modal-title">Modal Title</label>
+                    <input type="text" id="gm-action-modal-title" class="gm-object" placeholder="Judul..." style="width: 100%;">
+                </div>
+            </div>
+            <div class="gm-menu-row">
+                <div style="width: 100%;">
+                    <label for="gm-action-modal-content">Content</label>
+                    <textarea id="gm-action-modal-content" class="gm-object" placeholder="Isi pesan..." style="width: 100%; resize: vertical; min-height: 40px;"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Image & Style -->
+        <div class="gm-menu-section" style="width: 250px; padding: 0; margin: 0;">
+            <div class="gm-menu-title">Modal Media & Style</div>
+            <div class="gm-menu-row">
+                <div style="width: 100%;">
+                    <label for="gm-action-modal-image">Image URL (Optional)</label>
+                    <input type="text" id="gm-action-modal-image" class="gm-object" placeholder="https://..." style="width: 100%;">
+                </div>
+            </div>
+            <div class="gm-menu-row gm-row-pair">
+                <div>
+                    <label for="gm-action-modal-bg">Bg Color</label>
+                    <input type="color" id="gm-action-modal-bg" class="gm-object" value="#ffffff">
+                </div>
+                <div>
+                    <label for="gm-action-modal-color">Text Color</label>
+                    <input type="color" id="gm-action-modal-color" class="gm-object" value="#333333">
+                </div>
+            </div>
+            <div class="gm-menu-row gm-row-pair" style="align-items: flex-end;">
+                <div style="width: 50%;">
+                    <label for="gm-action-modal-width">Width</label>
+                    <input type="text" id="gm-action-modal-width" class="gm-object" value="400px" style="width: 100%;">
+                </div>
+                <div style="width: 50%;">
+                    <button id="gm-action-test-modal" style="width: 100%; padding: 5px; background: #0078ff; color: white; border: none; cursor: pointer; font-size: 0.9em; height: 26px;">Test Modal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

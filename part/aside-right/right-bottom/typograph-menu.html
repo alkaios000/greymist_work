@@ -1,0 +1,2766 @@
+<!-- Typography Menu -->
+<div class="gm-panelstyle-menu">
+    <!-- FONT & BASIC -->
+    <div class="gm-menu-section">
+        <div class="gm-menu-title">Font</div>
+
+        <!-- FONT FAMILY -->
+        <div class="gm-menu-row gm-font-family" data-style="font-family">
+
+            <label>Font Family</label>
+
+            <!-- input utama -->
+            <div class="gm-font-input-wrap">
+                <input type="text" class="gm-font-input gm-font-search" placeholder="Arial, Poppins, inherit"
+                    autocomplete="off">
+            </div>
+
+            <!-- dropdown font -->
+            <div class="gm-font-dropdown" hidden>
+
+                <!-- search -->
+                <div class="gm-font-search-wrap">
+                    <!-- <input type="text" class="gm-font-search" placeholder="Search font..."> -->
+                </div>
+
+                <!-- popular / recommended -->
+                <div class="gm-font-group" data-group="popular">
+                    <div class="gm-font-group-title">Popular</div>
+                    <div class="gm-font-list">
+                        <div class="gm-font-item" data-value="Inter">Inter</div>
+                        <div class="gm-font-item" data-value="Poppins">Poppins</div>
+                        <div class="gm-font-item" data-value="Roboto">Roboto</div>
+                        <div class="gm-font-item" data-value="Montserrat">Montserrat</div>
+                        <div class="gm-font-item" data-value="Open Sans">Open Sans</div>
+                    </div>
+                </div>
+
+                <!-- sans-serif -->
+                <div class="gm-font-group" data-group="sans">
+                    <div class="gm-font-group-title">Sans Serif</div>
+                    <div class="gm-font-list">
+                        <div class="gm-font-item" data-value="Arial">Arial</div>
+                        <div class="gm-font-item" data-value="Helvetica">Helvetica</div>
+                        <div class="gm-font-item" data-value="Inter">Inter</div>
+                        <div class="gm-font-item" data-value="Roboto">Roboto</div>
+                        <div class="gm-font-item" data-value="Poppins">Poppins</div>
+                        <div class="gm-font-item" data-value="Montserrat">Montserrat</div>
+                        <div class="gm-font-item" data-value="Open Sans">Open Sans</div>
+                        <div class="gm-font-item" data-value="Nunito">Nunito</div>
+                        <div class="gm-font-item" data-value="Lato">Lato</div>
+                    </div>
+                </div>
+
+                <!-- serif -->
+                <div class="gm-font-group" data-group="serif">
+                    <div class="gm-font-group-title">Serif</div>
+                    <div class="gm-font-list">
+                        <div class="gm-font-item" data-value="Times New Roman">Times New Roman</div>
+                        <div class="gm-font-item" data-value="Georgia">Georgia</div>
+                        <div class="gm-font-item" data-value="Merriweather">Merriweather</div>
+                        <div class="gm-font-item" data-value="Playfair Display">Playfair Display</div>
+                    </div>
+                </div>
+
+                <!-- monospace -->
+                <div class="gm-font-group" data-group="mono">
+                    <div class="gm-font-group-title">Monospace</div>
+                    <div class="gm-font-list">
+                        <div class="gm-font-item" data-value="Courier New">Courier New</div>
+                        <div class="gm-font-item" data-value="Fira Code">Fira Code</div>
+                        <div class="gm-font-item" data-value="JetBrains Mono">JetBrains Mono</div>
+                        <div class="gm-font-item" data-value="Source Code Pro">Source Code Pro</div>
+                    </div>
+                </div>
+
+                <!-- generic -->
+                <div class="gm-font-group" data-group="generic">
+                    <div class="gm-font-group-title">Generic</div>
+                    <div class="gm-font-list">
+                        <div class="gm-font-item" data-value="sans-serif">sans-serif</div>
+                        <div class="gm-font-item" data-value="serif">serif</div>
+                        <div class="gm-font-item" data-value="monospace">monospace</div>
+                        <div class="gm-font-item" data-value="inherit">inherit</div>
+                        <div class="gm-font-item" data-value="initial">initial</div>
+                    </div>
+                </div>
+
+            </div>
+            <style>
+                /* ===============================
+   FONT FAMILY MENU (WHITE)
+================================ */
+
+                .gm-font-family {
+                    position: relative;
+                }
+
+                /* input */
+                .gm-font-input {
+                    width: 100%;
+                    padding: 6px 8px;
+                    font-size: 12px;
+
+                    border-radius: 6px;
+                    border: 1px solid #cfcfcf;
+                    background: #ffffff;
+                    color: #222;
+
+                    outline: none;
+                    cursor: pointer;
+                }
+
+                .gm-font-input::placeholder {
+                    color: #999;
+                }
+
+                .gm-font-input:focus {
+                    border-color: #4a90e2;
+                    box-shadow: 0 0 0 1px rgba(74, 144, 226, .3);
+                }
+
+                /* hint ala MS Word */
+                .gm-font-family::after {
+                    /* content: "Click to choose font"; */
+                    position: absolute;
+                    right: 8px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    font-size: 10px;
+                    color: #aaa;
+                    pointer-events: none;
+                }
+
+                /* ===============================
+   DROPDOWN
+================================ */
+
+                .gm-font-dropdown {
+                    position: absolute;
+                    top: calc(100% + 4px);
+                    left: 0;
+                    width: 100%;
+                    max-height: 260px;
+
+                    background: #ffffff;
+                    border: 1px solid #cfcfcf;
+                    border-radius: 8px;
+
+                    box-shadow: 0 12px 30px rgba(0, 0, 0, .15);
+                    z-index: 10000;
+
+                    overflow-y: auto;
+                }
+
+                /* ===============================
+   GROUP
+================================ */
+
+                .gm-font-group {
+                    padding: 6px;
+                }
+
+                .gm-font-group-title {
+                    font-size: 10px;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: .04em;
+                    color: #777;
+                    margin-bottom: 4px;
+                }
+
+                /* ===============================
+   FONT ITEM
+================================ */
+
+                .gm-font-item {
+                    padding: 6px 8px;
+                    font-size: 12px;
+                    border-radius: 6px;
+
+                    cursor: pointer;
+                    color: #222;
+
+                    transition: background .12s ease;
+                }
+
+                .gm-font-item:hover {
+                    background: #e8f0fe;
+                }
+
+                .gm-font-item:active {
+                    background: #d2e3fc;
+                }
+
+                /* ===============================
+   SCROLLBAR
+================================ */
+
+                .gm-font-dropdown::-webkit-scrollbar {
+                    width: 6px;
+                }
+
+                .gm-font-dropdown::-webkit-scrollbar-thumb {
+                    background: #ccc;
+                    border-radius: 6px;
+                }
+            </style>
+            <script>
+                (function () {
+
+                    const menu = document.querySelector('.gm-font-family');
+                    if (!menu) return;
+
+                    const input = menu.querySelector('.gm-font-input');
+                    const dropdown = menu.querySelector('.gm-font-dropdown');
+                    const items = menu.querySelectorAll('.gm-font-item');
+
+                    const STYLE_PROP = 'fontFamily';
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function syncFontInput() {
+                        const actives = document.querySelectorAll('.gm-object.gm-active');
+
+                        // tidak ada object aktif
+                        if (!actives.length) {
+                            input.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const font = inline || computed || '';
+
+                            if (value === null) {
+                                value = font;
+                            } else if (value !== font) {
+                                mixed = true;
+                            }
+                        });
+
+                        input.value = mixed ? '' : value;
+                    }
+
+                    /* =========================
+                       APPLY FONT
+                    ========================= */
+
+                    function applyFont(value) {
+                        const actives = document.querySelectorAll('.gm-object.gm-active');
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style.fontFamily = value;
+                        });
+
+                        syncFontInput();
+                    }
+
+                    /* =========================
+                       DROPDOWN CONTROL
+                    ========================= */
+
+                    function openDropdown() {
+                        dropdown.hidden = false;
+                    }
+
+                    function closeDropdown() {
+                        dropdown.hidden = true;
+                    }
+
+                    input.addEventListener('focus', openDropdown);
+                    input.addEventListener('click', openDropdown);
+
+                    document.addEventListener('mousedown', e => {
+                        if (!menu.contains(e.target)) {
+                            closeDropdown();
+                        }
+                    });
+
+                    /* =========================
+                       INPUT = SEARCH
+                    ========================= */
+
+                    input.addEventListener('input', () => {
+                        const q = input.value.toLowerCase();
+
+                        items.forEach(item => {
+                            const text = item.textContent.toLowerCase();
+                            item.style.display = text.includes(q) ? '' : 'none';
+                        });
+                    });
+
+                    /* =========================
+                       CLICK OPTION
+                    ========================= */
+
+                    items.forEach(item => {
+                        item.addEventListener('click', () => {
+                            const value = item.dataset.value || item.textContent.trim();
+                            input.value = value;
+                            applyFont(value);
+                            closeDropdown();
+                        });
+                    });
+
+                    /* =========================
+                       ENTER APPLY
+                    ========================= */
+
+                    input.addEventListener('keydown', e => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            const value = input.value.trim();
+                            if (!value) return;
+
+                            applyFont(value);
+                            closeDropdown();
+                        }
+                    });
+
+                    /* =========================
+                       AUTO SYNC (MutationObserver)
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', syncFontInput);
+
+                    /* =========================
+                       INITIAL SYNC
+                    ========================= */
+
+                    syncFontInput();
+
+                })();
+            </script>
+            <script>
+                (function () {
+
+                    const menu = document.querySelector('.gm-font-family');
+                    if (!menu) return;
+
+                    const items = menu.querySelectorAll('.gm-font-item');
+
+                    // simpan font asli (aman & auto GC)
+                    const originalFonts = new WeakMap();
+                    let isCommitted = false;
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       PREVIEW FONT (HOVER)
+                    ========================= */
+
+                    function previewFont(font) {
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            if (!originalFonts.has(obj)) {
+                                const computedFont = getComputedStyle(obj).fontFamily;
+
+                                originalFonts.set(
+                                    obj,
+                                    computedFont && computedFont !== 'inherit'
+                                        ? computedFont
+                                        : 'inherit'
+                                );
+                            }
+
+                            obj.style.fontFamily = font;
+                        });
+                    }
+
+
+                    function restoreFont() {
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            const original = originalFonts.get(obj);
+                            if (original !== undefined) {
+                                obj.style.fontFamily = original;
+                                originalFonts.delete(obj);
+                            }
+                        });
+                    }
+
+                    /* =========================
+                       BIND HOVER
+                    ========================= */
+
+                    items.forEach(item => {
+                        const value = item.dataset.value || item.textContent.trim();
+
+                        item.addEventListener('mouseenter', () => {
+                            isCommitted = false;
+                            previewFont(value);
+                        });
+
+                        item.addEventListener('mouseleave', () => {
+                            if (!isCommitted) {
+                                restoreFont();
+                            }
+                        });
+
+                        item.addEventListener('click', () => {
+                            isCommitted = true;
+                            clearPreviewCache();
+                        });
+                    });
+
+
+                    /* =========================
+                       SAFETY: SELECTION CHANGED
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', restoreFont);
+
+                    function clearPreviewCache() {
+                        const actives = document.querySelectorAll('.gm-object.gm-active');
+                        actives.forEach(obj => originalFonts.delete(obj));
+                    }
+
+                })();
+
+            </script>
+        </div>
+
+        <div class="gm-menu-row gm-row-pair">
+            <!-- FONT SIZE -->
+            <div>
+                <label>Font Size</label>
+                <input type="text" data-style="font-size" placeholder="16px">
+                <script>
+                    (function () {
+
+                        const menu = document.querySelector('[data-style="font-size"]')?.closest('div');
+                        if (!menu) return;
+
+                        const input = menu.querySelector('input[data-style="font-size"]');
+                        const STYLE_PROP = 'fontSize';
+
+                        /* =========================
+                           UTIL
+                        ========================= */
+
+                        function normalizeSize(value) {
+                            if (!value) return '';
+
+                            // jika hanya angka → px
+                            if (/^\d+(\.\d+)?$/.test(value)) {
+                                return value + 'px';
+                            }
+
+                            return value;
+                        }
+
+                        function getActives() {
+                            return document.querySelectorAll('.gm-object.gm-active');
+                        }
+
+                        /* =========================
+                           SYNC FROM ACTIVE
+                        ========================= */
+
+                        function syncFontSize() {
+                            const actives = getActives();
+
+                            if (!actives.length) {
+                                input.value = '';
+                                return;
+                            }
+
+                            let value = null;
+                            let mixed = false;
+
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const size = inline || computed || '';
+
+                                if (value === null) {
+                                    value = size;
+                                } else if (value !== size) {
+                                    mixed = true;
+                                }
+                            });
+
+                            input.value = mixed ? '' : value;
+                        }
+
+                        /* =========================
+                           APPLY
+                        ========================= */
+
+                        function applyFontSize(value) {
+                            const actives = getActives();
+                            if (!actives.length) return;
+
+                            const finalValue = normalizeSize(value);
+                            if (!finalValue) return;
+
+                            actives.forEach(obj => {
+                                obj.style.fontSize = finalValue;
+                            });
+
+                            syncFontSize();
+                        }
+
+                        /* =========================
+                           ENTER APPLY
+                        ========================= */
+
+                        input.addEventListener('keydown', e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                applyFontSize(input.value.trim());
+                            }
+                        });
+
+                        /* =========================
+                           AUTO SYNC (SELECTION CHANGE)
+                        ========================= */
+
+                        window.addEventListener('gm-active-tick', syncFontSize);
+
+                        /* =========================
+                           INIT
+                        ========================= */
+
+                        syncFontSize();
+
+                    })();
+                </script>
+            </div>
+
+            <!-- FONT WEIGHT -->
+            <div>
+                <label>Font Weight</label>
+                <input type="text" data-style="font-weight" placeholder="400">
+                <script>
+                    (function () {
+
+                        const input = document.querySelector('input[data-style="font-weight"]');
+                        if (!input) return;
+
+                        const STYLE_PROP = 'fontWeight';
+
+                        function getActives() {
+                            return document.querySelectorAll('.gm-object.gm-active');
+                        }
+
+                        /* =========================
+                           NORMALIZE VALUE
+                        ========================= */
+
+                        function normalizeWeight(value) {
+                            if (!value) return '';
+
+                            const v = value.toLowerCase();
+
+                            // angka valid
+                            if (/^(100|200|300|400|500|600|700|800|900)$/.test(v)) {
+                                return v;
+                            }
+
+                            // keyword valid
+                            if (['normal', 'bold', 'bolder', 'lighter'].includes(v)) {
+                                return v;
+                            }
+
+                            return '';
+                        }
+
+                        /* =========================
+                           SYNC FROM ACTIVE
+                        ========================= */
+
+                        function syncFontWeight() {
+                            const actives = getActives();
+
+                            if (!actives.length) {
+                                input.value = '';
+                                return;
+                            }
+
+                            let value = null;
+                            let mixed = false;
+
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const weight = inline || computed || '';
+
+                                if (value === null) {
+                                    value = weight;
+                                } else if (value !== weight) {
+                                    mixed = true;
+                                }
+                            });
+
+                            input.value = mixed ? '' : value;
+                        }
+
+                        /* =========================
+                           APPLY
+                        ========================= */
+
+                        function applyFontWeight(rawValue) {
+                            const actives = getActives();
+                            if (!actives.length) return;
+
+                            const value = normalizeWeight(rawValue);
+                            if (!value) return;
+
+                            actives.forEach(obj => {
+                                obj.style.fontWeight = value;
+                            });
+
+                            syncFontWeight();
+                        }
+
+                        /* =========================
+                           ENTER APPLY
+                        ========================= */
+
+                        input.addEventListener('keydown', e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                applyFontWeight(input.value.trim());
+                            }
+                        });
+
+                        /* =========================
+                           AUTO SYNC (SELECTION CHANGE)
+                        ========================= */
+
+                        window.addEventListener('gm-active-tick', syncFontWeight);
+
+                        /* =========================
+                           INIT
+                        ========================= */
+
+                        syncFontWeight();
+
+                    })();
+                </script>
+            </div>
+        </div>
+
+        <div class="gm-menu-row gm-row-pair">
+            <!-- FONT STYLE -->
+            <div>
+                <label>Font Style</label>
+                <select data-style="font-style">
+                    <option value="">default</option>
+                    <option value="normal">normal</option>
+                    <option value="italic">italic</option>
+                    <option value="oblique">oblique</option>
+                </select>
+                <script>
+                    (function () {
+
+                        const select = document.querySelector('select[data-style="font-style"]');
+                        if (!select) return;
+
+                        const STYLE_PROP = 'fontStyle';
+
+                        function getActives() {
+                            return document.querySelectorAll('.gm-object.gm-active');
+                        }
+
+                        /* =========================
+                           SYNC FROM ACTIVE
+                        ========================= */
+
+                        function syncFontStyle() {
+                            const actives = getActives();
+
+                            // tidak ada object aktif
+                            if (!actives.length) {
+                                select.value = '';
+                                return;
+                            }
+
+                            let value = null;
+                            let mixed = false;
+
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const style = inline || computed || '';
+
+                                if (value === null) {
+                                    value = style;
+                                } else if (value !== style) {
+                                    mixed = true;
+                                }
+                            });
+
+                            select.value = mixed ? '' : value;
+                        }
+
+                        /* =========================
+                           APPLY
+                        ========================= */
+
+                        select.addEventListener('change', () => {
+                            const value = select.value;
+                            const actives = getActives();
+                            if (!actives.length) return;
+
+                            actives.forEach(obj => {
+                                if (value) {
+                                    obj.style.fontStyle = value;
+                                } else {
+                                    obj.style.removeProperty('font-style');
+                                }
+                            });
+
+                            syncFontStyle();
+                        });
+
+                        /* =========================
+                           AUTO SYNC (SELECTION CHANGE)
+                        ========================= */
+
+                        window.addEventListener('gm-active-tick', syncFontStyle);
+
+                        /* =========================
+                           INIT
+                        ========================= */
+
+                        syncFontStyle();
+
+                    })();
+                </script>
+            </div>
+
+            <!-- FONT VARIANT -->
+            <div>
+                <label>Font Variant</label>
+                <select data-style="font-variant">
+                    <option value="">default</option>
+                    <option value="normal">normal</option>
+                    <option value="small-caps">small-caps</option>
+                </select>
+                <script>
+                    (function () {
+
+                        const select = document.querySelector('select[data-style="font-variant"]');
+                        if (!select) return;
+
+                        const STYLE_PROP = 'fontVariant';
+
+                        function getActives() {
+                            return document.querySelectorAll('.gm-object.gm-active');
+                        }
+
+                        /* =========================
+                           SYNC FROM ACTIVE
+                        ========================= */
+
+                        function syncFontVariant() {
+                            const actives = getActives();
+
+                            if (!actives.length) {
+                                select.value = '';
+                                return;
+                            }
+
+                            let value = null;
+                            let mixed = false;
+
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const variant = inline || computed || '';
+
+                                if (value === null) {
+                                    value = variant;
+                                } else if (value !== variant) {
+                                    mixed = true;
+                                }
+                            });
+
+                            select.value = mixed ? '' : value;
+                        }
+
+                        /* =========================
+                           APPLY
+                        ========================= */
+
+                        select.addEventListener('change', () => {
+                            const value = select.value;
+                            const actives = getActives();
+                            if (!actives.length) return;
+
+                            actives.forEach(obj => {
+                                if (value) {
+                                    obj.style.fontVariant = value;
+                                } else {
+                                    obj.style.removeProperty('font-variant');
+                                }
+                            });
+
+                            syncFontVariant();
+                        });
+
+                        /* =========================
+                           AUTO SYNC (SELECTION CHANGE)
+                        ========================= */
+
+                        window.addEventListener('gm-active-tick', syncFontVariant);
+
+                        /* =========================
+                           INIT
+                        ========================= */
+
+                        syncFontVariant();
+
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <!-- BELUM -->
+    <!-- COLOR & OPACITY -->
+    <div class="gm-menu-section">
+        <div class="gm-menu-title">Color</div>
+
+        <!-- TEXT COLOR -->
+        <div class="gm-menu-row">
+            <label>Text Color</label>
+
+            <div class="gm-color-field gm-row-pair">
+
+                <!-- Native Color Picker -->
+                <input type="color" class="gm-color-picker" data-style="color" value="#000000">
+
+                <!-- Free Input -->
+                <input type="text" class="gm-color-input" data-style="color"
+                    placeholder="#000 / rgba() / var(--primary)">
+            </div>
+
+            <!-- Variable Token Area -->
+            <div class="gm-color-variable" id="gm-text-color-variables">
+                <!-- token render by JS -->
+                <span class="gm-color-token gm-add-token">+ variable</span>
+            </div>
+        </div>
+        <style>
+            /* ===============================
+   COLOR TOKEN – WHITE THEME
+================================ */
+
+            .gm-menu-section {
+                background: #ffffff;
+                color: #111827;
+            }
+
+            .gm-menu-title {
+                font-weight: 600;
+                color: #111827;
+            }
+
+            /* Color field */
+            .gm-color-field {
+                display: flex;
+                gap: 8px;
+            }
+
+            .gm-color-picker {
+                width: 34px;
+                height: 34px;
+                padding: 0;
+                border: 1px solid #d1d5db;
+                background: #fff;
+                cursor: pointer;
+            }
+
+            .gm-color-input {
+                flex: 1;
+                height: 34px;
+                padding: 0 10px;
+                border-radius: 6px;
+                border: 1px solid #d1d5db;
+                font-size: 13px;
+                background: #ffffff;
+                color: #111827;
+            }
+
+            .gm-color-input::placeholder {
+                color: #9ca3af;
+            }
+
+            /* ===============================
+   TOKEN AREA
+================================ */
+
+            .gm-color-variable {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-top: 6px;
+            }
+
+            .gm-color-token {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 4px 8px;
+                background: #f9fafb;
+                border: 1px solid #e5e7eb;
+                border-radius: 6px;
+                font-size: 12px;
+                color: #111827;
+                cursor: pointer;
+                transition: all .15s ease;
+            }
+
+            .gm-color-token:hover {
+                background: #f3f4f6;
+                border-color: #d1d5db;
+            }
+
+            /* Color dot */
+            .gm-color-token input[type="color"] {
+                width: 18px;
+                height: 18px;
+                padding: 0;
+                border: none;
+                background: none;
+                cursor: pointer;
+            }
+
+            /* Token name */
+            .gm-token-label {
+                white-space: nowrap;
+            }
+
+            /* ===============================
+   ADD TOKEN
+================================ */
+
+            .gm-add-token {
+                background: #ffffff;
+                border: 1px dashed #d1d5db;
+                color: #2563eb;
+                font-weight: 500;
+            }
+
+            .gm-add-token:hover {
+                background: #eff6ff;
+                border-color: #93c5fd;
+            }
+
+            /* ===============================
+   FOCUS STATES
+================================ */
+
+            .gm-color-input:focus,
+            .gm-color-picker:focus-visible {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+            }
+        </style>
+        <script>
+            (function() {
+                /* ===============================
+                   TRACK LAST SELECTED OBJECT
+                ================================ */
+                document.addEventListener("click", e => {
+                    const obj = e.target.closest(".gm-object");
+                    if (obj) {
+                        window.lastSelectedGmObject = obj;
+                    }
+                }, true);
+
+                /* ===============================
+                   COLOR TOKEN GLOBAL STATE
+                ================================ */
+                window.gmTypographyTokens = window.gmTypographyTokens || {
+                    initialized: false,
+                    tokens: {},
+                    projectId: null,
+                    
+                    getProjectId: function() {
+                        if (this.projectId) return this.projectId;
+                        if (window.GREYMIST && window.GREYMIST.project && window.GREYMIST.project.project_id) {
+                            this.projectId = window.GREYMIST.project.project_id;
+                        } else {
+                            const params = new URLSearchParams(window.location.search);
+                            this.projectId = params.get("project_id");
+                        }
+                        return this.projectId;
+                    },
+
+                    save: async function() {
+                        const pid = this.getProjectId();
+                        if (!pid) return;
+                        try {
+                            const res = await fetch("api/save_color_tokens.php", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ project_id: pid, tokens: this.tokens })
+                            });
+                            const result = await res.json();
+                            if (result.status === "OK" && window.GREYMIST && window.GREYMIST.project) {
+                                window.GREYMIST.project.color_tokens = JSON.stringify(this.tokens);
+                            }
+                        } catch(e) { console.error("Failed to save tokens:", e); }
+                    },
+                    
+                    load: async function() {
+                        if (window.GREYMIST && window.GREYMIST.project && window.GREYMIST.project.color_tokens) {
+                            try {
+                                const parsed = typeof window.GREYMIST.project.color_tokens === 'string'
+                                    ? JSON.parse(window.GREYMIST.project.color_tokens)
+                                    : window.GREYMIST.project.color_tokens;
+                                if (parsed && typeof parsed === 'object') {
+                                    this.tokens = parsed;
+                                }
+                            } catch(e) {}
+                        }
+
+                        const pid = this.getProjectId();
+                        if (!pid) return;
+                        try {
+                            const res = await fetch(`api/get_color_tokens.php?project_id=${pid}`);
+                            const data = await res.json();
+                            if (data.status === "OK" && data.tokens) {
+                                this.tokens = (typeof data.tokens === 'object' && !Array.isArray(data.tokens)) ? data.tokens : {};
+                                if (window.GREYMIST && window.GREYMIST.project) {
+                                    window.GREYMIST.project.color_tokens = JSON.stringify(this.tokens);
+                                }
+                            }
+                        } catch(e) { console.error("Failed to load tokens:", e); }
+                    },
+                    
+                    apply: function() {
+                        const frameRoot = document.querySelector("#gm-frame-preview") || document.querySelector(".gm-panelstyle-menu") || document.body;
+                        if (!frameRoot) return;
+
+                        let css = ":root {\n";
+                        Object.entries(this.tokens).forEach(([name, value]) => {
+                            const varName = name.startsWith("--") ? name : `--${name}`;
+                            frameRoot.style.setProperty(varName, value);
+                            document.documentElement.style.setProperty(varName, value);
+                            document.querySelectorAll(".gm-object-core").forEach(core => {
+                                core.style.setProperty(varName, value);
+                            });
+                            css += `  ${varName}: ${value};\n`;
+                        });
+                        css += "}";
+
+                        let styleTag = document.getElementById("gm-color-tokens-style");
+                        if (!styleTag) {
+                            styleTag = document.createElement("style");
+                            styleTag.id = "gm-color-tokens-style";
+                            document.head.appendChild(styleTag);
+                        }
+                        styleTag.textContent = css;
+
+                        try {
+                            const channel = new BroadcastChannel('greymist-live-preview');
+                            channel.postMessage({ type: 'update-color-tokens', tokens: this.tokens });
+                            channel.close();
+                        } catch(e) {}
+                    },
+                    
+                    render: function() {
+                        const containers = document.querySelectorAll("#gm-text-color-variables");
+                        containers.forEach(container => {
+                            container.querySelectorAll(".gm-color-token:not(.gm-add-token)").forEach(el => el.remove());
+                            const addBtn = container.querySelector(".gm-add-token");
+                            
+                            Object.entries(this.tokens).forEach(([name, value]) => {
+                                const varName = name.startsWith("--") ? name : `--${name}`;
+                                const token = document.createElement("span");
+                                token.className = "gm-color-token";
+                                token.dataset.name = varName;
+                                token.title = "Click to apply, Right click for options";
+                                token.innerHTML = `
+                                    <input type="color" value="${value}">
+                                    <span class="gm-token-label">${varName}</span>
+                                `;
+                                if (addBtn) container.insertBefore(token, addBtn);
+                                else container.appendChild(token);
+                            });
+                        });
+                    },
+                    
+                    setColorToActive: function(value) {
+                        let actives = document.querySelectorAll(".gm-object.gm-active");
+                        
+                        // Fallback jika gm-active sempat terlepas saat berinteraksi dengan menu/popup
+                        if (!actives.length && window.lastSelectedGmObject && document.contains(window.lastSelectedGmObject)) {
+                            window.lastSelectedGmObject.classList.add("gm-active");
+                            actives = [window.lastSelectedGmObject];
+                        }
+
+                        if (!actives.length) return;
+
+                        actives.forEach(el => {
+                            el.style.color = value;
+
+                            // Sinkronkan ke dataset breakpoint agar tersimpan permanen saat saveProject()
+                            const bp = window.gmActiveBreakpoint || 'desktop';
+                            if (bp === 'desktop') {
+                                el.dataset.bpDesktop = el.style.cssText;
+                            } else {
+                                el.setAttribute(`data-bp-${bp}`, el.style.cssText);
+                            }
+                        });
+
+                        // Sinkronisasi breakpoint secara global
+                        if (typeof window.syncCurrentBreakpoint === 'function') {
+                            window.syncCurrentBreakpoint();
+                        }
+
+                        // Update UI input text color
+                        const colorInput = document.querySelector('.gm-color-input[data-style="color"]');
+                        const colorPicker = document.querySelector('.gm-color-picker[data-style="color"]');
+                        if (colorInput) colorInput.value = value;
+                        if (colorPicker) {
+                            if (value.startsWith("#")) {
+                                colorPicker.value = value;
+                            } else if (value.startsWith("var(")) {
+                                const match = value.match(/var\((--[^)]+)\)/);
+                                if (match && this.tokens[match[1]] && this.tokens[match[1]].startsWith("#")) {
+                                    colorPicker.value = this.tokens[match[1]];
+                                }
+                            }
+                        }
+
+                        // Picu auto-save debounce dan event sinkronisasi
+                        document.dispatchEvent(new Event("gm-selection-change"));
+                        window.dispatchEvent(new CustomEvent('gm-active-tick'));
+                    }
+                };
+
+                // Inisialisasi awal
+                window.gmTypographyTokens.getProjectId();
+                window.gmTypographyTokens.load().then(() => {
+                    window.gmTypographyTokens.render();
+                    window.gmTypographyTokens.apply();
+                });
+
+                /* ===============================
+                   EVENT DELEGATION (GLOBAL)
+                ================================ */
+                if (!window.gmTypographyTokens.initialized) {
+                    window.gmTypographyTokens.initialized = true;
+
+                    /* TOKEN EDITOR POPUP */
+                    function openTokenEditorPopup(x, y, oldName, oldColor, onSave) {
+                        document.querySelectorAll(".gm-token-editor-popup").forEach(p => p.remove());
+                        document.querySelectorAll(".gm-token-popup").forEach(p => p.remove());
+
+                        // Simpan referensi elemen aktif saat ini agar tidak hilang
+                        const savedActiveEls = Array.from(document.querySelectorAll(".gm-object.gm-active"));
+                        if (savedActiveEls.length) {
+                            window.lastSelectedGmObject = savedActiveEls[0];
+                        }
+
+                        const popup = document.createElement("div");
+                        popup.className = "gm-token-editor-popup";
+                        
+                        if (x + 180 > window.innerWidth) x = window.innerWidth - 190;
+                        if (y + 160 > window.innerHeight) y = window.innerHeight - 170;
+
+                        Object.assign(popup.style, {
+                            position: "fixed",
+                            left: `${x}px`,
+                            top: `${y}px`,
+                            background: "#fff",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "8px",
+                            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                            zIndex: "999999",
+                            padding: "12px",
+                            width: "180px",
+                            fontFamily: "inherit"
+                        });
+
+                        popup.innerHTML = `
+                            <div style="margin-bottom:10px;">
+                                <label style="display:block;font-size:11px;font-weight:500;color:#4b5563;margin-bottom:4px;">Variable Name</label>
+                                <input type="text" class="gm-ed-name" style="width:100%;box-sizing:border-box;border:1px solid #d1d5db;border-radius:6px;padding:6px 8px;font-size:12px;outline:none;" placeholder="primary" value="${(oldName || '').replace(/^--/, '')}">
+                            </div>
+                            <div style="margin-bottom:12px;">
+                                <label style="display:block;font-size:11px;font-weight:500;color:#4b5563;margin-bottom:4px;">Color Code</label>
+                                <div style="display:flex;gap:6px;align-items:center;">
+                                    <input type="color" class="gm-ed-picker" style="width:28px;height:28px;padding:0;border:1px solid #d1d5db;border-radius:6px;cursor:pointer;" value="${(oldColor && oldColor.length === 7) ? oldColor : '#000000'}">
+                                    <input type="text" class="gm-ed-text" style="width:100%;box-sizing:border-box;flex:1;border:1px solid #d1d5db;border-radius:6px;padding:6px 8px;font-size:12px;outline:none;" placeholder="#000000" value="${oldColor || '#000000'}">
+                                </div>
+                            </div>
+                            <div style="display:flex;justify-content:flex-end;gap:8px;">
+                                <button class="gm-ed-cancel" style="background:#f3f4f6;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;color:#374151;">Cancel</button>
+                                <button class="gm-ed-save" style="background:#2563eb;color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;">Save</button>
+                            </div>
+                        `;
+
+                        document.body.appendChild(popup);
+
+                        const nameInput = popup.querySelector(".gm-ed-name");
+                        const pickerInput = popup.querySelector(".gm-ed-picker");
+                        const textInput = popup.querySelector(".gm-ed-text");
+                        const btnCancel = popup.querySelector(".gm-ed-cancel");
+                        const btnSave = popup.querySelector(".gm-ed-save");
+
+                        nameInput.focus();
+
+                        pickerInput.addEventListener("input", e => { textInput.value = e.target.value; });
+                        textInput.addEventListener("input", e => { 
+                            if(/^#[0-9A-Fa-f]{6}$/i.test(e.target.value)) pickerInput.value = e.target.value; 
+                        });
+
+                        const close = () => popup.remove();
+                        btnCancel.addEventListener("click", close);
+
+                        const save = () => {
+                            const rawName = nameInput.value.trim();
+                            const rawColor = textInput.value.trim();
+                            if (rawName && rawColor) {
+                                const finalName = rawName.startsWith("--") ? rawName : `--${rawName}`;
+                                // Restore gm-active jika terlepas
+                                if (savedActiveEls.length) {
+                                    savedActiveEls.forEach(el => el.classList.add("gm-active"));
+                                } else if (window.lastSelectedGmObject && document.contains(window.lastSelectedGmObject)) {
+                                    window.lastSelectedGmObject.classList.add("gm-active");
+                                }
+                                onSave(finalName, rawColor);
+                            }
+                            close();
+                        };
+
+                        btnSave.addEventListener("click", save);
+                        popup.addEventListener("keydown", e => {
+                            if (e.key === "Enter") save();
+                            if (e.key === "Escape") close();
+                        });
+
+                        setTimeout(() => {
+                            const outsideClick = (eClick) => {
+                                if (!popup.contains(eClick.target)) {
+                                    close();
+                                    document.removeEventListener("mousedown", outsideClick);
+                                }
+                            };
+                            document.addEventListener("mousedown", outsideClick);
+                        }, 10);
+                    }
+
+                    /* KLIK EVENTS (ADD VARIABLE & APPLY COLOR) */
+                    document.body.addEventListener("click", e => {
+                        const addBtn = e.target.closest(".gm-add-token");
+                        if (addBtn && addBtn.closest("#gm-text-color-variables")) {
+                            const rect = addBtn.getBoundingClientRect();
+                            openTokenEditorPopup(rect.left, rect.bottom + 8, "", "#000000", (newName, newColor) => {
+                                if (window.gmTypographyTokens.tokens[newName]) {
+                                    alert("Token already exists");
+                                } else {
+                                    window.gmTypographyTokens.tokens[newName] = newColor;
+                                    window.gmTypographyTokens.save();
+                                    window.gmTypographyTokens.render();
+                                    window.gmTypographyTokens.apply();
+                                    // Terapkan langsung ke object aktif saat ini jika ada
+                                    window.gmTypographyTokens.setColorToActive(`var(${newName})`);
+                                }
+                            });
+                            return;
+                        }
+
+                        const token = e.target.closest(".gm-color-token");
+                        if (token && token.closest("#gm-text-color-variables")) {
+                            if (e.target.tagName === "INPUT") return;
+                            const name = token.dataset.name;
+                            if (name) {
+                                window.gmTypographyTokens.setColorToActive(`var(${name})`);
+                            }
+                        }
+                    });
+
+                    /* INPUT EVENTS (CHANGE COLOR ON THE FLY) */
+                    document.body.addEventListener("input", e => {
+                        if (e.target.tagName === "INPUT" && e.target.type === "color") {
+                            const token = e.target.closest(".gm-color-token");
+                            if (token && token.dataset.name && token.closest("#gm-text-color-variables")) {
+                                window.gmTypographyTokens.tokens[token.dataset.name] = e.target.value;
+                                window.gmTypographyTokens.apply();
+                            }
+                        }
+                        // NATIVE COLOR PICKER
+                        if (e.target.classList.contains("gm-color-picker") && e.target.dataset.style === 'color') {
+                            window.gmTypographyTokens.setColorToActive(e.target.value);
+                        }
+                    });
+
+                    /* CHANGE EVENTS (SAVE TO DB) */
+                    document.body.addEventListener("change", e => {
+                        if (e.target.tagName === "INPUT" && e.target.type === "color") {
+                            const token = e.target.closest(".gm-color-token");
+                            if (token && token.closest("#gm-text-color-variables")) {
+                                window.gmTypographyTokens.save();
+                            }
+                        }
+                    });
+
+                    /* NATIVE INPUT ENTER (NATIVE TEXT) */
+                    document.body.addEventListener("keydown", e => {
+                        if (e.key === "Enter" && e.target.classList.contains("gm-color-input") && e.target.dataset.style === 'color') {
+                            window.gmTypographyTokens.setColorToActive(e.target.value.trim());
+                        }
+                    });
+
+                    document.body.addEventListener("blur", e => {
+                        if (e.target.classList && e.target.classList.contains("gm-color-input") && e.target.dataset.style === 'color') {
+                            const val = e.target.value.trim();
+                            if (val) window.gmTypographyTokens.setColorToActive(val);
+                        }
+                    }, true);
+
+                    /* CONTEXT MENU EVENTS (EDIT & DELETE) */
+                    document.body.addEventListener("contextmenu", e => {
+                        const token = e.target.closest(".gm-color-token:not(.gm-add-token)");
+                        if (!token || !token.closest("#gm-text-color-variables")) return;
+                        
+                        e.preventDefault();
+                        const name = token.dataset.name;
+                        if (!name) return;
+
+                        document.querySelectorAll(".gm-token-popup").forEach(p => p.remove());
+
+                        const popup = document.createElement("div");
+                        popup.className = "gm-token-popup";
+                        popup.innerHTML = `
+                            <div class="gm-token-action" data-action="edit" style="padding:6px 10px;cursor:pointer;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Edit</div>
+                            <div class="gm-token-action" data-action="delete" style="padding:6px 10px;cursor:pointer;color:#dc2626;display:flex;align-items:center;gap:8px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg> Delete</div>
+                        `;
+
+                        let cx = e.clientX;
+                        let cy = e.clientY;
+                        if (cx + 120 > window.innerWidth) cx = window.innerWidth - 130;
+                        if (cy + 80 > window.innerHeight) cy = window.innerHeight - 90;
+
+                        Object.assign(popup.style, {
+                            position: "fixed",
+                            left: `${cx}px`,
+                            top: `${cy}px`,
+                            background: "#fff",
+                            border: "1px solid #e5e7eb",
+                            borderRadius: "8px",
+                            boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
+                            zIndex: "999999",
+                            padding: "4px 0",
+                            fontSize: "12px",
+                            color: "#374151",
+                            minWidth: "120px",
+                            fontWeight: "500"
+                        });
+
+                        popup.querySelectorAll(".gm-token-action").forEach(act => {
+                            act.addEventListener("mouseenter", () => act.style.background = "#f3f4f6");
+                            act.addEventListener("mouseleave", () => act.style.background = "transparent");
+                        });
+
+                        document.body.appendChild(popup);
+
+                        popup.addEventListener("click", ev => {
+                            const action = ev.target.closest(".gm-token-action")?.dataset.action;
+                            if (action === "edit") {
+                                openTokenEditorPopup(cx, cy, name, window.gmTypographyTokens.tokens[name], (newName, newColor) => {
+                                    if (newName !== name && window.gmTypographyTokens.tokens[newName]) {
+                                        alert("Token name already exists!");
+                                        return;
+                                    }
+                                    window.gmTypographyTokens.tokens[newName] = newColor;
+                                    if (newName !== name) {
+                                        delete window.gmTypographyTokens.tokens[name];
+                                        document.querySelectorAll(".gm-object").forEach(el => {
+                                            if (el.style.color === `var(${name})`) {
+                                                el.style.color = `var(${newName})`;
+                                                if (el.dataset.bpDesktop) {
+                                                    el.dataset.bpDesktop = el.dataset.bpDesktop.replace(`var(${name})`, `var(${newName})`);
+                                                }
+                                            }
+                                        });
+                                    }
+                                    window.gmTypographyTokens.save();
+                                    window.gmTypographyTokens.render();
+                                    window.gmTypographyTokens.apply();
+                                    if (typeof window.syncCurrentBreakpoint === 'function') {
+                                        window.syncCurrentBreakpoint();
+                                    }
+                                });
+                            } else if (action === "delete") {
+                                if (!confirm(`Delete ${name}?`)) return;
+                                delete window.gmTypographyTokens.tokens[name];
+                                document.querySelectorAll(".gm-object").forEach(el => {
+                                    if (el.style.color === `var(${name})`) {
+                                        el.style.color = "";
+                                        if (el.dataset.bpDesktop) {
+                                            el.dataset.bpDesktop = el.dataset.bpDesktop.replace(`color: var(${name});`, '').replace(`color: var(${name})`, '');
+                                        }
+                                    }
+                                });
+                                window.gmTypographyTokens.save();
+                                window.gmTypographyTokens.render();
+                                window.gmTypographyTokens.apply();
+                                if (typeof window.syncCurrentBreakpoint === 'function') {
+                                    window.syncCurrentBreakpoint();
+                                }
+                            }
+                            popup.remove();
+                        });
+
+                        const closePopup = (eClose) => {
+                            if (!popup.contains(eClose.target)) {
+                                popup.remove();
+                                document.removeEventListener("mousedown", closePopup);
+                            }
+                        };
+                        setTimeout(() => document.addEventListener("mousedown", closePopup), 10);
+                    });
+                }
+            })();
+        </script>
+        <script>
+            /* ===============================
+               UI SYNC & RESET (TEXT COLOR)
+            ================================ */
+            (function() {
+                function resetTextColorUI() {
+                    const colorInput = document.querySelector('.gm-color-input[data-style="color"]');
+                    const colorPicker = document.querySelector('.gm-color-picker[data-style="color"]');
+                    if (colorInput) colorInput.value = "";
+                    if (colorPicker) colorPicker.value = "#000000";
+                }
+
+                function syncTextColorUI() {
+                    const colorInput = document.querySelector('.gm-color-input[data-style="color"]');
+                    const colorPicker = document.querySelector('.gm-color-picker[data-style="color"]');
+                    if (!colorInput) return;
+
+                    const actives = document.querySelectorAll(".gm-object.gm-active");
+
+                    if (!actives.length) {
+                        resetTextColorUI();
+                        return;
+                    }
+
+                    let firstValue = actives[0].style.color || "";
+
+                    for (let el of actives) {
+                        if ((el.style.color || "") !== firstValue) {
+                            resetTextColorUI();
+                            return;
+                        }
+                    }
+
+                    colorInput.value = firstValue;
+
+                    if (firstValue.startsWith("#") && colorPicker) {
+                        colorPicker.value = firstValue;
+                    } else if (firstValue.startsWith("var(") && colorPicker) {
+                        const varMatch = firstValue.match(/var\((--[^)]+)\)/);
+                        if (varMatch && window.gmTypographyTokens && window.gmTypographyTokens.tokens) {
+                            const tokenVal = window.gmTypographyTokens.tokens[varMatch[1]];
+                            if (tokenVal && tokenVal.startsWith("#")) {
+                                colorPicker.value = tokenVal;
+                            }
+                        }
+                    }
+                }
+
+                window.addEventListener('gm-active-tick', syncTextColorUI);
+                window.addEventListener('gm-selection-change', syncTextColorUI);
+                syncTextColorUI();
+            })();
+        </script>
+    </div>
+
+    <!-- SPACING & ALIGN -->
+    <div class="gm-menu-section">
+        <div class="gm-menu-title">Spacing & Align</div>
+
+        <div class="gm-menu-row gm-row-pair">
+            <!-- LINE HEIGHT -->
+            <div>
+                <label>Line Height</label>
+                <input type="text" data-style="line-height" placeholder="1.5">
+                <script>
+                    (function () {
+
+                        const input = document.querySelector('input[data-style="line-height"]');
+                        if (!input) return;
+
+                        const STYLE_PROP = 'lineHeight';
+
+                        function getActives() {
+                            return document.querySelectorAll('.gm-object.gm-active');
+                        }
+
+                        /* =========================
+                           NORMALIZE
+                        ========================= */
+
+                        function normalizeLineHeight(value) {
+                            if (!value) return '';
+
+                            // angka saja → unitless
+                            if (/^\d+(\.\d+)?$/.test(value)) {
+                                return value;
+                            }
+
+                            // angka + satuan
+                            if (/^\d+(\.\d+)?(px|em|rem|%)$/.test(value)) {
+                                return value;
+                            }
+
+                            return '';
+                        }
+
+                        /* =========================
+                           SYNC FROM ACTIVE
+                        ========================= */
+
+                        function syncLineHeight() {
+                            const actives = getActives();
+
+                            if (!actives.length) {
+                                input.value = '';
+                                return;
+                            }
+
+                            let value = null;
+                            let mixed = false;
+
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const lh = inline || computed || '';
+
+                                if (value === null) {
+                                    value = lh;
+                                } else if (value !== lh) {
+                                    mixed = true;
+                                }
+                            });
+
+                            input.value = mixed ? '' : value;
+                        }
+
+                        /* =========================
+                           APPLY
+                        ========================= */
+
+                        function applyLineHeight(rawValue) {
+                            const actives = getActives();
+                            if (!actives.length) return;
+
+                            const value = normalizeLineHeight(rawValue);
+                            if (!value) return;
+
+                            actives.forEach(obj => {
+                                obj.style.lineHeight = value;
+                            });
+
+                            syncLineHeight();
+                        }
+
+                        /* =========================
+                           ENTER APPLY
+                        ========================= */
+
+                        input.addEventListener('keydown', e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                applyLineHeight(input.value.trim());
+                            }
+                        });
+
+                        /* =========================
+                           AUTO SYNC (SELECTION CHANGE)
+                        ========================= */
+
+                        window.addEventListener('gm-active-tick', syncLineHeight);
+
+                        /* =========================
+                           INIT
+                        ========================= */
+
+                        syncLineHeight();
+
+                    })();
+                </script>
+            </div>
+
+            <!-- LETTER SPACING -->
+            <div>
+                <label>Letter Spacing</label>
+                <input type="text" data-style="letter-spacing" placeholder="0px">
+                <script>
+                    (function () {
+
+                        const input = document.querySelector('input[data-style="letter-spacing"]');
+                        if (!input) return;
+
+                        const STYLE_PROP = 'letterSpacing';
+
+                        function getActives() {
+                            return document.querySelectorAll('.gm-object.gm-active');
+                        }
+
+                        /* =========================
+                           NORMALIZE
+                        ========================= */
+
+                        function normalizeLetterSpacing(value) {
+                            if (!value) return '';
+
+                            // angka saja → px
+                            if (/^-?\d+(\.\d+)?$/.test(value)) {
+                                return value + 'px';
+                            }
+
+                            // angka + unit valid
+                            if (/^-?\d+(\.\d+)?(px|em|rem)$/.test(value)) {
+                                return value;
+                            }
+
+                            return '';
+                        }
+
+                        /* =========================
+                           SYNC FROM ACTIVE
+                        ========================= */
+
+                        function syncLetterSpacing() {
+                            const actives = getActives();
+
+                            if (!actives.length) {
+                                input.value = '';
+                                return;
+                            }
+
+                            let value = null;
+                            let mixed = false;
+
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const spacing = inline || computed || '';
+
+                                if (value === null) {
+                                    value = spacing;
+                                } else if (value !== spacing) {
+                                    mixed = true;
+                                }
+                            });
+
+                            input.value = mixed ? '' : value;
+                        }
+
+                        /* =========================
+                           APPLY
+                        ========================= */
+
+                        function applyLetterSpacing(rawValue) {
+                            const actives = getActives();
+                            if (!actives.length) return;
+
+                            const value = normalizeLetterSpacing(rawValue);
+                            if (!value) return;
+
+                            actives.forEach(obj => {
+                                obj.style.letterSpacing = value;
+                            });
+
+                            syncLetterSpacing();
+                        }
+
+                        /* =========================
+                           ENTER APPLY
+                        ========================= */
+
+                        input.addEventListener('keydown', e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                applyLetterSpacing(input.value.trim());
+                            }
+                        });
+
+                        /* =========================
+                           AUTO SYNC (SELECTION CHANGE)
+                        ========================= */
+
+                        window.addEventListener('gm-active-tick', syncLetterSpacing);
+
+                        /* =========================
+                           INIT
+                        ========================= */
+
+                        syncLetterSpacing();
+
+                    })();
+                </script>
+            </div>
+        </div>
+
+        <div class="gm-menu-row gm-row-pair">
+            <!-- WORD SPACING -->
+            <div class="gm-menu-row">
+                <label>Word Spacing</label>
+                <input type="text" data-style="word-spacing" placeholder="0px">
+                <script>
+                    (function () {
+
+                        const input = document.querySelector('input[data-style="word-spacing"]');
+                        if (!input) return;
+
+                        const STYLE_PROP = 'wordSpacing';
+
+                        function getActives() {
+                            return document.querySelectorAll('.gm-object.gm-active');
+                        }
+
+                        /* =========================
+                           NORMALIZE
+                        ========================= */
+
+                        function normalizeWordSpacing(value) {
+                            if (!value) return '';
+
+                            // angka saja → px
+                            if (/^-?\d+(\.\d+)?$/.test(value)) {
+                                return value + 'px';
+                            }
+
+                            // angka + unit valid
+                            if (/^-?\d+(\.\d+)?(px|em|rem)$/.test(value)) {
+                                return value;
+                            }
+
+                            return '';
+                        }
+
+                        /* =========================
+                           SYNC FROM ACTIVE
+                        ========================= */
+
+                        function syncWordSpacing() {
+                            const actives = getActives();
+
+                            if (!actives.length) {
+                                input.value = '';
+                                return;
+                            }
+
+                            let value = null;
+                            let mixed = false;
+
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const spacing = inline || computed || '';
+
+                                if (value === null) {
+                                    value = spacing;
+                                } else if (value !== spacing) {
+                                    mixed = true;
+                                }
+                            });
+
+                            input.value = mixed ? '' : value;
+                        }
+
+                        /* =========================
+                           APPLY
+                        ========================= */
+
+                        function applyWordSpacing(rawValue) {
+                            const actives = getActives();
+                            if (!actives.length) return;
+
+                            const value = normalizeWordSpacing(rawValue);
+                            if (!value) return;
+
+                            actives.forEach(obj => {
+                                obj.style.wordSpacing = value;
+                            });
+
+                            syncWordSpacing();
+                        }
+
+                        /* =========================
+                           ENTER APPLY
+                        ========================= */
+
+                        input.addEventListener('keydown', e => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                applyWordSpacing(input.value.trim());
+                            }
+                        });
+
+                        /* =========================
+                           AUTO SYNC (SELECTION CHANGE)
+                        ========================= */
+
+                        window.addEventListener('gm-active-tick', syncWordSpacing);
+
+                        /* =========================
+                           INIT
+                        ========================= */
+
+                        syncWordSpacing();
+
+                    })();
+                </script>
+            </div>
+
+            <!-- TEXT ALIGN -->
+            <div class="gm-menu-row">
+                <label>Text Align</label>
+                <select data-style="text-align">
+                    <option value="">default</option>
+                    <option value="left">left</option>
+                    <option value="center">center</option>
+                    <option value="right">right</option>
+                    <option value="justify">justify</option>
+                </select>
+                <script>
+                    (function () {
+
+                        const select = document.querySelector('select[data-style="text-align"]');
+                        if (!select) return;
+
+                        const STYLE_PROP = 'textAlign';
+
+                        function getActives() {
+                            return document.querySelectorAll('.gm-object.gm-active');
+                        }
+
+                        /* =========================
+                           SYNC FROM ACTIVE
+                        ========================= */
+
+                        function syncTextAlign() {
+                            const actives = getActives();
+
+                            if (!actives.length) {
+                                select.value = '';
+                                return;
+                            }
+
+                            let value = null;
+                            let mixed = false;
+
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const align = inline || computed || '';
+
+                                if (value === null) {
+                                    value = align;
+                                } else if (value !== align) {
+                                    mixed = true;
+                                }
+                            });
+
+                            select.value = mixed ? '' : value;
+                        }
+
+                        /* =========================
+                           APPLY
+                        ========================= */
+
+                        select.addEventListener('change', () => {
+                            const actives = getActives();
+                            if (!actives.length) return;
+
+                            const value = select.value;
+
+                            actives.forEach(obj => {
+                                if (value) {
+                                    obj.style.textAlign = value;
+                                } else {
+                                    obj.style.removeProperty('text-align');
+                                }
+                            });
+
+                            syncTextAlign();
+                        });
+
+                        /* =========================
+                           AUTO SYNC (SELECTION CHANGE)
+                        ========================= */
+
+                        window.addEventListener('gm-active-tick', syncTextAlign);
+
+                        /* =========================
+                           INIT
+                        ========================= */
+
+                        syncTextAlign();
+
+                    })();
+                </script>
+            </div>
+        </div>
+    </div>
+
+    <!-- DECORATION -->
+    <div class="gm-menu-section">
+        <div class="gm-menu-title">Decoration</div>
+
+        <!-- TEXT DECORATION -->
+        <div class="gm-menu-row gm-text-decoration">
+            <label>Text Decoration</label>
+
+            <div class="gm-menu-row">
+                <input type="text" data-style="text-decoration" placeholder="underline dotted red">
+            </div>
+            <div class="gm-menu-row">
+                <select class="gm-decoration-preset">
+                    <option value="">preset</option>
+                    <option value="none">none</option>
+                    <option value="underline">underline</option>
+                    <option value="overline">overline</option>
+                    <option value="line-through">line-through</option>
+                    <option value="underline dotted">underline dotted</option>
+                    <option value="underline dashed">underline dashed</option>
+                </select>
+            </div>
+            <style>
+                .gm-input-group {
+                    display: flex;
+                    gap: 6px;
+                }
+
+                .gm-input-group input {
+                    flex: 1;
+                }
+
+                .gm-decoration-preset {
+                    width: 90px;
+                    font-size: 12px;
+                    padding: 2px 4px;
+                }
+            </style>
+            <script>
+                (function () {
+
+                    const row = document.querySelector('.gm-text-decoration');
+                    if (!row) return;
+
+                    const input = row.querySelector('input[data-style="text-decoration"]');
+                    const select = row.querySelector('.gm-decoration-preset');
+
+                    const STYLE_PROP = 'textDecoration';
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       APPLY
+                    ========================= */
+
+                    function apply(value) {
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style[STYLE_PROP] = value;
+                        });
+
+                        sync();
+                    }
+
+                    /* =========================
+                       SELECT → APPLY LANGSUNG
+                    ========================= */
+
+                    select.addEventListener('change', () => {
+                        const value = select.value;
+                        if (!value) return;
+
+                        input.value = value;   // sinkron ke input
+                        apply(value);          // langsung apply
+                    });
+
+                    /* =========================
+                       INPUT → ENTER APPLY
+                    ========================= */
+
+                    input.addEventListener('keydown', e => {
+                        if (e.key !== 'Enter') return;
+
+                        e.preventDefault();
+                        const value = input.value.trim();
+                        if (!value) return;
+
+                        apply(value);
+                    });
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function sync() {
+                        const actives = getActives();
+
+                        if (!actives.length) {
+                            input.value = '';
+                            select.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const current = inline || computed || '';
+
+                            if (value === null) value = current;
+                            else if (value !== current) mixed = true;
+                        });
+
+                        input.value = mixed ? '' : value;
+                        select.value = ''; // preset tidak dipaksa match
+                    }
+
+                    /* =========================
+                       OBSERVE SELECTION CHANGE
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', sync);
+
+                    sync();
+
+                })();
+            </script>
+        </div>
+
+        <!-- TEXT TRANSFORM -->
+        <div class="gm-menu-row">
+            <label>Text Transform</label>
+            <select data-style="text-transform">
+                <option value="">default</option>
+                <option value="none">none</option>
+                <option value="uppercase">uppercase</option>
+                <option value="lowercase">lowercase</option>
+                <option value="capitalize">capitalize</option>
+            </select>
+            <script>
+                (function () {
+
+                    const row = document.querySelector('[data-style="text-transform"]')?.closest('.gm-menu-row');
+                    if (!row) return;
+
+                    const select = row.querySelector('select[data-style="text-transform"]');
+                    const STYLE_PROP = 'textTransform';
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       APPLY (SELECT = INSTANT)
+                    ========================= */
+
+                    select.addEventListener('change', () => {
+                        const value = select.value;
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style[STYLE_PROP] = value;
+                        });
+
+                        sync();
+                    });
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function sync() {
+                        const actives = getActives();
+
+                        if (!actives.length) {
+                            select.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const current = inline || computed || '';
+
+                            if (value === null) value = current;
+                            else if (value !== current) mixed = true;
+                        });
+
+                        select.value = mixed ? '' : value;
+                    }
+
+                    /* =========================
+                       OBSERVE SELECTION CHANGE
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', sync);
+
+                    sync();
+
+                })();
+            </script>
+        </div>
+    </div>
+
+    <!--TEXT SHADOW -->
+    <div class="gm-menu-section">
+        <div class="gm-menu-title">Text Shadow</div>
+        <div class="gm-menu-row">
+            <label>Shadow</label>
+            <input type="text" data-style="text-shadow" placeholder="0 2px 6px rgba(0,0,0,.3)">
+        </div>
+        <script>
+            (function () {
+
+                const input = document.querySelector('input[data-style="text-shadow"]');
+                if (!input) return;
+
+                const STYLE_PROP = 'textShadow';
+
+                function getActives() {
+                    return document.querySelectorAll('.gm-object.gm-active');
+                }
+
+                /* =========================
+                   APPLY (ENTER ONLY)
+                ========================= */
+
+                input.addEventListener('keydown', e => {
+                    if (e.key !== 'Enter') return;
+
+                    e.preventDefault();
+                    const value = input.value.trim();
+                    if (!value) return;
+
+                    const actives = getActives();
+                    if (!actives.length) return;
+
+                    actives.forEach(obj => {
+                        obj.style[STYLE_PROP] = value;
+                    });
+
+                    sync();
+                });
+
+                /* =========================
+                   SYNC FROM ACTIVE OBJECT
+                ========================= */
+
+                function sync() {
+                    const actives = getActives();
+
+                    if (!actives.length) {
+                        input.value = '';
+                        return;
+                    }
+
+                    let value = null;
+                    let mixed = false;
+
+                    actives.forEach(obj => {
+                        const inline = obj.style[STYLE_PROP];
+                        const computed = getComputedStyle(obj)[STYLE_PROP];
+                        const current = inline || computed || '';
+
+                        if (value === null) value = current;
+                        else if (value !== current) mixed = true;
+                    });
+
+                    input.value = mixed ? '' : value;
+                }
+
+                /* =========================
+                   OBSERVE SELECTION CHANGE
+                ========================= */
+
+                window.addEventListener('gm-active-tick', sync);
+
+                sync();
+
+            })();
+        </script>
+    </div>
+
+    <!-- FLOW & WRAP -->
+    <div class="gm-menu-section">
+        <div class="gm-menu-title">Flow & Wrap</div>
+
+        <!-- WHITE SPACE -->
+        <div class="gm-menu-row">
+            <label>White Space</label>
+            <select data-style="white-space">
+                <option value="">default</option>
+                <option value="normal">normal</option>
+                <option value="nowrap">nowrap</option>
+                <option value="pre">pre</option>
+                <option value="pre-wrap">pre-wrap</option>
+                <option value="pre-line">pre-line</option>
+            </select>
+            <script>
+                (function () {
+
+                    const select = document.querySelector('select[data-style="white-space"]');
+                    if (!select) return;
+
+                    const STYLE_PROP = 'whiteSpace';
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       APPLY (SELECT = INSTANT)
+                    ========================= */
+
+                    select.addEventListener('change', () => {
+                        const value = select.value;
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style[STYLE_PROP] = value;
+                        });
+
+                        sync();
+                    });
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function sync() {
+                        const actives = getActives();
+
+                        if (!actives.length) {
+                            select.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const current = inline || computed || '';
+
+                            if (value === null) value = current;
+                            else if (value !== current) mixed = true;
+                        });
+
+                        select.value = mixed ? '' : value;
+                    }
+
+                    /* =========================
+                       OBSERVE SELECTION CHANGE
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', sync);
+
+                    sync();
+
+                })();
+            </script>
+        </div>
+
+        <!-- WORD BREAK -->
+        <div class="gm-menu-row">
+            <label>Word Break</label>
+            <select data-style="word-break">
+                <option value="">default</option>
+                <option value="normal">normal</option>
+                <option value="break-all">break-all</option>
+                <option value="keep-all">keep-all</option>
+            </select>
+            <script>
+                (function () {
+
+                    const select = document.querySelector('select[data-style="word-break"]');
+                    if (!select) return;
+
+                    const STYLE_PROP = 'wordBreak';
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       APPLY (INSTANT)
+                    ========================= */
+
+                    select.addEventListener('change', () => {
+                        const value = select.value;
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style[STYLE_PROP] = value;
+                        });
+
+                        sync();
+                    });
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function sync() {
+                        const actives = getActives();
+
+                        if (!actives.length) {
+                            select.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const current = inline || computed || '';
+
+                            if (value === null) value = current;
+                            else if (value !== current) mixed = true;
+                        });
+
+                        select.value = mixed ? '' : value;
+                    }
+
+                    /* =========================
+                       OBSERVE SELECTION CHANGE
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', sync);
+
+                    sync();
+
+                })();
+            </script>
+
+        </div>
+
+        <!-- TEXT OVERFLOW -->
+        <div class="gm-menu-row">
+            <label>Text Overflow</label>
+            <select data-style="text-overflow">
+                <option value="">default</option>
+                <option value="clip">clip</option>
+                <option value="ellipsis">ellipsis</option>
+            </select>
+            <script>
+                (function () {
+
+                    const select = document.querySelector('select[data-style="text-overflow"]');
+                    if (!select) return;
+
+                    const STYLE_PROP = 'textOverflow';
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       APPLY (INSTANT)
+                    ========================= */
+
+                    select.addEventListener('change', () => {
+                        const value = select.value;
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style[STYLE_PROP] = value;
+                        });
+
+                        sync();
+                    });
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function sync() {
+                        const actives = getActives();
+
+                        if (!actives.length) {
+                            select.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const current = inline || computed || '';
+
+                            if (value === null) value = current;
+                            else if (value !== current) mixed = true;
+                        });
+
+                        select.value = mixed ? '' : value;
+                    }
+
+                    /* =========================
+                       OBSERVE SELECTION CHANGE
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', sync);
+
+                    sync();
+
+                })();
+            </script>
+        </div>
+    </div>
+
+    <!-- DIRECTION -->
+    <div class="gm-menu-section">
+        <div class="gm-menu-title">Direction</div>
+
+        <!-- TEXT DIRECTION -->
+        <div class="gm-menu-row">
+            <label>Direction</label>
+            <select data-style="direction">
+                <option value="">default</option>
+                <option value="ltr">ltr</option>
+                <option value="rtl">rtl</option>
+            </select>
+            <script>
+                (function () {
+
+                    const select = document.querySelector('select[data-style="direction"]');
+                    if (!select) return;
+
+                    const STYLE_PROP = 'direction';
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       APPLY (INSTANT)
+                    ========================= */
+
+                    select.addEventListener('change', () => {
+                        const value = select.value;
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style[STYLE_PROP] = value;
+                        });
+
+                        sync();
+                    });
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function sync() {
+                        const actives = getActives();
+
+                        if (!actives.length) {
+                            select.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const current = inline || computed || '';
+
+                            if (value === null) value = current;
+                            else if (value !== current) mixed = true;
+                        });
+
+                        select.value = mixed ? '' : value;
+                    }
+
+                    /* =========================
+                       OBSERVE SELECTION CHANGE
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', sync);
+
+                    sync();
+
+                })();
+            </script>
+
+        </div>
+
+        <!-- WRITING MODE -->
+        <div class="gm-menu-row">
+            <label>Writing Mode</label>
+            <select data-style="writing-mode">
+                <option value="">default</option>
+                <option value="horizontal-tb">horizontal-tb</option>
+                <option value="vertical-rl">vertical-rl</option>
+                <option value="vertical-lr">vertical-lr</option>
+            </select>
+            <script>
+                (function () {
+
+                    const select = document.querySelector('select[data-style="writing-mode"]');
+                    if (!select) return;
+
+                    const STYLE_PROP = 'writingMode';
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       APPLY (INSTANT)
+                    ========================= */
+
+                    select.addEventListener('change', () => {
+                        const value = select.value;
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style[STYLE_PROP] = value;
+                        });
+
+                        sync();
+                    });
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function sync() {
+                        const actives = getActives();
+
+                        if (!actives.length) {
+                            select.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const current = inline || computed || '';
+
+                            if (value === null) value = current;
+                            else if (value !== current) mixed = true;
+                        });
+
+                        select.value = mixed ? '' : value;
+                    }
+
+                    /* =========================
+                       OBSERVE SELECTION CHANGE
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', sync);
+
+                    sync();
+
+                })();
+            </script>
+        </div>
+
+        <!-- TEXT ORIENTATION -->
+        <div class="gm-menu-row">
+            <label>Text Orientation</label>
+            <select data-style="text-orientation">
+                <option value="">default</option>
+                <option value="mixed">mixed</option>
+                <option value="upright">upright</option>
+                <option value="sideways">sideways</option>
+            </select>
+
+            <script>
+                (function () {
+
+                    const select = document.querySelector('select[data-style="text-orientation"]');
+                    if (!select) return;
+
+                    const STYLE_PROP = 'textOrientation';
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       APPLY (INSTANT)
+                    ========================= */
+
+                    select.addEventListener('change', () => {
+                        const value = select.value;
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style[STYLE_PROP] = value;
+                        });
+
+                        sync();
+                    });
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function sync() {
+                        const actives = getActives();
+
+                        if (!actives.length) {
+                            select.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const current = inline || computed || '';
+
+                            if (value === null) value = current;
+                            else if (value !== current) mixed = true;
+                        });
+
+                        select.value = mixed ? '' : value;
+                    }
+
+                    /* =========================
+                       OBSERVE SELECTION CHANGE
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', sync);
+
+                    sync();
+
+                })();
+            </script>
+        </div>
+
+        <!-- BIDI UNICODE -->
+        <div class="gm-menu-row">
+            <label>Unicode BiDi</label>
+            <select data-style="unicode-bidi">
+                <option value="">default</option>
+                <option value="normal">normal</option>
+                <option value="isolate">isolate</option>
+                <option value="embed">embed</option>
+                <option value="bidi-override">bidi-override</option>
+                <option value="isolate-override">isolate-override</option>
+            </select>
+            <script>
+                (function () {
+
+                    const select = document.querySelector('select[data-style="unicode-bidi"]');
+                    if (!select) return;
+
+                    const STYLE_PROP = 'unicodeBidi';
+
+                    function getActives() {
+                        return document.querySelectorAll('.gm-object.gm-active');
+                    }
+
+                    /* =========================
+                       APPLY (INSTANT)
+                    ========================= */
+
+                    select.addEventListener('change', () => {
+                        const value = select.value;
+                        const actives = getActives();
+                        if (!actives.length) return;
+
+                        actives.forEach(obj => {
+                            obj.style[STYLE_PROP] = value;
+                        });
+
+                        sync();
+                    });
+
+                    /* =========================
+                       SYNC FROM ACTIVE OBJECT
+                    ========================= */
+
+                    function sync() {
+                        const actives = getActives();
+
+                        if (!actives.length) {
+                            select.value = '';
+                            return;
+                        }
+
+                        let value = null;
+                        let mixed = false;
+
+                        actives.forEach(obj => {
+                            const inline = obj.style[STYLE_PROP];
+                            const computed = getComputedStyle(obj)[STYLE_PROP];
+                            const current = inline || computed || '';
+
+                            if (value === null) value = current;
+                            else if (value !== current) mixed = true;
+                        });
+
+                        select.value = mixed ? '' : value;
+                    }
+
+                    /* =========================
+                       OBSERVE SELECTION CHANGE
+                    ========================= */
+
+                    window.addEventListener('gm-active-tick', sync);
+
+                    sync();
+
+                })();
+            </script>
+        </div>
+    </div>
+</div>
+<!-- End Typography Menu -->
