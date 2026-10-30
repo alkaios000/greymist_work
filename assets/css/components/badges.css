@@ -1,0 +1,81 @@
+/**
+ * File: assets/css/components/badges.css
+ * Fungsi: Lencana status (badge/pill) dan tampilan state kosong (empty state).
+ */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.badge-published,
+.badge-success {
+    background-color: var(--color-success-bg);
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.badge-draft,
+.badge-muted {
+    background-color: #f1f5f9;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.badge-template,
+.badge-blue {
+    background-color: var(--btn-blue-soft);
+    color: var(--btn-blue);
+    border: 1px solid var(--btn-blue-border);
+}
+
+.badge-danger {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+    border: 1px solid #fecaca;
+}
+
+/* Empty State */
+.empty-state {
+    background-color: #ffffff;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 40px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.empty-state-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--btn-blue-soft);
+    color: var(--btn-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 4px;
+}
+
+.empty-state h3 {
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.empty-state p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    max-width: 380px;
+}
+

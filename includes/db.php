@@ -1,19 +1,6 @@
 <?php
-$host = "localhost";
-$db   = "GREYMISTBETA";
-$user = "root";
-$pass = "";
-
-try {
-    $pdo = new PDO(
-        "mysql:host=$host;dbname=$db;charset=utf8mb4",
-        $user,
-        $pass,
-        [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
-        ]
-    );
-} catch (PDOException $e) {
-    die("Database error");
-}
+/**
+ * File: includes/db.php
+ * Fungsi: Wrapper kompatibilitas yang meneruskan koneksi PDO dari config/config.php.
+ */
+require_once dirname(__DIR__) . '/config/config.php';

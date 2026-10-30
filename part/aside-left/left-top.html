@@ -2,12 +2,13 @@
     <div class="gm-corner-menu" id="gm-corner-menu">
         <div class="gm-menu" id="main-menu">
             <div class="gm-menu-btn gm-app-main-menu">
-                <!-- <i class="fas fa-g"></i> -->
-                <!-- <img src="assets/web-icon/Chaldea.svg" alt="" class="gm-main-logo" id="gm-main-logo"> -->
                 <h5>GM</h5>
                 <i class="fas fa-angle-down"></i>
             </div>
             <div class="gm-dropdown">
+                <div class="gm-dropdown-item gm-no-child" onclick="window.location.href='index.php?page=dashboard'">Dashboard</div>
+                <div class="gm-dropdown-item gm-no-child" onclick="window.location.href='index.php?page=projects'">Proyek Saya</div>
+                <div class="gm-dropdown-item gm-no-child" id="gm-menu-open-ai-studio" style="color: #60a5fa; font-weight: 600;">Gemini AI Studio ✨</div>
                 <div class="gm-dropdown-item gm-no-child">Save</div>
                 <div class="gm-dropdown-item gm-no-child">Setings</div>
                 <div class="gm-dropdown-item gm-no-child">Tutorial</div>
@@ -47,7 +48,7 @@
 
             </script>
             <i class="gm-edit-project-name far fa-pen-to-square"></i>
-            <i class="gm-cloud-sync fas fa-cloud" id="gm-cloud-sync" title="Auto-Save Sync" style="margin-left: 8px; font-size: 13px; color: #4caf50; transition: color 0.3s ease;"></i>
+            <i class="gm-cloud-sync fas fa-cloud" id="gm-cloud-sync" title="Auto-Save Sync" style="margin-left: 8px; font-size: 13px; color: #3b82f6; transition: color 0.3s ease;"></i>
         </div>
     </div>
     <div class="gm-corner-menu" id="gm-corner-menu">

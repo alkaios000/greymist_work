@@ -1,0 +1,114 @@
+/**
+ * File: assets/css/components/buttons.css
+ * Fungsi: Gaya tombol interaksi dengan aksen Soft Blue (#3B82F6 / #EFF6FF).
+ */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.25;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    text-decoration: none;
+}
+
+/* Tombol Utama (Soft Blue Solid) */
+.btn-primary {
+    background-color: var(--btn-blue);
+    color: #ffffff;
+    border-color: var(--btn-blue);
+}
+
+.btn-primary:hover {
+    background-color: var(--btn-blue-hover);
+    border-color: var(--btn-blue-hover);
+    color: #ffffff;
+}
+
+/* Tombol Soft Blue (Tinted Soft Blue) */
+.btn-soft-blue {
+    background-color: var(--btn-blue-soft);
+    color: var(--btn-blue);
+    border-color: var(--btn-blue-border);
+}
+
+.btn-soft-blue:hover {
+    background-color: var(--btn-blue-soft-hover);
+    color: var(--btn-blue-hover);
+}
+
+/* Tombol Sekunder / Putih Bersih */
+.btn-secondary,
+.btn-outline {
+    background-color: #ffffff;
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+.btn-secondary:hover,
+.btn-outline:hover {
+    background-color: var(--btn-blue-soft);
+    color: var(--btn-blue);
+    border-color: var(--btn-blue-border);
+}
+
+/* Tombol Bahaya (Hapus / Destruktif) */
+.btn-danger {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+    border-color: #fecaca;
+}
+
+.btn-danger:hover {
+    background-color: var(--color-danger);
+    color: #ffffff;
+    border-color: var(--color-danger);
+}
+
+/* Variasi Ukuran Tombol */
+.btn-sm {
+    padding: 6px 11px;
+    font-size: 0.78rem;
+    gap: 6px;
+}
+
+.btn-lg {
+    padding: 11px 22px;
+    font-size: 0.925rem;
+}
+
+.btn-icon {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border-radius: var(--radius-md);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-icon:hover {
+    background-color: var(--btn-blue-soft);
+    color: var(--btn-blue);
+    border-color: var(--btn-blue-border);
+}
+
+.btn-icon.danger:hover {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+    border-color: #fecaca;
+}
+

@@ -1,0 +1,67 @@
+/**
+ * File: assets/css/modules/about.css
+ * Fungsi: Gaya halaman Informasi Platform (About Greymist).
+ */
+
+.about-hero {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.about-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.feature-item-card {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 16px 18px;
+    transform: none !important;
+}
+
+.feature-item-card:hover {
+    transform: none !important;
+    border-color: var(--btn-blue-border);
+}
+
+.feature-item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background-color: var(--btn-blue-soft);
+    color: var(--btn-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.feature-item-card h4 {
+    font-size: 0.92rem;
+    margin-bottom: 4px;
+}
+
+.feature-item-card p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.tech-badges-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+

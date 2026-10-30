@@ -1,0 +1,212 @@
+/**
+ * File: assets/css/components/cards.css
+ * Fungsi: Komponen kartu (Stat Card, Project Card, Panel Card) dengan padding/margin ringkas
+ *         dan TANPA animasi pergeseran saat hover (sesuai rule.md Bagian 7).
+ */
+
+.card,
+.panel-card {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-xs);
+    transform: none !important;
+    transition: border-color 0.15s ease;
+}
+
+/* Grid Statistik Ringkas */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.stat-card {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: var(--shadow-xs);
+    transform: none !important;
+}
+
+.stat-card:hover {
+    transform: none !important;
+    border-color: var(--btn-blue-border);
+}
+
+.stat-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-md);
+    background-color: var(--btn-blue-soft);
+    color: var(--btn-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    flex-shrink: 0;
+}
+
+.stat-icon.green {
+    background-color: var(--color-success-bg);
+    color: var(--color-success);
+}
+
+.stat-icon.amber {
+    background-color: var(--color-warning-bg);
+    color: var(--color-warning);
+}
+
+.stat-icon.red {
+    background-color: var(--color-danger-bg);
+    color: var(--color-danger);
+}
+
+.stat-info {
+    min-width: 0;
+}
+
+.stat-value {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+/* Grid Kartu Proyek (Ukuran Ringkas & Tanpa Animasi Hover) */
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.project-card {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-xs);
+    transform: none !important;
+    transition: border-color 0.15s ease;
+}
+
+.project-card:hover {
+    transform: none !important;
+    border-color: var(--btn-blue-border);
+}
+
+.project-thumb {
+    position: relative;
+    height: 148px;
+    background-color: var(--bg-subtle);
+    border-bottom: 1px solid var(--border-color);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.project-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.project-thumb iframe.live-preview-frame {
+    width: 400%;
+    height: 400%;
+    transform: scale(0.25);
+    transform-origin: top left;
+    pointer-events: none;
+    border: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: #ffffff;
+}
+
+.project-thumb-placeholder {
+    color: var(--text-light);
+    font-size: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.project-thumb-placeholder span {
+    font-size: 0.72rem;
+    font-weight: 500;
+}
+
+.project-badges {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.project-body {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.project-title {
+    font-size: 0.925rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.project-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.project-actions {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border-subtle);
+    background-color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.project-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+

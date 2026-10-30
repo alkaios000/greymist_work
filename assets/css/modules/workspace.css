@@ -1,0 +1,8 @@
+/**
+ * File: assets/css/modules/workspace.css
+ * Fungsi: Gaya tambahan khusus Workspace tanpa mengubah tata letak asli komponen editor.
+ */
+
+.gm-object-core {
+    background-color: #ffffff;
+}

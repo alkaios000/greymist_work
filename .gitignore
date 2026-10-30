@@ -1,12 +1,27 @@
-v_env/
+# Environment & Konfigurasi Lokal
+.env
+.env.local
+.env.production
 
-DB/
+# File Upload Pengguna (kecuali struktur folder .gitkeep)
+/uploads/*
+!/uploads/.gitkeep
+!/uploads/.htaccess
+!/uploads/foto_profil/.gitkeep
+!/uploads/background/.gitkeep
+!/uploads/assets/.gitkeep
+!/uploads/lampiran/.gitkeep
 
-backups/
+# Folder Temporary, Backup, & Virtual Env
+/v_env/
+/backups/
+/scratch/
+*.bak
+*.tmp
+*.log
 
-config/
-
-Review/
-
-scratch/
-
+# OS & Editor Metadata
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

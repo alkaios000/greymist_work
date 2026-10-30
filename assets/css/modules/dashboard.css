@@ -1,0 +1,136 @@
+/**
+ * File: assets/css/modules/dashboard.css
+ * Fungsi: Gaya untuk halaman Dashboard, Projects, Explore, Templates, dan Trash.
+ */
+
+.welcome-banner {
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.welcome-text h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.welcome-text p {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.section-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-title i {
+    color: var(--btn-blue);
+    font-size: 0.95rem;
+}
+
+/* Quick Actions Bar Ringkas */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.quick-action-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background-color: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transform: none !important;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.quick-action-item:hover {
+    border-color: var(--btn-blue-border);
+    background-color: var(--btn-blue-soft);
+    transform: none !important;
+}
+
+.quick-action-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    background-color: var(--btn-blue-soft);
+    color: var(--btn-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.quick-action-text h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.quick-action-text p {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+}
+
+/* Author Chip pada kartu Explore & Template */
+.author-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.author-chip-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--btn-blue-soft);
+    color: var(--btn-blue);
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.author-chip-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+

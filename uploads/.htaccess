@@ -1,0 +1,13 @@
+# Matikan eksekusi script PHP di dalam direktori uploads
+Options -Indexes -ExecCGI
+
+<FilesMatch "\.(php|php5|php7|php8|phtml|pl|py|jsp|asp|htm|html|shtml|sh|cgi)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
