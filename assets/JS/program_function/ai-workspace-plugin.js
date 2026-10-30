@@ -616,13 +616,26 @@
             });
         }
 
-        // 2. Terapkan Atribut HTML Non-Style jika ada
+        // 2. Terapkan Atribut HTML Non-Style jika ada (Action, Animasi, Id, Href, dll.)
         if (patch && patch.attributes && typeof patch.attributes === "object") {
             Object.keys(patch.attributes).forEach(attr => {
-                if (attr !== "style" && attr !== "class") {
+                if (attr === "class") {
+                    const classes = String(patch.attributes[attr]).split(/\s+/);
+                    classes.forEach(c => c && destEl.classList.add(c));
+                } else if (attr !== "style") {
                     destEl.setAttribute(attr, patch.attributes[attr]);
                 }
             });
+            if (patch.attributes["data-gm-anim"]) {
+                const animName = patch.attributes["data-gm-anim"];
+                destEl.classList.add("gm-anim-base", animName);
+                if (!destEl.style.getPropertyValue("--gm-anim-duration")) {
+                    destEl.style.setProperty("--gm-anim-duration", "0.8s");
+                }
+                if (!destEl.style.animationIterationCount) {
+                    destEl.style.animationIterationCount = "1";
+                }
+            }
         }
 
         // 3. Terapkan Teks Baru jika ada

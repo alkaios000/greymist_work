@@ -6,9 +6,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const type = el.dataset.actionType;
         
         if (type === "goto") {
-            const targetId = el.dataset.actionTarget;
-            if(targetId) {
-                const thumb = document.querySelector(`.gm-frame-thumbnail[data-frame="${targetId}"]`);
+            const targetId = (el.dataset.actionTarget || "").trim();
+            if (targetId) {
+                // 1. Cari berdasarkan frame_id numerik
+                let thumb = document.querySelector(`.gm-frame-thumbnail[data-frame="${targetId}"]`);
+                // 2. Jika bukan ID numerik, cari berdasarkan nama frame (case-insensitive)
+                if (!thumb) {
+                    const cleanTarget = targetId.toLowerCase();
+                    const allThumbs = Array.from(document.querySelectorAll('.gm-frame-thumbnail'));
+                    thumb = allThumbs.find(t => {
+                        const nameEl = t.querySelector('.gm-frame-name');
+                        const fName = (nameEl ? nameEl.textContent : '').trim().toLowerCase();
+                        return fName === cleanTarget || fName.includes(cleanTarget) || cleanTarget.includes(fName);
+                    });
+                }
                 if (thumb) {
                     thumb.click();
                 } else if (typeof window.activateFrame === "function") {

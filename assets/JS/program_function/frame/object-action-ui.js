@@ -42,7 +42,21 @@
 
                 if (type === "goto") {
                     populateFrames();
-                    if(gotoTarget) gotoTarget.value = activeObj.dataset.actionTarget || "";
+                    if (gotoTarget) {
+                        const targetVal = (activeObj.dataset.actionTarget || "").trim();
+                        gotoTarget.value = targetVal;
+                        // Jika targetVal adalah nama frame, cocokkan dengan option text
+                        if (!gotoTarget.value && targetVal) {
+                            const matchOpt = Array.from(gotoTarget.options).find(o =>
+                                o.textContent.trim().toLowerCase() === targetVal.toLowerCase() ||
+                                o.textContent.trim().toLowerCase().includes(targetVal.toLowerCase())
+                            );
+                            if (matchOpt) {
+                                gotoTarget.value = matchOpt.value;
+                                activeObj.dataset.actionTarget = matchOpt.value;
+                            }
+                        }
+                    }
                 } else if (type === "scroll") {
                     if(scrollTarget) scrollTarget.value = activeObj.dataset.actionScrollTarget || "";
                 } else if (type === "modal") {
