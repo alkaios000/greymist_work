@@ -10,6 +10,195 @@ require_once ROOT_PATH . '/config/config.php';
 require_once ROOT_PATH . '/models/component_model.php';
 require_once ROOT_PATH . '/models/frame_model.php';
 
+@set_time_limit(300);
+@ini_set('memory_limit', '1024M');
+
+/**
+ * Memastikan kolom ai_memory tersedia di tabel gm_projects untuk menyimpan cache konteks & riwayat AI.
+ */
+if (!function_exists('ensure_ai_memory_column')) {
+    function ensure_ai_memory_column(PDO $pdo): void
+    {
+        static $checked = false;
+        if ($checked) {
+            return;
+        }
+        $checked = true;
+        try {
+            $stmt = $pdo->query("SHOW COLUMNS FROM `gm_projects` LIKE 'ai_memory'");
+            if (!$stmt || !$stmt->fetch()) {
+                $pdo->exec("ALTER TABLE `gm_projects` ADD COLUMN `ai_memory` LONGTEXT DEFAULT NULL");
+            }
+        } catch (Throwable $e) {
+            // Abaikan jika gagal alter
+        }
+    }
+}
+
+/**
+ * Merangkum struktur komponen di dalam satu kode HTML frame menjadi ringkasan arsitektur yang padat.
+ */
+if (!function_exists('summarize_frame_structure')) {
+    function summarize_frame_structure(string $html): array
+    {
+        if (trim($html) === '') {
+            return [];
+        }
+        $doc = new DOMDocument();
+        @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $root = $doc->getElementById('gm-root');
+        $blocks = [];
+        if ($root) {
+            $idx = 1;
+            foreach ($root->childNodes as $node) {
+                if ($node->nodeType === XML_ELEMENT_NODE) {
+                    $tag   = strtolower($node->nodeName);
+                    $text  = trim(preg_replace('/\s+/', ' ', $node->textContent));
+                    $short = mb_substr($text, 0, 60);
+                    $child_count = $node->getElementsByTagName('*')->length;
+                    $blocks[] = [
+                        'order'       => $idx++,
+                        'tag'         => $tag,
+                        'preview'     => $short !== '' ? $short : '(elemen visual)',
+                        'child_count' => $child_count,
+                    ];
+                }
+            }
+        }
+        return $blocks;
+    }
+}
+
+/**
+ * Mengambil dan menyinkronkan memori konteks AI proyek dari database gm_projects + gm_frames.
+ */
+if (!function_exists('get_project_ai_memory')) {
+    function get_project_ai_memory(PDO $pdo, int $project_id, array $client_frames_snapshot = []): array
+    {
+        ensure_ai_memory_column($pdo);
+
+        $default_memory = [
+            'project_id'       => $project_id,
+            'project_name'     => 'Untitled Project',
+            'system_summary'   => '',
+            'total_pages'      => 0,
+            'pages_map'        => [],
+            'history'          => [],
+            'updated_at'       => date('Y-m-d H:i:s'),
+        ];
+
+        if ($project_id <= 0) {
+            return $default_memory;
+        }
+
+        $stmt = $pdo->prepare("SELECT project_name, ai_memory FROM gm_projects WHERE project_id = ? LIMIT 1");
+        $stmt->execute([$project_id]);
+        $proj = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$proj) {
+            return $default_memory;
+        }
+
+        $saved = [];
+        if (!empty($proj['ai_memory'])) {
+            $decoded = json_decode((string)$proj['ai_memory'], true);
+            if (is_array($decoded)) {
+                $saved = $decoded;
+            }
+        }
+
+        // Ambil susunan seluruh frame/halaman terkini (prioritaskan snapshot live dari client jika dikirim, fallback ke DB gm_frames)
+        $pages_map = [];
+        if (!empty($client_frames_snapshot)) {
+            foreach ($client_frames_snapshot as $f) {
+                $fid   = (int)($f['frame_id'] ?? 0);
+                $fname = trim((string)($f['frame_name'] ?? 'Frame'));
+                $fhtml = (string)($f['core_content'] ?? '');
+                $pages_map[] = [
+                    'frame_id'   => $fid,
+                    'frame_name' => $fname,
+                    'components' => summarize_frame_structure($fhtml),
+                ];
+            }
+        } else {
+            $db_frames = get_project_frames($pdo, $project_id);
+            foreach ($db_frames as $f) {
+                $pages_map[] = [
+                    'frame_id'   => (int)$f['frame_id'],
+                    'frame_name' => (string)$f['frame_name'],
+                    'components' => summarize_frame_structure((string)($f['core_content'] ?? '')),
+                ];
+            }
+        }
+
+        return [
+            'project_id'     => $project_id,
+            'project_name'   => (string)$proj['project_name'],
+            'system_summary' => (string)($saved['system_summary'] ?? ''),
+            'total_pages'    => count($pages_map),
+            'pages_map'      => $pages_map,
+            'history'        => isset($saved['history']) && is_array($saved['history']) ? array_slice($saved['history'], -20) : [],
+            'updated_at'     => (string)($saved['updated_at'] ?? date('Y-m-d H:i:s')),
+        ];
+    }
+}
+
+/**
+ * Menyimpan pembaruan memori AI ke dalam gm_projects.ai_memory.
+ */
+if (!function_exists('save_project_ai_memory')) {
+    function save_project_ai_memory(PDO $pdo, int $project_id, array $memory): void
+    {
+        if ($project_id <= 0) {
+            return;
+        }
+        ensure_ai_memory_column($pdo);
+        $memory['updated_at'] = date('Y-m-d H:i:s');
+        if (isset($memory['history']) && is_array($memory['history'])) {
+            $memory['history'] = array_values(array_slice($memory['history'], -20));
+        }
+        $stmt = $pdo->prepare("UPDATE gm_projects SET ai_memory = ? WHERE project_id = ?");
+        $stmt->execute([json_encode($memory, JSON_UNESCAPED_UNICODE), $project_id]);
+    }
+}
+
+/**
+ * Memformat memori proyek menjadi teks konteks yang dibaca oleh Gemini sebelum mengeksekusi prompt.
+ */
+if (!function_exists('format_ai_memory_for_prompt')) {
+    function format_ai_memory_for_prompt(array $memory): string
+    {
+        $lines = [];
+        $lines[] = "=== CACHE MEMORI & ARSITEKTUR PROYEK ===";
+        $lines[] = "Nama Proyek: " . ($memory['project_name'] ?? 'Untitled');
+        $lines[] = "Total Pages/Frames Saat Ini: " . (int)($memory['total_pages'] ?? 0);
+
+        if (!empty($memory['system_summary'])) {
+            $lines[] = "Ringkasan Sistem Terakhir: " . $memory['system_summary'];
+        }
+
+        if (!empty($memory['pages_map']) && is_array($memory['pages_map'])) {
+            $lines[] = "Susunan Halaman (Frames) & Komponen di Dalamnya:";
+            foreach ($memory['pages_map'] as $p) {
+                $comp_strs = [];
+                foreach (($p['components'] ?? []) as $c) {
+                    $comp_strs[] = "#{$c['order']} <{$c['tag']}> \"{$c['preview']}\"";
+                }
+                $comp_desc = !empty($comp_strs) ? implode('; ', $comp_strs) : '(Kosong)';
+                $lines[] = "  - Frame ID {$p['frame_id']} (\"{$p['frame_name']}\"): {$comp_desc}";
+            }
+        }
+
+        if (!empty($memory['history']) && is_array($memory['history'])) {
+            $lines[] = "Riwayat Perubahan AI Sebelumnya (Kronologis):";
+            foreach (array_slice($memory['history'], -10) as $h) {
+                $lines[] = "  * [" . ($h['time'] ?? '-') . "] Prompt: \"" . ($h['prompt'] ?? '') . "\" -> Hasil: " . ($h['action_summary'] ?? '');
+            }
+        }
+
+        return implode("\n", $lines);
+    }
+}
+
 /**
  * Memastikan setiap elemen HTML di dalam output memiliki class "gm-object"
  * agar kompatibel dengan DOM Tree, seleksi objek, dan panel properti Greymist.
@@ -168,11 +357,15 @@ HTML;
 }
 
 /**
- * Memproses penghapusan atau pembacaan komponen secara lokal pada HTML frame (Fallback Cerdas).
+ * Memproses penghapusan, pembacaan, atau pengeditan atribut (font, warna, ukuran, style) komponen secara lokal (Fallback Cerdas).
  */
 if (!function_exists('process_local_frame_command')) {
-    function process_local_frame_command(string $prompt, string $current_frame_html): ?array
-    {
+    function process_local_frame_command(
+        string $prompt,
+        string $current_frame_html,
+        string $selected_object_html = '',
+        string $target_mode = 'core'
+    ): ?array {
         $lower = strtolower(trim($prompt));
 
         // 1. Jika meminta membuat frame / halaman baru (atau multi-page) secara lokal
@@ -261,7 +454,7 @@ if (!function_exists('process_local_frame_command')) {
             ];
         }
 
-        // 2. Jika meminta menghapus semua / mengosongkan frame
+        // 3. Jika meminta menghapus semua / mengosongkan frame
         if (preg_match('/\b(hapus semua|kosongkan|bersihkan frame|clear all|delete all)\b/i', $lower)) {
             return [
                 'operation' => 'replace_frame',
@@ -270,7 +463,7 @@ if (!function_exists('process_local_frame_command')) {
             ];
         }
 
-        // 3. Jika meminta menghapus komponen tertentu (misal: hapus navbar, hapus footer, hapus hero, hapus pricing, hapus form)
+        // 4. Jika meminta menghapus komponen tertentu (misal: hapus navbar, hapus footer, hapus hero, hapus pricing, hapus form)
         if (preg_match('/\b(hapus|hilangkan|buang|delete|remove)\b/i', $lower) && trim($current_frame_html) !== '') {
             $doc = new DOMDocument();
             @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $current_frame_html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
@@ -340,6 +533,216 @@ if (!function_exists('process_local_frame_command')) {
             }
         }
 
+        // 5. Jika meminta mengubah atribut / style (font, warna, ukuran, background, border-radius) pada elemen yang sudah ada tanpa membuat ulang dari 0
+        if (preg_match('/\b(ubah|ganti|rubah|jadikan|set|font|warna|color|background|latar|ukuran|perbesar|perkecil|bold|tebal|miring|italic|radius|rounded)\b/i', $lower)) {
+            $is_editing_selected = ($target_mode === 'edit_selected' || trim($selected_object_html) !== '') && trim($selected_object_html) !== '';
+            $target_html         = $is_editing_selected ? $selected_object_html : $current_frame_html;
+
+            if (trim($target_html) !== '') {
+                $css_patches = [];
+
+                // Deteksi perubahan Font Family
+                $font_map = [
+                    'poppins'          => "'Poppins', sans-serif",
+                    'roboto'           => "'Roboto', sans-serif",
+                    'inter'            => "'Inter', sans-serif",
+                    'montserrat'       => "'Montserrat', sans-serif",
+                    'open sans'        => "'Open Sans', sans-serif",
+                    'lato'             => "'Lato', sans-serif",
+                    'playfair'         => "'Playfair Display', serif",
+                    'georgia'          => "Georgia, serif",
+                    'times'            => "'Times New Roman', serif",
+                    'courier'          => "'Courier New', monospace",
+                    'monospace'        => "monospace",
+                    'serif'            => "serif",
+                    'sans-serif'       => "sans-serif",
+                    'arial'            => "Arial, sans-serif",
+                ];
+                foreach ($font_map as $key => $font_val) {
+                    if (str_contains($lower, $key)) {
+                        $css_patches['font-family'] = $font_val;
+                        break;
+                    }
+                }
+                if (!isset($css_patches['font-family']) && str_contains($lower, 'font')) {
+                    if (preg_match('/font(?:\s+family)?(?:\s+jadi|\s+menjadi|\s+ke)?\s+([a-zA-Z0-9\s\-]{3,25})/i', $prompt, $fm)) {
+                        $f_clean = trim($fm[1]);
+                        if ($f_clean !== '') {
+                            $css_patches['font-family'] = "'" . ucwords($f_clean) . "', sans-serif";
+                        }
+                    } else {
+                        $css_patches['font-family'] = "Georgia, serif";
+                    }
+                }
+
+                // Deteksi perubahan Warna (Color / Background Color)
+                $color_map = [
+                    'merah'   => '#ef4444',
+                    'red'     => '#ef4444',
+                    'biru'    => '#2563eb',
+                    'blue'    => '#2563eb',
+                    'hijau'   => '#10b981',
+                    'green'   => '#10b981',
+                    'kuning'  => '#eab308',
+                    'yellow'  => '#eab308',
+                    'ungu'    => '#8b5cf6',
+                    'purple'  => '#8b5cf6',
+                    'oranye'  => '#f97316',
+                    'orange'  => '#f97316',
+                    'pink'    => '#ec4899',
+                    'hitam'   => '#0f172a',
+                    'gelap'   => '#0f172a',
+                    'dark'    => '#0f172a',
+                    'putih'   => '#ffffff',
+                    'white'   => '#ffffff',
+                    'abu'     => '#64748b',
+                    'gray'    => '#64748b',
+                ];
+                $detected_color = null;
+                if (preg_match('/#([0-9a-fA-F]{3,6})\b/', $prompt, $hex_m)) {
+                    $detected_color = '#' . $hex_m[1];
+                } else {
+                    foreach ($color_map as $c_name => $c_hex) {
+                        if (str_contains($lower, $c_name)) {
+                            $detected_color = $c_hex;
+                            break;
+                        }
+                    }
+                }
+
+                if ($detected_color !== null) {
+                    if (preg_match('/\b(background|latar|bg|kotak|card|section|navbar|footer)\b/i', $lower)) {
+                        $css_patches['background-color'] = $detected_color;
+                    } elseif (preg_match('/\b(teks|tulisan|font|judul|heading|title)\b/i', $lower)) {
+                        $css_patches['color'] = $detected_color;
+                    } else {
+                        $css_patches['__auto_color__'] = $detected_color;
+                    }
+                }
+
+                // Deteksi ukuran font (font-size)
+                if (preg_match('/(\d{1,3})\s*px\b/i', $lower, $px_m)) {
+                    if (str_contains($lower, 'radius') || str_contains($lower, 'rounded')) {
+                        $css_patches['border-radius'] = $px_m[1] . 'px';
+                    } else {
+                        $css_patches['font-size'] = $px_m[1] . 'px';
+                    }
+                }
+
+                if (!empty($css_patches)) {
+                    $doc = new DOMDocument();
+                    @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $target_html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                    $root = $doc->getElementById('gm-root');
+                    if ($root) {
+                        $apply_style_to_node = function (DOMElement $el, array $patches) {
+                            $existing_style = (string)$el->getAttribute('style');
+                            $style_map      = [];
+                            foreach (explode(';', $existing_style) as $decl) {
+                                $parts = explode(':', $decl, 2);
+                                if (count($parts) === 2) {
+                                    $k = strtolower(trim($parts[0]));
+                                    $v = trim($parts[1]);
+                                    if ($k !== '' && $v !== '') {
+                                        $style_map[$k] = $v;
+                                    }
+                                }
+                            }
+                            $tag = strtolower($el->nodeName);
+                            foreach ($patches as $prop => $val) {
+                                if ($prop === '__auto_color__') {
+                                    if ($tag === 'button' || isset($style_map['background-color']) || isset($style_map['background'])) {
+                                        $style_map['background-color'] = $val;
+                                    } else {
+                                        $style_map['color'] = $val;
+                                    }
+                                } else {
+                                    $style_map[$prop] = $val;
+                                }
+                            }
+                            $rebuilt = [];
+                            foreach ($style_map as $k => $v) {
+                                $rebuilt[] = $k . ':' . $v;
+                            }
+                            $el->setAttribute('style', implode(';', $rebuilt) . ';');
+                        };
+
+                        if ($is_editing_selected) {
+                            foreach ($root->childNodes as $child) {
+                                if ($child instanceof DOMElement) {
+                                    $apply_style_to_node($child, $css_patches);
+                                    if (isset($css_patches['font-family'])) {
+                                        foreach ($child->getElementsByTagName('*') as $sub) {
+                                            if ($sub instanceof DOMElement && str_contains(strtolower((string)$sub->getAttribute('style')), 'font-family')) {
+                                                $apply_style_to_node($sub, ['font-family' => $css_patches['font-family']]);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            // Cari elemen spesifik yang dimaksud di dalam frame (misal tombol, judul/h1, navbar, footer)
+                            $matched_nodes = [];
+                            $all_elements  = $root->getElementsByTagName('*');
+                            foreach ($all_elements as $el) {
+                                if (!($el instanceof DOMElement)) {
+                                    continue;
+                                }
+                                $tag = strtolower($el->nodeName);
+                                if (str_contains($lower, 'tombol') || str_contains($lower, 'button')) {
+                                    if ($tag === 'button') {
+                                        $matched_nodes[] = $el;
+                                    }
+                                } elseif (str_contains($lower, 'judul') || str_contains($lower, 'heading') || str_contains($lower, 'title')) {
+                                    if (in_array($tag, ['h1', 'h2', 'h3'], true)) {
+                                        $matched_nodes[] = $el;
+                                    }
+                                } elseif (str_contains($lower, 'navbar') || str_contains($lower, 'header')) {
+                                    if ($tag === 'nav' || $tag === 'header') {
+                                        $matched_nodes[] = $el;
+                                    }
+                                } elseif (str_contains($lower, 'footer')) {
+                                    if ($tag === 'footer') {
+                                        $matched_nodes[] = $el;
+                                    }
+                                }
+                            }
+                            if (empty($matched_nodes)) {
+                                foreach ($root->childNodes as $child) {
+                                    if ($child instanceof DOMElement) {
+                                        $matched_nodes[] = $child;
+                                    }
+                                }
+                            }
+                            foreach ($matched_nodes as $m_node) {
+                                $apply_style_to_node($m_node, $css_patches);
+                            }
+                        }
+
+                        $out_html = '';
+                        foreach ($root->childNodes as $child) {
+                            $out_html .= $doc->saveHTML($child);
+                        }
+
+                        $target_selector = 'self';
+                        if (!$is_editing_selected && !empty($matched_nodes)) {
+                            $target_selector = strtolower($matched_nodes[0]->nodeName);
+                        }
+
+                        return [
+                            'operation' => 'patch_attributes',
+                            'patch'     => [
+                                'target'  => $target_selector,
+                                'styles'  => $css_patches,
+                                'summary' => 'Atribut elemen (' . implode(', ', array_keys($css_patches)) . ') berhasil diperbarui.',
+                            ],
+                            'html'      => trim($out_html),
+                            'summary'   => 'Atribut elemen berhasil diperbarui secara langsung.',
+                        ];
+                    }
+                }
+            }
+        }
+
         return null;
     }
 }
@@ -347,8 +750,10 @@ if (!function_exists('process_local_frame_command')) {
 /**
  * Memanggil Gemini Interactions API menggunakan model Free Tier (Gratis) dengan konteks isi Frame aktif.
  * Mendukung operasi:
+ * - PATCH_ATTRIBUTES (membaca komponen dulu & hanya mengubah/menambah atribut/style tanpa membuat dari nol)
  * - APPEND (menambah komponen baru ke frame aktif)
- * - REPLACE_FRAME (menghapus komponen di dalam frame atau mengedit isi frame yang sudah ada)
+ * - REPLACE_SELECTED (mengubah objek yang dipilih jika merombak struktur)
+ * - REPLACE_FRAME (menghapus komponen di dalam frame atau mengubah halaman)
  * - CREATE_FRAMES (membuat 1 atau beberapa frame/halaman baru otomatis sesuai kebutuhan pages)
  * - EXPLAIN (membaca dan menjelaskan isi frame kepada pengguna)
  */
@@ -359,30 +764,54 @@ if (!function_exists('call_gemini_interactions_api')) {
         string $model = 'gemini-3.5-flash-lite',
         string $current_frame_html = '',
         string $selected_object_html = '',
-        string $target_mode = 'core'
+        string $target_mode = 'core',
+        string $memory_context_text = '',
+        array $selected_object_attrs = []
     ): array {
-        $system_instruction = "Anda adalah AI Visual Workspace Assistant untuk editor web Greymist.\n"
-            . "Anda memiliki kemampuan untuk MEMBACA isi frame saat ini (CURRENT_FRAME_HTML), MENAMBAH komponen baru, MENGEDIT komponen yang ada, MENGHAPUS komponen dari dalam frame, serta MENAMBAH FRAME BARU (Halaman/Pages baru) secara otomatis.\n\n"
-            . "PILIH SALAH SATU FORMAT OPERASI DI BAWAH INI:\n"
-            . "1. Jika pengguna meminta MEMBACA / MENJELASKAN apa yang ada di dalam frame (tanpa mengubah kode):\n"
-            . "   Awali dengan: <!--GM_OP:EXPLAIN--> diikuti penjelasan ringkas isi frame dalam Bahasa Indonesia.\n"
-            . "2. Jika pengguna meminta MENGHAPUS komponen tertentu (misal 'hapus navbar', 'hapus bagian harga', 'hapus tombol', 'kosongkan frame') ATAU MENGUBAH/MENGEDIT elemen yang sudah ada di dalam CURRENT_FRAME_HTML:\n"
-            . "   Awali dengan: <!--GM_OP:REPLACE_FRAME--> diikuti SELURUH kode HTML isi frame terbaru setelah komponen tersebut dihapus/diedit.\n"
-            . "3. Jika pengguna meminta MEMBUAT HALAMAN BARU / MENAMBAH FRAME BARU, atau meminta BEBERAPA HALAMAN (Multi-Page, misal 'buat halaman login di frame baru', 'buat 3 halaman: Home, About, Contact', 'tambah frame checkout', atau jika TARGET_MODE adalah new_frame):\n"
-            . "   Gunakan satu atau beberapa blok penanda frame berikut (sesuai jumlah halaman yang dibutuhkan):\n"
-            . "   <!--GM_FRAME:Nama Halaman-->\n"
-            . "   (diikuti kode HTML lengkap .gm-object untuk halaman tersebut)\n"
-            . "4. Jika pengguna hanya meminta MEMBUAT / MENAMBAHKAN komponen ke dalam frame yang sedang aktif:\n"
-            . "   Awali dengan: <!--GM_OP:APPEND--> diikuti HANYA kode HTML komponen baru tersebut (sesuaikan gaya/warnanya agar serasi dengan CURRENT_FRAME_HTML).\n\n"
-            . "ATURAN KODE HTML WAJIB:\n"
-            . "- Jangan gunakan markdown code fences (jangan tulis ```html).\n"
-            . "- SETIAP elemen tag HTML (section, div, nav, header, footer, h1, h2, h3, p, span, a, button, input, img, ul, li) WAJIB memiliki class=\"gm-object\".\n"
-            . "- Gunakan inline style (style=\"...\") yang rapi, modern, dan responsif.";
+        $system_instruction = "Anda adalah AI Visual Workspace Architect untuk editor web Greymist.\n"
+            . "Anda memiliki CACHE MEMORI PROYEK yang mencatat seluruh halaman (frames), susunan komponen di setiap halaman, dan riwayat perubahan yang telah Anda buat sebelumnya.\n"
+            . "Gunakan memori tersebut agar setiap perubahan, penambahan, atau penghapusan selalu konsisten dengan sistem desain dan susunan halaman yang sudah ada.\n\n"
+            . "ATURAN UTAMA: BACA KOMPONEN DULU & UBAH ATRIBUTNYA (JANGAN MEMBUAT BARU DARI NOL):\n"
+            . "Jika pengguna meminta MENGUBAH atau MENAMBAHKAN atribut/gaya (seperti warna, font, background, ukuran font, border, radius, padding, margin, shadow, atau teks) pada suatu komponen yang sudah ada:\n"
+            . "1. DILARANG KERAS MEMBUAT ELEMEN/KOMPONEN BARU DARI NOL!\n"
+            . "2. DILARANG MENGHASILKAN KODE HTML BARU LENGKAP ATAU MENUMPANGKAN ELEMEN BARU DI ATAS ELEMEN LAMA!\n"
+            . "3. BACA atribut dan style yang sudah ada pada komponen (SELECTED_OBJECT_HTML atau elemen di CURRENT_FRAME_HTML).\n"
+            . "4. Tentukan HANYA properti CSS (style) atau teks apa yang perlu DIUBAH atau DITAMBAHKAN sesuai instruksi pengguna.\n"
+            . "5. Kembalikan HANYA penanda <!--GM_OP:PATCH_ATTRIBUTES--> diikuti satu objek JSON valid persis format berikut:\n"
+            . "   <!--GM_OP:PATCH_ATTRIBUTES-->\n"
+            . "   {\n"
+            . "     \"target\": \"self\",\n"
+            . "     \"styles\": {\n"
+            . "       \"background-color\": \"#38bdf8\",\n"
+            . "       \"color\": \"#ffffff\"\n"
+            . "     },\n"
+            . "     \"attributes\": {},\n"
+            . "     \"text\": null,\n"
+            . "     \"summary\": \"Warna latar belakang diubah menjadi biru muda\"\n"
+            . "   }\n\n"
+            . "PILIHAN FORMAT OPERASI LAINNYA (Hanya jika BUKAN sekadar ubah atribut/style):\n"
+            . "1. Jika pengguna meminta MEMBACA / MENJELASKAN apa yang ada di dalam frame atau proyek (tanpa mengubah kode):\n"
+            . "   Awali dengan: <!--GM_OP:EXPLAIN--> diikuti penjelasan ringkas isi frame & struktur halaman dalam Bahasa Indonesia.\n"
+            . "2. Jika pengguna meminta MENGHAPUS komponen tertentu lewat prompt (misal 'hapus navbar', 'hapus bagian harga', 'hapus tombol', 'kosongkan frame'):\n"
+            . "   Awali dengan: <!--GM_OP:REPLACE_FRAME--> diikuti SELURUH kode HTML frame setelah komponen dihapus.\n"
+            . "3. Jika pengguna meminta MEMBUAT HALAMAN BARU / MENAMBAH FRAME BARU, atau meminta BEBERAPA HALAMAN (Multi-Page):\n"
+            . "   Gunakan blok penanda frame: <!--GM_FRAME:Nama Halaman--> diikuti kode HTML lengkap .gm-object untuk halaman tersebut.\n"
+            . "4. Jika pengguna meminta MEMBUAT / MENAMBAHKAN komponen BARU dari nol (misal 'buat hero section', 'tambah form kontak', 'buat kartu harga'):\n"
+            . "   Awali dengan: <!--GM_OP:APPEND--> diikuti HANYA kode HTML komponen baru tersebut.\n"
+            . "   Setiap tag WAJIB memiliki class=\"gm-object\" dan style=\"...\". Jangan gunakan markdown code fences.";
 
-        $context_input = "TARGET_MODE: " . $target_mode . "\n";
-        $context_input .= "CURRENT_FRAME_HTML:\n" . ($current_frame_html !== '' ? $current_frame_html : "(Frame masih kosong)") . "\n\n";
+        $context_input = "";
+        if ($memory_context_text !== '') {
+            $context_input .= $memory_context_text . "\n\n";
+        }
+        $context_input .= "TARGET_MODE: " . $target_mode . "\n";
+        $context_input .= "CURRENT_FRAME_HTML (Frame yang sedang dibuka pengguna):\n" . ($current_frame_html !== '' ? $current_frame_html : "(Frame masih kosong)") . "\n\n";
         if ($selected_object_html !== '') {
-            $context_input .= "SELECTED_OBJECT_HTML (Objek yang sedang diklik pengguna):\n" . $selected_object_html . "\n\n";
+            $context_input .= "SELECTED_OBJECT_HTML (Komponen yang sedang aktif dipilih):\n" . $selected_object_html . "\n";
+            if (!empty($selected_object_attrs)) {
+                $context_input .= "ATRIBUT SAAT INI: " . json_encode($selected_object_attrs, JSON_UNESCAPED_UNICODE) . "\n";
+            }
+            $context_input .= "\n";
         }
         $context_input .= "INSTRUKSI PENGGUNA:\n" . $prompt;
 
@@ -403,7 +832,7 @@ if (!function_exists('call_gemini_interactions_api')) {
                 'system_instruction' => $system_instruction,
                 'input'              => $context_input,
                 'generation_config'  => [
-                    'max_output_tokens' => 4096,
+                    'max_output_tokens' => 65536,
                 ],
             ];
 
@@ -417,7 +846,7 @@ if (!function_exists('call_gemini_interactions_api')) {
                     'Api-Revision: 2026-05-20',
                 ],
                 CURLOPT_POSTFIELDS     => json_encode($payload),
-                CURLOPT_TIMEOUT        => 40,
+                CURLOPT_TIMEOUT        => 120,
                 CURLOPT_SSL_VERIFYPEER => false,
             ]);
 
@@ -491,8 +920,23 @@ if (!function_exists('call_gemini_interactions_api')) {
                     }
                 }
 
-                $operation = 'append';
-                if (str_contains($trimmed_out, '<!--GM_OP:EXPLAIN-->')) {
+                $operation = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
+                if (str_contains($trimmed_out, '<!--GM_OP:PATCH_ATTRIBUTES-->')) {
+                    $json_str = trim(str_replace('<!--GM_OP:PATCH_ATTRIBUTES-->', '', $trimmed_out));
+                    $json_str = preg_replace('/^```(?:json)?\s*/i', '', $json_str);
+                    $json_str = preg_replace('/\s*```$/', '', $json_str);
+                    $patch_data = json_decode($json_str, true);
+                    if (is_array($patch_data) && (!empty($patch_data['styles']) || !empty($patch_data['attributes']) || !empty($patch_data['text']))) {
+                        return [
+                            'success'    => true,
+                            'used_model' => $candidate_model,
+                            'operation'  => 'patch_attributes',
+                            'patch'      => $patch_data,
+                            'summary'    => $patch_data['summary'] ?? 'Atribut elemen berhasil diperbarui.',
+                            'html'       => '',
+                        ];
+                    }
+                } elseif (str_contains($trimmed_out, '<!--GM_OP:EXPLAIN-->')) {
                     $operation   = 'explain';
                     $trimmed_out = trim(str_replace('<!--GM_OP:EXPLAIN-->', '', $trimmed_out));
                     return [
@@ -502,11 +946,14 @@ if (!function_exists('call_gemini_interactions_api')) {
                         'summary'    => $trimmed_out,
                         'html'       => $current_frame_html,
                     ];
+                } elseif (str_contains($trimmed_out, '<!--GM_OP:REPLACE_SELECTED-->')) {
+                    $operation   = 'replace_selected';
+                    $trimmed_out = trim(str_replace('<!--GM_OP:REPLACE_SELECTED-->', '', $trimmed_out));
                 } elseif (str_contains($trimmed_out, '<!--GM_OP:REPLACE_FRAME-->')) {
                     $operation   = 'replace_frame';
                     $trimmed_out = trim(str_replace('<!--GM_OP:REPLACE_FRAME-->', '', $trimmed_out));
                 } elseif (str_contains($trimmed_out, '<!--GM_OP:APPEND-->')) {
-                    $operation   = 'append';
+                    $operation   = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
                     $trimmed_out = trim(str_replace('<!--GM_OP:APPEND-->', '', $trimmed_out));
                 }
 
@@ -542,6 +989,17 @@ if (!is_array($data)) {
 }
 
 switch ($ai_action) {
+    case 'ai_get_memory':
+        $project_id = (int)($data['project_id'] ?? $_GET['project_id'] ?? 0);
+        $snapshot   = isset($data['frames_snapshot']) && is_array($data['frames_snapshot']) ? $data['frames_snapshot'] : [];
+        $memory     = get_project_ai_memory($pdo, $project_id, $snapshot);
+        json_response([
+            'status'    => 'OK',
+            'success'   => true,
+            'ai_memory' => $memory,
+        ]);
+        break;
+
     case 'ai_save_api_key':
         $new_key = trim((string)($data['api_key'] ?? ''));
         $env_file = ROOT_PATH . '/.env';
@@ -574,12 +1032,18 @@ switch ($ai_action) {
         $requested_model      = trim((string)($data['model'] ?? ''));
         $current_frame_html   = (string)($data['current_frame_html'] ?? '');
         $selected_object_html = (string)($data['selected_object_html'] ?? '');
-        $target_mode          = trim((string)($data['target_mode'] ?? 'core'));
-        $project_id           = (int)($data['project_id'] ?? $_GET['project_id'] ?? 0);
+        $target_mode           = trim((string)($data['target_mode'] ?? 'core'));
+        $project_id            = (int)($data['project_id'] ?? $_GET['project_id'] ?? 0);
+        $frames_snapshot       = isset($data['frames_snapshot']) && is_array($data['frames_snapshot']) ? $data['frames_snapshot'] : [];
+        $selected_object_attrs = isset($data['selected_object_attrs']) && is_array($data['selected_object_attrs']) ? $data['selected_object_attrs'] : [];
 
         if ($prompt === '') {
             json_response(['status' => 'ERROR', 'success' => false, 'msg' => 'Prompt atau instruksi AI wajib diisi.']);
         }
+
+        // Ambil & bangun cache memori arsitektur proyek sebelum memanggil Gemini
+        $ai_memory           = get_project_ai_memory($pdo, $project_id, $frames_snapshot);
+        $memory_context_text = format_ai_memory_for_prompt($ai_memory);
 
         $api_key = $inline_api_key !== ''
             ? $inline_api_key
@@ -590,9 +1054,10 @@ switch ($ai_action) {
 
         $source_mode  = 'smart_preset (Gratis Lokal)';
         $api_warning  = '';
-        $operation    = 'append';
+        $operation    = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
         $summary_msg  = '';
         $frames_specs = [];
+        $patch_data   = null;
 
         if ($model !== 'local-free' && $api_key !== '') {
             $gemini_res = call_gemini_interactions_api(
@@ -601,34 +1066,39 @@ switch ($ai_action) {
                 $model,
                 $current_frame_html,
                 $selected_object_html,
-                $target_mode
+                $target_mode,
+                $memory_context_text,
+                $selected_object_attrs
             );
             if ($gemini_res['success']) {
                 $generated_html = $gemini_res['html'] ?? '';
-                $operation      = $gemini_res['operation'] ?? 'append';
+                $operation      = $gemini_res['operation'] ?? $operation;
                 $summary_msg    = $gemini_res['summary'] ?? '';
                 $frames_specs   = $gemini_res['frames_specs'] ?? [];
+                $patch_data     = $gemini_res['patch'] ?? null;
                 $used_model     = $gemini_res['used_model'] ?? $model;
                 $source_mode    = 'Gemini Free Tier (' . $used_model . ')';
             } else {
                 $api_warning = $gemini_res['error'];
-                $local_cmd   = process_local_frame_command($prompt, $current_frame_html);
+                $local_cmd   = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode);
                 if ($local_cmd !== null) {
                     $operation      = $local_cmd['operation'];
                     $generated_html = $local_cmd['html'] ?? '';
                     $summary_msg    = $local_cmd['summary'] ?? '';
                     $frames_specs   = $local_cmd['frames_specs'] ?? [];
+                    $patch_data     = $local_cmd['patch'] ?? null;
                 } else {
                     $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
                 }
             }
         } else {
-            $local_cmd = process_local_frame_command($prompt, $current_frame_html);
+            $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode);
             if ($local_cmd !== null) {
                 $operation      = $local_cmd['operation'];
                 $generated_html = $local_cmd['html'] ?? '';
                 $summary_msg    = $local_cmd['summary'] ?? '';
                 $frames_specs   = $local_cmd['frames_specs'] ?? [];
+                $patch_data     = $local_cmd['patch'] ?? null;
             } else {
                 $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
             }
@@ -684,16 +1154,38 @@ switch ($ai_action) {
         }
 
         $default_msg = match ($operation) {
-            'explain'       => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil dianalisis.',
-            'replace_frame' => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil diperbarui (' . $source_mode . ').',
-            'create_frames' => count($created_frames) . ' Frame Halaman baru berhasil ditambahkan (' . $source_mode . ').',
-            default         => 'Komponen berhasil ditambahkan (' . $source_mode . ').',
+            'explain'          => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil dianalisis.',
+            'patch_attributes' => $summary_msg !== '' ? $summary_msg : ('Atribut elemen berhasil diperbarui (' . $source_mode . ').'),
+            'replace_selected' => 'Objek aktif berhasil diperbarui (' . $source_mode . ').',
+            'replace_frame'    => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil diperbarui (' . $source_mode . ').',
+            'create_frames'    => count($created_frames) . ' Frame Halaman baru berhasil ditambahkan (' . $source_mode . ').',
+            default            => 'Komponen berhasil ditambahkan (' . $source_mode . ').',
         };
+
+        // Perbarui & simpan cache memori AI proyek ke database gm_projects
+        if ($project_id > 0) {
+            $updated_memory = get_project_ai_memory($pdo, $project_id, []);
+            $updated_memory['history'][] = [
+                'time'           => date('H:i:s'),
+                'prompt'         => mb_substr($prompt, 0, 140),
+                'operation'      => $operation,
+                'action_summary' => $default_msg,
+            ];
+            if ($operation === 'create_frames' && !empty($created_frames)) {
+                $page_names = array_map(fn($cf) => $cf['frame_name'], $created_frames);
+                $updated_memory['system_summary'] = 'Sistem memiliki halaman: ' . implode(', ', $page_names) . ' (instruksi: ' . mb_substr($prompt, 0, 100) . ')';
+            } elseif (empty($updated_memory['system_summary'])) {
+                $updated_memory['system_summary'] = 'Proyek dibangun dengan instruksi: ' . mb_substr($prompt, 0, 100);
+            }
+            save_project_ai_memory($pdo, $project_id, $updated_memory);
+            $ai_memory = $updated_memory;
+        }
 
         json_response([
             'status'         => 'OK',
             'success'        => true,
             'operation'      => $operation,
+            'patch'          => $patch_data,
             'summary'        => $summary_msg,
             'msg'            => $default_msg,
             'source_mode'    => $source_mode,
@@ -701,6 +1193,7 @@ switch ($ai_action) {
             'html'           => $generated_html,
             'created_frames' => $created_frames,
             'component'      => $saved_component,
+            'ai_memory'      => $ai_memory,
         ]);
         break;
 }
