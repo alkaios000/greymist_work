@@ -1,9 +1,11 @@
 /**
- * Greymist Workspace — Minimalist Draggable Gemini AI Builder, Frame Reader & Component Remover
+ * Greymist Workspace — Minimalist Draggable Gemini AI Builder, Frame Reader & Live Unstyled-to-Styled Constructor
  * Fitur utama:
  * 1. Membaca seluruh isi frame aktif (#object-core-{frame_id}) dan objek yang dipilih (.gm-object.gm-active).
- * 2. Menambah komponen baru, mengedit elemen yang ada di dalam frame, atau menghapus komponen via instruksi AI (Prompt).
- * 3. Dilengkapi panel "Isi Frame" langsung di floating widget untuk melihat daftar komponen di dalam frame, memilihnya, atau menghapusnya (per komponen / hapus objek aktif / kosongkan frame).
+ * 2. Real-Time Construction Process di dalam Frame (tanpa teks placeholder di dalam frame):
+ *    Setiap elemen dibuat terlebih dahulu sebagai tag HTML mentah tanpa style (misal <button> polos),
+ *    diisi teksnya, lalu diberi properti CSS style secara live satu per satu hingga seluruh komponen terbentuk.
+ * 3. Mendukung tambah komponen, edit isi frame, baca isi frame, dan hapus komponen.
  */
 (function () {
     "use strict";
@@ -57,56 +59,184 @@
         renderFrameComponentsList();
     }
 
-    function injectHtmlIntoCanvas(htmlString, targetMode) {
+    /**
+     * Membangun pohon elemen secara real-time di dalam Frame:
+     * Tahap 1 per elemen: Buat elemen HTML polos tanpa atribut style (beserta teks langsungnya) & masukkan ke parent.
+     * Tahap 2 per elemen: Terapkan atribut style="..." secara live sehingga terlihat perubahan dari elemen mentah menjadi elemen ber-style.
+     */
+    function buildElementsLiveUnstyledToStyled(sourceRootElements, targetContainer, statusEl, onComplete) {
+        // Susun daftar langkah konstruksi (pre-order) dari pohon sumber
+        const steps = [];
+
+        function collectSteps(sourceNode, liveParent) {
+            const tag = sourceNode.tagName.toLowerCase();
+            const liveEl = document.createElement(tag);
+
+            // Salin atribut selain style terlebih dahulu (class, href, type, placeholder, src, dll.)
+            Array.from(sourceNode.attributes).forEach(attr => {
+                if (attr.name.toLowerCase() !== "style") {
+                    liveEl.setAttribute(attr.name, attr.value);
+                }
+            });
+            if (!["script", "style", "br", "hr"].includes(tag)) {
+                liveEl.classList.add("gm-object");
+            }
+
+            // Ambil teks langsung (direct text nodes) milik elemen ini
+            const directTexts = [];
+            Array.from(sourceNode.childNodes).forEach(childNode => {
+                if (childNode.nodeType === Node.TEXT_NODE && childNode.nodeValue.trim() !== "") {
+                    directTexts.push(childNode.nodeValue);
+                }
+            });
+
+            const savedStyle = sourceNode.getAttribute("style") || "";
+
+            // Langkah A: Pasang elemen mentah (tanpa style) ke DOM
+            steps.push({
+                type: "mount_raw",
+                el: liveEl,
+                parent: liveParent,
+                directTexts: directTexts,
+                tag: tag
+            });
+
+            // Langkah B: Terapkan style CSS ke elemen tersebut
+            if (savedStyle.trim() !== "") {
+                steps.push({
+                    type: "apply_style",
+                    el: liveEl,
+                    style: savedStyle,
+                    tag: tag
+                });
+            }
+
+            // Rekursif untuk seluruh child element
+            Array.from(sourceNode.children).forEach(childEl => {
+                collectSteps(childEl, liveEl);
+            });
+
+            return liveEl;
+        }
+
+        const createdRoots = [];
+        sourceRootElements.forEach(srcRoot => {
+            const liveRoot = collectSteps(srcRoot, targetContainer);
+            createdRoots.push(liveRoot);
+        });
+
+        const totalSteps = steps.length;
+        if (totalSteps === 0) {
+            if (typeof onComplete === "function") onComplete(0);
+            return;
+        }
+
+        // Atur kecepatan per langkah agar proses pembuatan tag -> pemberian style terlihat jelas namun tetap cepat & ringan
+        const stepInterval = Math.max(35, Math.min(85, Math.floor(1800 / totalSteps)));
+        let idx = 0;
+
+        function runNextStep() {
+            if (idx >= totalSteps) {
+                // Bersihkan class transisi bantu agar kode HTML di dalam #object-core 100% murni
+                setTimeout(() => {
+                    createdRoots.forEach(root => {
+                        root.classList.remove("gm-ai-live-morph");
+                        root.querySelectorAll(".gm-ai-live-morph").forEach(el => {
+                            el.classList.remove("gm-ai-live-morph");
+                        });
+                    });
+                    if (typeof onComplete === "function") {
+                        onComplete(createdRoots);
+                    }
+                }, 160);
+                return;
+            }
+
+            const step = steps[idx];
+
+            if (step.type === "mount_raw") {
+                // Masukkan teks langsung jika ada, lalu mount elemen polos tanpa style ke dalam parent
+                step.directTexts.forEach(txt => {
+                    step.el.appendChild(document.createTextNode(txt));
+                });
+                step.parent.appendChild(step.el);
+
+                if (idx === 0) {
+                    step.el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                }
+                if (statusEl) {
+                    showStatus(statusEl, "info", `🔨 Membuat <${step.tag}> polos...`);
+                }
+            } else if (step.type === "apply_style") {
+                // Terapkan style secara live dengan transisi halus
+                step.el.classList.add("gm-ai-live-morph");
+                step.el.setAttribute("style", step.style);
+                if (statusEl) {
+                    showStatus(statusEl, "info", `🎨 Memberi style pada <${step.tag}>...`);
+                }
+            }
+
+            idx++;
+            setTimeout(() => {
+                requestAnimationFrame(runNextStep);
+            }, stepInterval);
+        }
+
+        requestAnimationFrame(runNextStep);
+    }
+
+    function injectHtmlIntoCanvasProgressive(htmlString, targetMode, statusEl, callback) {
         const container = getTargetContainer(targetMode);
         if (!container) {
             alert("Frame atau Object Core tidak ditemukan. Buat atau pilih frame terlebih dahulu.");
-            return 0;
+            if (callback) callback(0);
+            return;
         }
 
         const temp = document.createElement("div");
         temp.innerHTML = htmlString.trim();
+        const sourceRoots = Array.from(temp.children);
 
-        temp.querySelectorAll("*").forEach(el => {
-            const tag = el.tagName.toLowerCase();
-            if (!["script", "style", "br", "hr"].includes(tag)) {
-                el.classList.add("gm-object");
+        buildElementsLiveUnstyledToStyled(sourceRoots, container, statusEl, createdRoots => {
+            if (Array.isArray(createdRoots)) {
+                createdRoots.forEach(root => {
+                    if (typeof window.initLoadedObjects === "function") {
+                        window.initLoadedObjects(root);
+                    }
+                });
             }
+            refreshWorkspaceAfterChange();
+            if (callback) callback(Array.isArray(createdRoots) ? createdRoots.length : 0);
         });
-
-        const children = Array.from(temp.children);
-        let insertedCount = 0;
-
-        children.forEach(child => {
-            container.appendChild(child);
-            if (typeof window.initLoadedObjects === "function") {
-                window.initLoadedObjects(child);
-            }
-            insertedCount++;
-        });
-
-        refreshWorkspaceAfterChange();
-        return insertedCount;
     }
 
-    function replaceFrameHtml(htmlString) {
+    function replaceFrameHtmlProgressive(htmlString, statusEl, callback) {
         const core = getActiveObjectCore();
-        if (!core) return false;
-
-        core.innerHTML = (htmlString || "").trim();
-        core.querySelectorAll("*").forEach(el => {
-            const tag = el.tagName.toLowerCase();
-            if (!["script", "style", "br", "hr"].includes(tag)) {
-                el.classList.add("gm-object");
-            }
-        });
-
-        if (typeof window.initLoadedObjects === "function") {
-            window.initLoadedObjects(core);
+        if (!core) {
+            if (callback) callback(false);
+            return;
         }
 
-        refreshWorkspaceAfterChange();
-        return true;
+        const trimmed = (htmlString || "").trim();
+        core.innerHTML = "";
+
+        if (trimmed === "") {
+            refreshWorkspaceAfterChange();
+            if (callback) callback(true);
+            return;
+        }
+
+        const temp = document.createElement("div");
+        temp.innerHTML = trimmed;
+        const sourceRoots = Array.from(temp.children);
+
+        buildElementsLiveUnstyledToStyled(sourceRoots, core, statusEl, () => {
+            if (typeof window.initLoadedObjects === "function") {
+                window.initLoadedObjects(core);
+            }
+            refreshWorkspaceAfterChange();
+            if (callback) callback(true);
+        });
     }
 
     function summarizeElementLabel(el, idx) {
@@ -293,6 +423,11 @@
 
         const styleEl = document.createElement("style");
         styleEl.textContent = `
+            /* Transisi ringan saat elemen polos diberi style secara real-time */
+            .gm-ai-live-morph {
+                transition: background-color 0.16s ease, color 0.16s ease, padding 0.16s ease, border-radius 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+            }
+
             .gm-ai-plugin-toggle {
                 position: absolute;
                 top: 105px;
@@ -672,7 +807,6 @@
 
         document.body.appendChild(panel);
 
-        // Aktifkan fitur Drag pada header panel
         const dragHandle = document.getElementById("gm-ai-drag-handle");
         makeDraggable(panel, dragHandle);
 
@@ -694,7 +828,6 @@
         toggleBtn.addEventListener("click", () => togglePanel());
         document.getElementById("gm-ai-close-btn").addEventListener("click", () => togglePanel(false));
 
-        // Minimize / Expand
         const minBtn = document.getElementById("gm-ai-minimize-btn");
         minBtn.addEventListener("click", () => {
             panel.classList.toggle("minimized");
@@ -704,20 +837,18 @@
             }
         });
 
-        // Hubungkan dengan menu kiri atas GM -> Gemini AI Studio
         const menuTrigger = document.getElementById("gm-menu-open-ai-studio");
         if (menuTrigger) {
             menuTrigger.addEventListener("click", () => togglePanel(true));
         }
 
-        // Perbarui daftar Isi Frame setiap kali klik di kanvas atau pindah frame
         document.addEventListener("click", () => {
             if (panel.style.display === "flex") {
                 setTimeout(renderFrameComponentsList, 60);
             }
         });
 
-        // Tombol Hapus Objek yang Sedang Dipilih (.gm-active)
+        // Hapus Objek yang Sedang Dipilih (.gm-active)
         document.getElementById("gm-ai-del-selected-btn").addEventListener("click", () => {
             const selected = getSelectedObject();
             if (!selected) {
@@ -729,7 +860,7 @@
             showStatus(statusEl, "success", "✓ Objek aktif berhasil dihapus dari frame.");
         });
 
-        // Tombol Kosongkan Frame Aktif
+        // Kosongkan Frame Aktif
         document.getElementById("gm-ai-clear-frame-btn").addEventListener("click", () => {
             const core = getActiveObjectCore();
             if (!core || core.children.length === 0) {
@@ -789,7 +920,7 @@
             syncFromAntigravityDB(statusEl);
         });
 
-        // Jalankan AI (Baca Frame / Tambah Komponen / Edit / Hapus Komponen)
+        // Jalankan AI dengan konstruksi live (Tag Polos -> Style) tanpa teks placeholder di dalam Frame
         const generateBtn = document.getElementById("gm-ai-generate-btn");
         generateBtn.addEventListener("click", () => {
             const prompt = document.getElementById("gm-ai-prompt-input").value.trim();
@@ -810,7 +941,7 @@
 
             generateBtn.disabled = true;
             generateBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Proses...</span>`;
-            showStatus(statusEl, "info", "AI sedang membaca frame & memproses instruksi...");
+            showStatus(statusEl, "info", "Menghubungi AI...");
 
             fetch("api/ai_generate.php", {
                 method: "POST",
@@ -826,10 +957,9 @@
             })
                 .then(r => r.json())
                 .then(res => {
-                    generateBtn.disabled = false;
-                    generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
-
                     if (res.status !== "OK") {
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
                         showStatus(statusEl, "error", res.msg || "Gagal memproses instruksi AI.");
                         return;
                     }
@@ -837,14 +967,22 @@
                     const op = res.operation || "append";
 
                     if (op === "explain") {
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
                         showStatus(statusEl, "info", res.summary || res.msg || "Frame dianalisis.");
                         renderFrameComponentsList();
                     } else if (op === "replace_frame") {
-                        replaceFrameHtml(res.html || "");
-                        showStatus(statusEl, "success", `✓ ${res.msg || "Isi frame berhasil diperbarui."}`);
+                        replaceFrameHtmlProgressive(res.html || "", statusEl, () => {
+                            generateBtn.disabled = false;
+                            generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                            showStatus(statusEl, "success", `✓ ${res.msg || "Isi frame berhasil diperbarui."}`);
+                        });
                     } else {
-                        const inserted = injectHtmlIntoCanvas(res.html || "", targetMode);
-                        showStatus(statusEl, "success", `✓ Ditambahkan ke Frame (${inserted} blok).`);
+                        injectHtmlIntoCanvasProgressive(res.html || "", targetMode, statusEl, inserted => {
+                            generateBtn.disabled = false;
+                            generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                            showStatus(statusEl, "success", `✓ Selesai dibangun (${inserted} komponen utama).`);
+                        });
                     }
                 })
                 .catch(err => {

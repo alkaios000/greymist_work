@@ -37,7 +37,8 @@ switch ($frame_action) {
         $stmt_cnt = $pdo->prepare("SELECT COUNT(*) FROM gm_frames WHERE project_id = ?");
         $stmt_cnt->execute([$project_id]);
         $index = (int)$stmt_cnt->fetchColumn() + 1;
-        $frame_name = "Frame {$index}";
+        $custom_name = trim((string)($json_input['frame_name'] ?? $_POST['frame_name'] ?? ''));
+        $frame_name  = $custom_name !== '' ? $custom_name : "Frame {$index}";
 
         $stmt = $pdo->prepare("
             INSERT INTO gm_frames (project_id, frame_name, core_content)

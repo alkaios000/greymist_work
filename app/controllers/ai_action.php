@@ -175,7 +175,57 @@ if (!function_exists('process_local_frame_command')) {
     {
         $lower = strtolower(trim($prompt));
 
-        // 1. Jika meminta membaca / menjelaskan isi frame
+        // 1. Jika meminta membuat frame / halaman baru (atau multi-page) secara lokal
+        if (preg_match('/\b(frame baru|tambah frame|halaman baru|buat halaman|page baru|multi[- ]?page|\d+\s*halaman)\b/i', $lower)) {
+            if (preg_match('/\b(multi[- ]?page|3\s*halaman|beberapa halaman|website lengkap)\b/i', $lower)) {
+                $nav = generate_smart_preset_component('navbar');
+                $footer = generate_smart_preset_component('footer');
+                return [
+                    'operation'    => 'create_frames',
+                    'html'         => '',
+                    'summary'      => '3 Frame Halaman baru berhasil dibuat (Beranda, Layanan & Harga, Kontak).',
+                    'frames_specs' => [
+                        [
+                            'frame_name' => 'Beranda',
+                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('hero') . "\n" . $footer),
+                        ],
+                        [
+                            'frame_name' => 'Layanan & Harga',
+                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('pricing') . "\n" . $footer),
+                        ],
+                        [
+                            'frame_name' => 'Hubungi Kami',
+                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('kontak') . "\n" . $footer),
+                        ],
+                    ],
+                ];
+            }
+
+            $page_title = 'Halaman Baru';
+            if (preg_match('/(?:halaman|frame|page)\s+(?:baru\s+)?(?:untuk\s+|tentang\s+)?([a-zA-Z0-9\s\-]{2,30})/i', $prompt, $m)) {
+                $candidate = trim($m[1]);
+                if ($candidate !== '') {
+                    $page_title = ucwords($candidate);
+                }
+            }
+            $nav    = generate_smart_preset_component('navbar');
+            $body   = generate_smart_preset_component($prompt);
+            $footer = generate_smart_preset_component('footer');
+
+            return [
+                'operation'    => 'create_frames',
+                'html'         => '',
+                'summary'      => "Frame baru '{$page_title}' berhasil dibuat.",
+                'frames_specs' => [
+                    [
+                        'frame_name' => $page_title,
+                        'html'       => ensure_gm_object_class($nav . "\n" . $body . "\n" . $footer),
+                    ],
+                ],
+            ];
+        }
+
+        // 2. Jika meminta membaca / menjelaskan isi frame
         if (preg_match('/\b(baca|isi frame|apa saja|analisis|cek frame|lihat isi)\b/i', $lower)) {
             if (trim($current_frame_html) === '') {
                 return [
@@ -297,8 +347,9 @@ if (!function_exists('process_local_frame_command')) {
 /**
  * Memanggil Gemini Interactions API menggunakan model Free Tier (Gratis) dengan konteks isi Frame aktif.
  * Mendukung operasi:
- * - APPEND (menambah komponen baru)
+ * - APPEND (menambah komponen baru ke frame aktif)
  * - REPLACE_FRAME (menghapus komponen di dalam frame atau mengedit isi frame yang sudah ada)
+ * - CREATE_FRAMES (membuat 1 atau beberapa frame/halaman baru otomatis sesuai kebutuhan pages)
  * - EXPLAIN (membaca dan menjelaskan isi frame kepada pengguna)
  */
 if (!function_exists('call_gemini_interactions_api')) {
@@ -307,23 +358,29 @@ if (!function_exists('call_gemini_interactions_api')) {
         string $prompt,
         string $model = 'gemini-3.5-flash-lite',
         string $current_frame_html = '',
-        string $selected_object_html = ''
+        string $selected_object_html = '',
+        string $target_mode = 'core'
     ): array {
         $system_instruction = "Anda adalah AI Visual Workspace Assistant untuk editor web Greymist.\n"
-            . "Anda memiliki kemampuan untuk MEMBACA isi frame saat ini (CURRENT_FRAME_HTML), MENAMBAH komponen baru, MENGEDIT komponen yang ada, atau MENGHAPUS komponen dari dalam frame.\n\n"
-            . "PILIH SALAH SATU PREFIX OPERASI DI BARIS PERTAMA RESPONS ANDA:\n"
+            . "Anda memiliki kemampuan untuk MEMBACA isi frame saat ini (CURRENT_FRAME_HTML), MENAMBAH komponen baru, MENGEDIT komponen yang ada, MENGHAPUS komponen dari dalam frame, serta MENAMBAH FRAME BARU (Halaman/Pages baru) secara otomatis.\n\n"
+            . "PILIH SALAH SATU FORMAT OPERASI DI BAWAH INI:\n"
             . "1. Jika pengguna meminta MEMBACA / MENJELASKAN apa yang ada di dalam frame (tanpa mengubah kode):\n"
             . "   Awali dengan: <!--GM_OP:EXPLAIN--> diikuti penjelasan ringkas isi frame dalam Bahasa Indonesia.\n"
             . "2. Jika pengguna meminta MENGHAPUS komponen tertentu (misal 'hapus navbar', 'hapus bagian harga', 'hapus tombol', 'kosongkan frame') ATAU MENGUBAH/MENGEDIT elemen yang sudah ada di dalam CURRENT_FRAME_HTML:\n"
-            . "   Awali dengan: <!--GM_OP:REPLACE_FRAME--> diikuti SELURUH kode HTML isi frame terbaru setelah komponen tersebut dihapus/diedit (jika hasil akhirnya kosong, cukup tulis <!--GM_OP:REPLACE_FRAME--> saja).\n"
-            . "3. Jika pengguna meminta MEMBUAT / MENAMBAHKAN komponen baru ke dalam frame:\n"
+            . "   Awali dengan: <!--GM_OP:REPLACE_FRAME--> diikuti SELURUH kode HTML isi frame terbaru setelah komponen tersebut dihapus/diedit.\n"
+            . "3. Jika pengguna meminta MEMBUAT HALAMAN BARU / MENAMBAH FRAME BARU, atau meminta BEBERAPA HALAMAN (Multi-Page, misal 'buat halaman login di frame baru', 'buat 3 halaman: Home, About, Contact', 'tambah frame checkout', atau jika TARGET_MODE adalah new_frame):\n"
+            . "   Gunakan satu atau beberapa blok penanda frame berikut (sesuai jumlah halaman yang dibutuhkan):\n"
+            . "   <!--GM_FRAME:Nama Halaman-->\n"
+            . "   (diikuti kode HTML lengkap .gm-object untuk halaman tersebut)\n"
+            . "4. Jika pengguna hanya meminta MEMBUAT / MENAMBAHKAN komponen ke dalam frame yang sedang aktif:\n"
             . "   Awali dengan: <!--GM_OP:APPEND--> diikuti HANYA kode HTML komponen baru tersebut (sesuaikan gaya/warnanya agar serasi dengan CURRENT_FRAME_HTML).\n\n"
             . "ATURAN KODE HTML WAJIB:\n"
             . "- Jangan gunakan markdown code fences (jangan tulis ```html).\n"
             . "- SETIAP elemen tag HTML (section, div, nav, header, footer, h1, h2, h3, p, span, a, button, input, img, ul, li) WAJIB memiliki class=\"gm-object\".\n"
             . "- Gunakan inline style (style=\"...\") yang rapi, modern, dan responsif.";
 
-        $context_input = "CURRENT_FRAME_HTML:\n" . ($current_frame_html !== '' ? $current_frame_html : "(Frame masih kosong)") . "\n\n";
+        $context_input = "TARGET_MODE: " . $target_mode . "\n";
+        $context_input .= "CURRENT_FRAME_HTML:\n" . ($current_frame_html !== '' ? $current_frame_html : "(Frame masih kosong)") . "\n\n";
         if ($selected_object_html !== '') {
             $context_input .= "SELECTED_OBJECT_HTML (Objek yang sedang diklik pengguna):\n" . $selected_object_html . "\n\n";
         }
@@ -401,6 +458,38 @@ if (!function_exists('call_gemini_interactions_api')) {
                 // Bersihkan markdown fences jika model masih menyertakannya
                 $trimmed_out = preg_replace('/^```(?:html)?\s*/i', '', $trimmed_out);
                 $trimmed_out = preg_replace('/\s*```$/', '', $trimmed_out);
+
+                // Cek apakah AI mengembalikan 1 atau beberapa blok halaman/frame baru: <!--GM_FRAME:Nama Halaman-->
+                if (preg_match_all('/<!--\s*GM_FRAME\s*:\s*(.*?)\s*-->/is', $trimmed_out, $frame_matches, PREG_OFFSET_CAPTURE)) {
+                    $frames_specs = [];
+                    $count_matches = count($frame_matches[0]);
+                    for ($i = 0; $i < $count_matches; $i++) {
+                        $f_name = trim($frame_matches[1][$i][0]);
+                        if ($f_name === '') {
+                            $f_name = 'Page ' . ($i + 1);
+                        }
+                        $start_pos = $frame_matches[0][$i][1] + strlen($frame_matches[0][$i][0]);
+                        $end_pos   = ($i + 1 < $count_matches) ? $frame_matches[0][$i + 1][1] : strlen($trimmed_out);
+                        $f_html    = trim(substr($trimmed_out, $start_pos, $end_pos - $start_pos));
+                        $f_html    = str_replace(['<!--GM_OP:APPEND-->', '<!--GM_OP:REPLACE_FRAME-->'], '', $f_html);
+                        if ($f_html !== '') {
+                            $frames_specs[] = [
+                                'frame_name' => $f_name,
+                                'html'       => ensure_gm_object_class($f_html),
+                            ];
+                        }
+                    }
+
+                    if (!empty($frames_specs)) {
+                        return [
+                            'success'      => true,
+                            'used_model'   => $candidate_model,
+                            'operation'    => 'create_frames',
+                            'frames_specs' => $frames_specs,
+                            'html'         => '',
+                        ];
+                    }
+                }
 
                 $operation = 'append';
                 if (str_contains($trimmed_out, '<!--GM_OP:EXPLAIN-->')) {
@@ -485,6 +574,8 @@ switch ($ai_action) {
         $requested_model      = trim((string)($data['model'] ?? ''));
         $current_frame_html   = (string)($data['current_frame_html'] ?? '');
         $selected_object_html = (string)($data['selected_object_html'] ?? '');
+        $target_mode          = trim((string)($data['target_mode'] ?? 'core'));
+        $project_id           = (int)($data['project_id'] ?? $_GET['project_id'] ?? 0);
 
         if ($prompt === '') {
             json_response(['status' => 'ERROR', 'success' => false, 'msg' => 'Prompt atau instruksi AI wajib diisi.']);
@@ -497,17 +588,26 @@ switch ($ai_action) {
             ? $requested_model
             : (string)env('GEMINI_MODEL', 'gemini-3.5-flash-lite');
 
-        $source_mode = 'smart_preset (Gratis Lokal)';
-        $api_warning = '';
-        $operation   = 'append';
-        $summary_msg = '';
+        $source_mode  = 'smart_preset (Gratis Lokal)';
+        $api_warning  = '';
+        $operation    = 'append';
+        $summary_msg  = '';
+        $frames_specs = [];
 
         if ($model !== 'local-free' && $api_key !== '') {
-            $gemini_res = call_gemini_interactions_api($api_key, $prompt, $model, $current_frame_html, $selected_object_html);
+            $gemini_res = call_gemini_interactions_api(
+                $api_key,
+                $prompt,
+                $model,
+                $current_frame_html,
+                $selected_object_html,
+                $target_mode
+            );
             if ($gemini_res['success']) {
                 $generated_html = $gemini_res['html'] ?? '';
                 $operation      = $gemini_res['operation'] ?? 'append';
                 $summary_msg    = $gemini_res['summary'] ?? '';
+                $frames_specs   = $gemini_res['frames_specs'] ?? [];
                 $used_model     = $gemini_res['used_model'] ?? $model;
                 $source_mode    = 'Gemini Free Tier (' . $used_model . ')';
             } else {
@@ -515,8 +615,9 @@ switch ($ai_action) {
                 $local_cmd   = process_local_frame_command($prompt, $current_frame_html);
                 if ($local_cmd !== null) {
                     $operation      = $local_cmd['operation'];
-                    $generated_html = $local_cmd['html'];
+                    $generated_html = $local_cmd['html'] ?? '';
                     $summary_msg    = $local_cmd['summary'] ?? '';
+                    $frames_specs   = $local_cmd['frames_specs'] ?? [];
                 } else {
                     $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
                 }
@@ -525,10 +626,47 @@ switch ($ai_action) {
             $local_cmd = process_local_frame_command($prompt, $current_frame_html);
             if ($local_cmd !== null) {
                 $operation      = $local_cmd['operation'];
-                $generated_html = $local_cmd['html'];
+                $generated_html = $local_cmd['html'] ?? '';
                 $summary_msg    = $local_cmd['summary'] ?? '';
+                $frames_specs   = $local_cmd['frames_specs'] ?? [];
             } else {
                 $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
+            }
+        }
+
+        // Jika pengguna memilih target_mode = 'new_frame' tetapi AI mengembalikan operasi append biasa,
+        // otomatis bungkus menjadi pembuatan frame baru.
+        if ($target_mode === 'new_frame' && $operation === 'append' && trim($generated_html) !== '' && empty($frames_specs)) {
+            $new_page_name  = $component_name !== '' && $component_name !== 'AI Component'
+                ? $component_name
+                : ('Page: ' . mb_substr($prompt, 0, 22));
+            $operation      = 'create_frames';
+            $frames_specs[] = [
+                'frame_name' => $new_page_name,
+                'html'       => $generated_html,
+            ];
+        }
+
+        // Simpan frame baru ke database gm_frames jika operation === 'create_frames'
+        $created_frames = [];
+        if ($operation === 'create_frames' && !empty($frames_specs)) {
+            foreach ($frames_specs as $idx => $spec) {
+                $f_name = trim((string)($spec['frame_name'] ?? ('Page ' . ($idx + 1))));
+                $f_html = (string)($spec['html'] ?? '');
+                if ($project_id > 0) {
+                    $db_frame = add_project_frame($pdo, $project_id, $f_name, $f_html);
+                    $created_frames[] = [
+                        'frame_id'     => $db_frame['frame_id'],
+                        'frame_name'   => $db_frame['frame_name'],
+                        'core_content' => $f_html,
+                    ];
+                } else {
+                    $created_frames[] = [
+                        'frame_id'     => time() + $idx,
+                        'frame_name'   => $f_name,
+                        'core_content' => $f_html,
+                    ];
+                }
             }
         }
 
@@ -548,19 +686,21 @@ switch ($ai_action) {
         $default_msg = match ($operation) {
             'explain'       => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil dianalisis.',
             'replace_frame' => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil diperbarui (' . $source_mode . ').',
+            'create_frames' => count($created_frames) . ' Frame Halaman baru berhasil ditambahkan (' . $source_mode . ').',
             default         => 'Komponen berhasil ditambahkan (' . $source_mode . ').',
         };
 
         json_response([
-            'status'      => 'OK',
-            'success'     => true,
-            'operation'   => $operation,
-            'summary'     => $summary_msg,
-            'msg'         => $default_msg,
-            'source_mode' => $source_mode,
-            'api_warning' => $api_warning,
-            'html'        => $generated_html,
-            'component'   => $saved_component,
+            'status'         => 'OK',
+            'success'        => true,
+            'operation'      => $operation,
+            'summary'        => $summary_msg,
+            'msg'            => $default_msg,
+            'source_mode'    => $source_mode,
+            'api_warning'    => $api_warning,
+            'html'           => $generated_html,
+            'created_frames' => $created_frames,
+            'component'      => $saved_component,
         ]);
         break;
 }
