@@ -17,9 +17,11 @@
         { label: "Navbar", prompt: "Buat Navbar navigasi horizontal dengan logo brand di kiri, menu link di tengah, dan tombol CTA di kanan" },
         { label: "Pricing", prompt: "Buat bagian kartu harga (Pricing Table) 3 kolom: Starter, Pro (Populer), dan Enterprise" },
         { label: "Kontak", prompt: "Buat kartu Formulir Kontak minimalis dengan input Nama, Email, Pesan, dan tombol Kirim" },
-        { label: "📄 +Page Baru", prompt: "Buat frame halaman baru untuk halaman Login lengkap dengan Navbar dan Form Login" },
-        { label: "📑 Multi-Page", prompt: "Buat 3 frame halaman website terpisah: Beranda, Layanan & Harga, dan Hubungi Kami" },
-        { label: "🔍 Baca Frame", prompt: "Baca dan jelaskan komponen apa saja yang ada di dalam proyek dan frame ini sekarang" }
+        { label: "+Page Baru", prompt: "Buat frame halaman baru untuk halaman Login lengkap dengan Navbar dan Form Login" },
+        { label: "Multi-Page", prompt: "Buat 3 frame halaman website terpisah: Beranda, Layanan & Harga, dan Hubungi Kami" },
+        { label: "Baca Proyek", prompt: "Baca dan jelaskan susunan proyek, halaman-halaman, serta komponen di dalamnya" },
+        { label: "📸 Clone Foto", prompt: "Buat antarmuka (UI) website modern yang meniru tata letak dan estetika foto referensi yang diunggah" },
+        { label: "🏷️ Ganti Nama", prompt: "Ganti nama project jadi " }
     ];
 
     function getCurrentProjectId() {
@@ -54,6 +56,11 @@
         if (activeThumb && activeThumb.dataset.frame) return activeThumb.dataset.frame;
         const core = getActiveObjectCore();
         return core ? (core.dataset.frame || "") : "";
+    }
+
+    function cleanEmojis(str) {
+        if (!str || typeof str !== "string") return str || "";
+        return str.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{20E3}\u{FE0F}]/gu, "");
     }
 
     function getSelectedObject() {
@@ -134,7 +141,22 @@
 
     function updateMemoryBadgeUI(memory) {
         const badgeEl = document.getElementById("gm-ai-memory-badge");
-        if (!badgeEl || !memory) return;
+        if (!badgeEl) return;
+
+        const readMemoryCheckbox = document.getElementById("gm-ai-read-memory");
+        const isMemOn = readMemoryCheckbox ? readMemoryCheckbox.checked : false;
+
+        if (!isMemOn) {
+            badgeEl.textContent = `⚡ Mode Kilat (Memori Off)`;
+            badgeEl.title = `Mode Kilat aktif: AI merespons super cepat tanpa membaca riwayat & seluruh frame.\n(Klik badge atau centang opsi di panel bawah untuk mengaktifkan Memori Konteks)`;
+            return;
+        }
+
+        if (!memory) {
+            badgeEl.textContent = `🧠 Memori AI Aktif`;
+            badgeEl.title = `Memori Konteks Proyek AI Aktif`;
+            return;
+        }
 
         const pagesCount = memory.total_pages || (Array.isArray(memory.pages_map) ? memory.pages_map.length : 0);
         const historyCount = Array.isArray(memory.history) ? memory.history.length : 0;
@@ -572,6 +594,146 @@
      * Memperbarui atribut/style elemen aktif secara langsung di tempatnya (In-Place).
      * TIDAK membuat elemen baru dari 0, TIDAK menduplikasi di atasnya, TIDAK menghapus elemen bawah.
      */
+    function findSpecificCards(container) {
+        if (!container) return [];
+        const all = Array.from(container.querySelectorAll(".card, [class*='card'], [class*='item'], [class*='box'], div[style*='border']"));
+        const filtered = all.filter(el => {
+            const idCls = (el.className + " " + (el.id || "")).toLowerCase();
+            return !/\b(container|grid|wrapper|row|list|group)\b/i.test(idCls);
+        });
+        const leaf = filtered.filter(el => {
+            const hasChildCard = el.querySelector(".card, [class*='card'], [class*='item'], [class*='box']");
+            return !hasChildCard;
+        });
+        if (leaf.length > 0) return leaf;
+
+        // Fallback: periksa container flex/grid yang memiliki anak langsung >= 2
+        const potentialContainers = [container, ...Array.from(container.querySelectorAll("div, section"))].filter(c => {
+            if (!c || !c.getAttribute) return false;
+            const style = (c.getAttribute("style") || "").toLowerCase();
+            const cls = (c.className || "").toLowerCase();
+            return style.includes("display: flex") || style.includes("display:flex") ||
+                   style.includes("display: grid") || style.includes("display:grid") ||
+                   cls.includes("grid") || cls.includes("flex") || cls.includes("row");
+        });
+        for (const pc of potentialContainers) {
+            const directKids = Array.from(pc.children).filter(ch => ch.tagName === "DIV" || ch.tagName === "ARTICLE");
+            if (directKids.length >= 2) {
+                return directKids;
+            }
+        }
+        return [];
+    }
+
+    function resolveSpecificTargetElement(activeCore, selectedObj, prompt) {
+        if (!activeCore) return selectedObj;
+        const lower = prompt.toLowerCase();
+
+        const isSpecificSingleCard = /\b(ke\s*[-]?\s*[1-9]|kedua|ketiga|keempat|kelima|first|second|third|fourth|pertama|kesatu|terakhir|last|ini|yang\s+dipilih|terpilih|active|selected|pro|populer|popular|enterprise|bisnis|business|basic|starter|pemula|gratis|free)\b/i.test(lower);
+        const isPluralCardPrompt = /\b(semua|all|seluruh|tiap|setiap|para|cards|kartu-kartu)\b/i.test(lower);
+
+        // 1. Cek apakah prompt merujuk ke CARD / KARTU / ITEM / BOX / PRICING / HARGA
+        if (/\b(card|kartu|kotak|box|item|pricing|harga|paket)\b/i.test(lower)) {
+            const scope = (selectedObj && (selectedObj.tagName === "SECTION" || selectedObj.tagName === "DIV" || selectedObj.classList.contains("gm-object"))) ? selectedObj : activeCore;
+            let cards = findSpecificCards(scope);
+            if (cards.length === 0 && scope !== activeCore) {
+                cards = findSpecificCards(activeCore);
+            }
+
+            if (cards.length > 0) {
+                // Jika pengguna meminta kartu SPESIFIK tunggal (misal card ke-2, card pro, dsb.)
+                if (isSpecificSingleCard && !isPluralCardPrompt) {
+                    let targetCard = null;
+                    if (/\b(ke\s*[-]?\s*2|kedua|second|2(?:nd)?)\b/i.test(lower)) {
+                        targetCard = cards[1] || cards[0];
+                    } else if (/\b(ke\s*[-]?\s*3|ketiga|third|3(?:rd)?)\b/i.test(lower)) {
+                        targetCard = cards[2] || cards[cards.length - 1];
+                    } else if (/\b(ke\s*[-]?\s*4|keempat|fourth|4(?:th)?)\b/i.test(lower)) {
+                        targetCard = cards[3] || cards[cards.length - 1];
+                    } else if (/\b(ke\s*[-]?\s*1|pertama|kesatu|first|1(?:st)?)\b/i.test(lower)) {
+                        targetCard = cards[0];
+                    } else if (/\b(terakhir|last)\b/i.test(lower)) {
+                        targetCard = cards[cards.length - 1];
+                    } else if (/\b(ini|dipilih|terpilih|active|selected)\b/i.test(lower) && selectedObj && cards.includes(selectedObj)) {
+                        targetCard = selectedObj;
+                    } else {
+                        for (const c of cards) {
+                            const txt = c.textContent.toLowerCase();
+                            const idCls = ((c.id || "") + " " + c.className).toLowerCase();
+                            if (/\b(pro|populer|popular)\b/i.test(lower) && (txt.includes("pro") || txt.includes("populer") || idCls.includes("pro"))) {
+                                targetCard = c; break;
+                            }
+                            if (/\b(enterprise|bisnis|business)\b/i.test(lower) && (txt.includes("enterprise") || txt.includes("bisnis") || idCls.includes("enterprise"))) {
+                                targetCard = c; break;
+                            }
+                            if (/\b(basic|starter|pemula|gratis|free)\b/i.test(lower) && (txt.includes("basic") || txt.includes("starter") || txt.includes("gratis") || idCls.includes("starter"))) {
+                                targetCard = c; break;
+                            }
+                        }
+                    }
+
+                    if (targetCard) return targetCard;
+                }
+
+                // Jika pengguna meminta animasi kartu secara umum/jamak (tanpa menunjuk satu kartu spesifik),
+                // pertahankan kontainer pembungkus kartu (parent element) agar SEMUA saudara kartu (siblings)
+                // ikut terbawa ke backend dan dianimasikan secara berurutan (staggered delay)!
+                if (cards.length > 1) {
+                    const parentContainer = cards[0].parentElement;
+                    if (parentContainer && parentContainer !== activeCore && parentContainer.tagName !== "BODY") {
+                        return parentContainer;
+                    }
+                    return scope;
+                }
+                return cards[0];
+            }
+        }
+
+        // 2. Cek apakah prompt merujuk ke TOMBOL / BUTTON / CTA
+        if (/\b(tombol|button|cta)\b/i.test(lower)) {
+            const scope = selectedObj || activeCore;
+            const btn = scope.querySelector("button, .btn, [class*='btn'], a[class*='btn']") || activeCore.querySelector("button, .btn, [class*='btn']");
+            if (btn) return btn;
+        }
+
+        // 3. Cek apakah prompt merujuk ke JUDUL / HEADING / TITLE / H1 / H2 / H3
+        if (/\b(judul|heading|title|h1|h2|h3)\b/i.test(lower)) {
+            const scope = selectedObj || activeCore;
+            const h = scope.querySelector("h1, h2, h3, h4") || activeCore.querySelector("h1, h2, h3, h4");
+            if (h) return h;
+        }
+
+        // 4. Cek apakah prompt merujuk ke NAVBAR / HEADER
+        if (/\b(navbar|header|nav)\b/i.test(lower)) {
+            const nav = activeCore.querySelector("header, nav, [class*='nav']");
+            if (nav) return nav;
+        }
+
+        // 5. Cek apakah prompt merujuk ke FOOTER
+        if (/\b(footer|kaki)\b/i.test(lower)) {
+            const foot = activeCore.querySelector("footer, [class*='footer']");
+            if (foot) return foot;
+        }
+
+        // 6. Jika prompt animasi tapi elemen saat ini adalah root section atau core:
+        if (/\b(animasi|anim|animasikan)\b/i.test(lower)) {
+            if (!selectedObj || selectedObj === activeCore || selectedObj.classList.contains("gm-object-core") || selectedObj.tagName === "SECTION") {
+                const specificCards = findSpecificCards(selectedObj || activeCore);
+                if (specificCards.length > 0) {
+                    if (specificCards.length > 1 && !isSpecificSingleCard) {
+                        const parentContainer = specificCards[0].parentElement;
+                        return (parentContainer && parentContainer !== activeCore && parentContainer.tagName !== "BODY") ? parentContainer : (selectedObj || activeCore);
+                    }
+                    return specificCards[0];
+                }
+                const specificChild = (selectedObj || activeCore).querySelector("button, h1, h2, [class*='item'], div[style*='border']");
+                if (specificChild) return specificChild;
+            }
+        }
+
+        return selectedObj;
+    }
+
     function applyAttributePatchInPlace(targetEl, patch, statusEl, onDone) {
         if (!targetEl) {
             targetEl = getSelectedObject() || getActiveObjectCore();
@@ -581,91 +743,252 @@
             return;
         }
 
-        let destEl = targetEl;
-        if (patch && patch.target && patch.target !== "self") {
-            const foundChild = targetEl.querySelector(patch.target);
-            if (foundChild) destEl = foundChild;
-        }
+        const activeCore = getActiveObjectCore();
+        let targetElements = [];
 
-        // Terapkan transisi CSS halus agar perubahan warna/font/ukuran terlihat elegan
-        destEl.style.transition = "background-color 0.28s ease, color 0.28s ease, font-size 0.2s ease, border-radius 0.2s ease, box-shadow 0.25s ease, padding 0.2s ease, border-color 0.25s ease";
-
-        // 1. Terapkan Styles
-        if (patch && patch.styles && typeof patch.styles === "object") {
-            Object.keys(patch.styles).forEach(prop => {
-                const val = patch.styles[prop];
-                if (!val) return;
-
-                if (prop === "__auto_color__") {
-                    const tag = destEl.tagName.toLowerCase();
-                    if (tag === "button" || destEl.style.backgroundColor || destEl.classList.contains("gm-bg")) {
-                        destEl.style.backgroundColor = val;
-                    } else {
-                        destEl.style.color = val;
+        // 1. Selector Presisi Array: Jika patch menyediakan array 'targets' (misal ['#card-1', '#card-2', '#card-3'])
+        if (patch && Array.isArray(patch.targets) && patch.targets.length > 0) {
+            patch.targets.forEach(sel => {
+                if (typeof sel === "string" && sel.trim() !== "") {
+                    let el = targetEl.querySelector(sel);
+                    if (!el && activeCore) el = activeCore.querySelector(sel);
+                    if (!el) el = document.querySelector(sel);
+                    if (el && !targetElements.includes(el)) {
+                        targetElements.push(el);
                     }
-                } else if (prop === "font-family") {
-                    destEl.style.fontFamily = val;
-                    // Wariskan ke seluruh anak teks di dalam komponen agar konsisten
-                    destEl.querySelectorAll("*").forEach(ch => {
-                        ch.style.fontFamily = val;
-                    });
-                } else if (prop === "color") {
-                    destEl.style.color = val;
-                    // Jika destEl adalah navbar/card/header, sesuaikan juga elemen teks di dalamnya
-                    destEl.querySelectorAll("a, span, p, h1, h2, h3, h4, div").forEach(ch => {
-                        if (ch.children.length === 0) ch.style.color = val;
-                    });
-                } else if (prop === "background" || prop === "background-color") {
-                    destEl.style.backgroundColor = val;
-                } else {
-                    destEl.style.setProperty(prop, val);
                 }
             });
         }
 
-        // 2. Terapkan Atribut HTML Non-Style jika ada (Action, Animasi, Id, Href, dll.)
-        if (patch && patch.attributes && typeof patch.attributes === "object") {
-            Object.keys(patch.attributes).forEach(attr => {
-                if (attr === "class") {
-                    const classes = String(patch.attributes[attr]).split(/\s+/);
-                    classes.forEach(c => c && destEl.classList.add(c));
-                } else if (attr !== "style") {
-                    destEl.setAttribute(attr, patch.attributes[attr]);
+        // 2. Selector Presisi String: Jika patch memberikan target spesifik (bisa comma-separated misal '#card-1, #card-2' atau '.card')
+        if (targetElements.length === 0 && patch && patch.target && patch.target !== "self") {
+            try {
+                let els = targetEl.querySelectorAll(patch.target);
+                if (els.length === 0 && activeCore) els = activeCore.querySelectorAll(patch.target);
+                if (els.length === 0) els = document.querySelectorAll(patch.target);
+                if (els.length > 0) {
+                    targetElements = Array.from(els);
                 }
-            });
-            if (patch.attributes["data-gm-anim"]) {
-                const animName = patch.attributes["data-gm-anim"];
-                destEl.classList.add("gm-anim-base", animName);
-                if (!destEl.style.getPropertyValue("--gm-anim-duration")) {
-                    destEl.style.setProperty("--gm-anim-duration", "0.8s");
-                }
-                if (!destEl.style.animationIterationCount) {
-                    destEl.style.animationIterationCount = "1";
+            } catch (_) {}
+        }
+
+        // 3. Proteksi Anti-Root & Multi-Card: JANGAN PERNAH menganimasikan frame/object-core atau root section jika ada card di dalamnya!
+        if (targetElements.length === 0) {
+            let destEl = targetEl;
+            const isCoreOrSection = destEl.classList.contains("gm-object-core") || destEl.id === "object-core" || destEl.tagName === "SECTION" || destEl.tagName === "BODY";
+            const hasAnimPayload = (patch && patch.attributes && patch.attributes["data-gm-anim"]) ||
+                                   (patch && Array.isArray(patch.classes_to_add) && patch.classes_to_add.some(c => c.includes("anim"))) ||
+                                   (patch && Array.isArray(patch.classes_to_remove) && patch.classes_to_remove.includes("gm-anim-base"));
+
+            const specificCards = findSpecificCards(destEl);
+            if ((isCoreOrSection || (patch && patch.target_all)) && specificCards.length > 0 && hasAnimPayload) {
+                targetElements = specificCards;
+            } else if (isCoreOrSection && hasAnimPayload) {
+                const cardChild = destEl.querySelector("button, [class*='item'], div[style*='border'], h1, h2");
+                if (cardChild) targetElements = [cardChild];
+                else targetElements = [destEl];
+            } else {
+                targetElements = [destEl];
+            }
+        }
+
+        const ALL_GM_ANIMS = [
+            "gm-anim-fade-in",
+            "gm-anim-slide-up",
+            "gm-anim-slide-down",
+            "gm-anim-slide-left",
+            "gm-anim-slide-right",
+            "gm-anim-zoom-in",
+            "gm-anim-bounce-in"
+        ];
+
+        function normalizeGreymistAnimName(name) {
+            if (!name) return "";
+            const n = String(name).toLowerCase().trim();
+            if (n === "none" || n === "false" || n === "null" || n === "") return "";
+            if (n.includes("bounce")) return "gm-anim-bounce-in";
+            if (n.includes("zoom")) return "gm-anim-zoom-in";
+            if (n.includes("slide") && n.includes("down")) return "gm-anim-slide-down";
+            if (n.includes("slide") && n.includes("left")) return "gm-anim-slide-left";
+            if (n.includes("slide") && n.includes("right")) return "gm-anim-slide-right";
+            if (n.includes("slide") || n.includes("up")) return "gm-anim-slide-up";
+            if (n.includes("fade")) return "gm-anim-fade-in";
+            return n.startsWith("gm-anim-") ? n : "gm-anim-" + n;
+        }
+
+        const isRemovingAnim = (patch && Array.isArray(patch.classes_to_remove) && patch.classes_to_remove.includes("gm-anim-base")) ||
+                               (patch && patch.attributes && (patch.attributes["data-gm-anim"] === "" || patch.attributes["data-gm-anim"] === "none"));
+
+        let targetAnim = "";
+        if (!isRemovingAnim) {
+            if (patch && patch.attributes && patch.attributes["data-gm-anim"]) {
+                targetAnim = normalizeGreymistAnimName(patch.attributes["data-gm-anim"]);
+            } else if (patch && Array.isArray(patch.classes_to_add)) {
+                const found = patch.classes_to_add.find(c => c.includes("anim") || c.includes("fade") || c.includes("slide") || c.includes("zoom") || c.includes("bounce"));
+                if (found && found !== "gm-anim-base") {
+                    targetAnim = normalizeGreymistAnimName(found);
                 }
             }
         }
 
-        // 3. Terapkan Teks Baru jika ada
-        if (patch && typeof patch.text === "string" && patch.text.trim() !== "") {
-            const heading = destEl.querySelector("h1, h2, h3, h4, strong, span, a") || destEl;
-            heading.textContent = patch.text.trim();
+        const baseDur = (patch && patch.attributes && patch.attributes["data-gm-anim-dur"]) || (patch && patch.styles && patch.styles["--gm-anim-duration"]) || "0.8";
+        const durNum = String(baseDur).replace(/s$/i, "");
+        const rawBaseDel = (patch && patch.attributes && patch.attributes["data-gm-anim-del"]) || (patch && patch.styles && patch.styles["--gm-anim-delay"]) || "0";
+        const baseDelNum = parseFloat(String(rawBaseDel).replace(/s$/i, "")) || 0;
+        const loopVal = (patch && patch.attributes && patch.attributes["data-gm-anim-loop"]) || (patch && patch.styles && patch.styles["animation-iteration-count"]) || "1";
+
+        const staggerStep = (typeof patch.stagger === "number") ? patch.stagger : (targetElements.length > 1 ? 0.15 : 0);
+
+        // Terapkan patch pada SETIAP elemen target (seluruh kartu saudara / siblings)
+        targetElements.forEach((destEl, elIdx) => {
+            // Terapkan transisi CSS halus agar perubahan warna/font/ukuran terlihat elegan
+            destEl.style.transition = "background-color 0.28s ease, color 0.28s ease, font-size 0.2s ease, border-radius 0.2s ease, box-shadow 0.25s ease, padding 0.2s ease, border-color 0.25s ease";
+
+            // 0. Hapus Class, Atribut, atau Style jika diminta (misal reset warna atau hapus animasi)
+            if (patch && Array.isArray(patch.classes_to_remove)) {
+                patch.classes_to_remove.forEach(c => c && destEl.classList.remove(c));
+            }
+            if (patch && Array.isArray(patch.attributes_to_remove)) {
+                patch.attributes_to_remove.forEach(attr => {
+                    if (attr) {
+                        destEl.removeAttribute(attr);
+                        if (attr.startsWith("data-")) {
+                            const camel = attr.slice(5).replace(/-([a-z])/g, (_, g) => g.toUpperCase());
+                            delete destEl.dataset[camel];
+                        }
+                    }
+                });
+            }
+            if (patch && Array.isArray(patch.styles_to_remove)) {
+                patch.styles_to_remove.forEach(prop => {
+                    if (prop) destEl.style.removeProperty(prop);
+                });
+            }
+
+            // 1. Terapkan Styles
+            if (patch && patch.styles && typeof patch.styles === "object") {
+                Object.keys(patch.styles).forEach(prop => {
+                    if (prop.startsWith("--gm-anim-")) return;
+                    const val = patch.styles[prop];
+                    if (val === null || val === undefined) return;
+
+                    if (prop === "__auto_color__") {
+                        const tag = destEl.tagName.toLowerCase();
+                        if (tag === "button" || destEl.style.backgroundColor || destEl.classList.contains("gm-bg") || tag === "nav" || tag === "header" || tag === "footer" || tag === "section") {
+                            destEl.style.backgroundColor = val;
+                        } else {
+                            destEl.style.color = val;
+                        }
+                    } else if (prop === "font-family") {
+                        destEl.style.fontFamily = val;
+                        destEl.querySelectorAll("*").forEach(ch => {
+                            ch.style.fontFamily = val;
+                        });
+                    } else if (prop === "color") {
+                        destEl.style.color = val;
+                        destEl.querySelectorAll("a, span, p, h1, h2, h3, h4, div").forEach(ch => {
+                            if (ch.children.length === 0) ch.style.color = val;
+                        });
+                    } else if (prop === "background" || prop === "background-color") {
+                        destEl.style.background = val;
+                        destEl.style.backgroundColor = val;
+                    } else {
+                        destEl.style.setProperty(prop, val);
+                    }
+                });
+            }
+
+            // 2. Terapkan Tambahan Class
+            if (patch && Array.isArray(patch.classes_to_add)) {
+                patch.classes_to_add.forEach(c => {
+                    if (c && !c.includes("anim")) destEl.classList.add(c);
+                });
+            }
+
+            // 3. Terapkan Atribut HTML Non-Style (Action, Animasi, Id, Href, dll.)
+            if (patch && patch.attributes && typeof patch.attributes === "object") {
+                Object.keys(patch.attributes).forEach(attr => {
+                    if (attr.startsWith("data-gm-anim")) return;
+                    if (attr === "class") {
+                        const classes = String(patch.attributes[attr]).split(/\s+/);
+                        classes.forEach(c => c && !c.includes("anim") && destEl.classList.add(c));
+                    } else if (attr !== "style" && attr !== "id") {
+                        destEl.setAttribute(attr, patch.attributes[attr]);
+                    }
+                });
+            }
+
+            // 4. Sinkronisasi Animasi Kompatibel Greymist (7 class resmi, dataset, CSS vars, & Reflow)
+            if (isRemovingAnim) {
+                ALL_GM_ANIMS.forEach(c => destEl.classList.remove(c));
+                destEl.classList.remove("gm-anim-base");
+                delete destEl.dataset.gmAnim;
+                delete destEl.dataset.gmAnimDur;
+                delete destEl.dataset.gmAnimDel;
+                delete destEl.dataset.gmAnimLoop;
+                destEl.style.removeProperty("--gm-anim-duration");
+                destEl.style.removeProperty("--gm-anim-delay");
+                destEl.style.animationIterationCount = "";
+            } else if (targetAnim) {
+                ALL_GM_ANIMS.forEach(c => destEl.classList.remove(c));
+                destEl.classList.add("gm-anim-base", targetAnim);
+                destEl.dataset.gmAnim = targetAnim;
+
+                // Hitung Stagger Delay per kartu jika ada beberapa elemen
+                const itemDel = Math.round((baseDelNum + (elIdx * staggerStep)) * 100) / 100;
+
+                destEl.dataset.gmAnimDur = durNum;
+                destEl.dataset.gmAnimDel = String(itemDel);
+                destEl.dataset.gmAnimLoop = loopVal;
+
+                destEl.style.setProperty("--gm-anim-duration", durNum + "s");
+                destEl.style.setProperty("--gm-anim-delay", itemDel + "s");
+                destEl.style.animationIterationCount = loopVal;
+
+                // Reflow agar animasi dimainkan ulang seketika di canvas
+                destEl.classList.remove(targetAnim);
+                void destEl.offsetWidth;
+                destEl.classList.add(targetAnim);
+            }
+
+            // 5. Terapkan Teks Baru jika ada (hanya jika target tunggal)
+            if (targetElements.length === 1 && patch && typeof patch.text === "string" && patch.text.trim() !== "") {
+                const heading = destEl.querySelector("h1, h2, h3, h4, strong, span, a") || destEl;
+                heading.textContent = patch.text.trim();
+            }
+
+            // Efek highlight seleksi halus sesaat
+            const prevOutline = destEl.style.outline;
+            destEl.style.outline = "2px solid #0078ff";
+            setTimeout(() => {
+                destEl.style.outline = prevOutline || "";
+            }, 350 + (elIdx * 80));
+        });
+
+        if (typeof BroadcastChannel !== "undefined") {
+            try {
+                new BroadcastChannel("greymist-live-preview").postMessage({ type: "force-play-anim" });
+            } catch (_) {}
         }
 
-        // Efek highlight seleksi halus sesaat
-        const prevOutline = destEl.style.outline;
-        destEl.style.outline = "2px solid #0078ff";
-        setTimeout(() => {
-            destEl.style.outline = prevOutline || "";
-        }, 350);
+        // Update handler seleksi Greymist pada kartu pertama dari target
+        const primaryDest = targetElements[0];
+        document.querySelectorAll(".gm-object.gm-active").forEach(el => {
+            if (el !== primaryDest) el.classList.remove("gm-active");
+        });
+        primaryDest.classList.add("gm-active");
 
-        // Update handler seleksi Greymist agar kotak seleksi dan label dimensi menyesuaikan
         if (typeof window.GMObjectHandler !== "undefined" && typeof window.GMObjectHandler.attachTo === "function") {
-            window.GMObjectHandler.attachTo(destEl);
+            window.GMObjectHandler.attachTo(primaryDest);
         }
 
         refreshWorkspaceAfterChange();
 
-        const summary = (patch && patch.summary) || "Atribut elemen berhasil diperbarui.";
+        // Notifikasi ke object-animation.js & panel attribute Greymist agar UI panel bawah sinkron
+        document.dispatchEvent(new CustomEvent("objectSelected", { detail: { target: primaryDest } }));
+        primaryDest.dispatchEvent(new CustomEvent("gm-active-tick", { bubbles: true }));
+
+        const summary = (patch && patch.summary) || (targetElements.length > 1 ? `${targetElements.length} elemen kartu saudara berhasil diperbarui.` : "Atribut elemen berhasil diperbarui.");
         if (statusEl) {
             showStatus(statusEl, "success", "✓ " + summary);
         }
@@ -686,8 +1009,8 @@
 
         const parent = targetObj.parentElement;
         const temp = document.createElement("div");
-        temp.innerHTML = (htmlString || "").trim();
-        const sourceRoots = Array.from(temp.children);
+        temp.innerHTML = cleanEmojis((htmlString || "").trim());
+        const sourceRoots = Array.from(temp.children).filter(el => { const t = el.tagName.toLowerCase(); return t !== "style" && t !== "script"; });
 
         if (sourceRoots.length === 0) {
             targetObj.remove();
@@ -701,7 +1024,8 @@
         if (sourceRoots.length === 1) {
             const newRoot = sourceRoots[0];
             // Jika tag sama, langsung patch atribut & teks tanpa merusak node DOM
-            if (newRoot.tagName === targetObj.tagName) {
+            const isBothContainers = /^(NAV|HEADER|DIV|SECTION|ASIDE|FOOTER)$/.test(newRoot.tagName) && /^(NAV|HEADER|DIV|SECTION|ASIDE|FOOTER)$/.test(targetObj.tagName);
+            if (newRoot.tagName === targetObj.tagName || isBothContainers) {
                 const opsQueue = [];
                 const rootPatch = computeElementAttributePatch(targetObj, newRoot);
                 if (rootPatch.hasChanges) {
@@ -740,6 +1064,7 @@
         }
 
         // Hanya jika hasil berupa beberapa elemen baru terpisah
+        targetObj.style.display = "none";
         buildElementsLiveUnstyledToStyled(sourceRoots, parent, statusEl, createdRoots => {
             targetObj.remove();
             if (Array.isArray(createdRoots) && createdRoots.length > 0) {
@@ -905,8 +1230,8 @@
 
             newCore.innerHTML = "";
             const temp = document.createElement("div");
-            temp.innerHTML = (frameInfo.core_content || "").trim();
-            const sourceRoots = Array.from(temp.children);
+            temp.innerHTML = cleanEmojis((frameInfo.core_content || "").trim());
+            const sourceRoots = Array.from(temp.children).filter(el => { const t = el.tagName.toLowerCase(); return t !== "style" && t !== "script"; });
 
             // Alirkan elemen per elemen dengan latensi sangat rendah (Ultra-Low Latency)
             buildElementsLiveUnstyledToStyled(sourceRoots, newCore, statusEl, () => {
@@ -930,7 +1255,7 @@
             return;
         }
 
-        const trimmed = (htmlString || "").trim();
+        const trimmed = cleanEmojis((htmlString || "").trim());
         if (trimmed === "") {
             if (callback) callback(0);
             return;
@@ -938,7 +1263,7 @@
 
         const temp = document.createElement("div");
         temp.innerHTML = trimmed;
-        const sourceRoots = Array.from(temp.children);
+        const sourceRoots = Array.from(temp.children).filter(el => { const t = el.tagName.toLowerCase(); return t !== "style" && t !== "script"; });
 
         // Alirkan elemen per elemen secara realtime dengan latensi sangat rendah
         buildElementsLiveUnstyledToStyled(sourceRoots, container, statusEl, createdRoots => {
@@ -966,7 +1291,7 @@
             return;
         }
 
-        const trimmed = (htmlString || "").trim();
+        const trimmed = cleanEmojis((htmlString || "").trim());
 
         // Hanya jika respons kosong (pengguna eksplisit meminta "kosongkan frame" / "hapus semua")
         if (trimmed === "") {
@@ -978,7 +1303,7 @@
 
         const temp = document.createElement("div");
         temp.innerHTML = trimmed;
-        const sourceRoots = Array.from(temp.children);
+        const sourceRoots = Array.from(temp.children).filter(el => { const t = el.tagName.toLowerCase(); return t !== "style" && t !== "script"; });
 
         // Jika frame sebelumnya sudah memiliki elemen, gunakan In-Place DOM Diff & Attribute Patcher
         // sehingga perubahan font, warna, ukuran, atau penghapusan 1 item TIDAK meriset elemen lain dari 0!
@@ -1067,6 +1392,36 @@
 
             row.appendChild(labelBtn);
             listEl.appendChild(row);
+
+            // Tampilkan juga sub-kartu di dalam section ini agar pengguna bisa langsung klik memilih kartu spesifik
+            const subCards = findSpecificCards(child);
+            subCards.forEach((cItem, cIdx) => {
+                const subRow = document.createElement("div");
+                subRow.className = "gm-ai-frame-item";
+                subRow.style.paddingLeft = "16px";
+                subRow.style.background = "#fafafa";
+                if (cItem.classList.contains("gm-active")) {
+                    subRow.style.borderColor = "#0078ff";
+                    subRow.style.background = "#eff6ff";
+                }
+                const subLabel = document.createElement("span");
+                subLabel.className = "gm-ai-frame-item-label";
+                const headingEl = cItem.querySelector("h1, h2, h3, h4, strong, a");
+                const cardTitle = headingEl ? headingEl.textContent.trim().replace(/\s+/g, " ") : (cItem.id || `Kartu ${cIdx + 1}`);
+                subLabel.innerHTML = `<i class="fa-regular fa-square" style="font-size:9px;color:#0078ff;margin-right:4px;"></i> <span>Kartu ${cIdx + 1}: ${cardTitle.substring(0, 24)}</span>`;
+                subLabel.title = "Klik untuk memilih kartu ini di kanvas";
+                subLabel.addEventListener("click", () => {
+                    document.querySelectorAll(".gm-object.gm-active").forEach(el => el.classList.remove("gm-active"));
+                    cItem.classList.add("gm-active");
+                    if (typeof window.GMObjectHandler !== "undefined" && typeof window.GMObjectHandler.attachTo === "function") {
+                        window.GMObjectHandler.attachTo(cItem);
+                    }
+                    cItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                    renderFrameComponentsList();
+                });
+                subRow.appendChild(subLabel);
+                listEl.appendChild(subRow);
+            });
         });
     }
 
@@ -1258,7 +1613,7 @@
             const currentFrameHtml = activeCore ? activeCore.innerHTML : "";
             const selectedObjectHtml = targetObj.outerHTML;
             const projectId = getCurrentProjectId();
-            const framesSnapshot = collectAllFramesSnapshot();
+            const framesSnapshot = []; // Mode Kilat: tidak scrape seluruh frame saat edit komponen
 
             // Baca atribut dan computed style komponen terlebih dahulu
             const computed = window.getComputedStyle(targetObj);
@@ -1269,14 +1624,18 @@
                 fontFamily: computed.fontFamily,
                 fontSize: computed.fontSize,
                 padding: computed.padding,
-                borderRadius: computed.borderRadius
+                borderRadius: computed.borderRadius,
+                anim: targetObj.dataset.gmAnim || "",
+                animDur: targetObj.dataset.gmAnimDur || "",
+                animDel: targetObj.dataset.gmAnimDel || "",
+                animLoop: targetObj.dataset.gmAnimLoop || ""
             };
 
             submitBtn.disabled = true;
             submitBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
             ctxStatus.style.display = "block";
             ctxStatus.style.color = "#2563eb";
-            ctxStatus.textContent = "Membaca & memodifikasi atribut objek...";
+            ctxStatus.textContent = "AI memproses modifikasi atribut objek...";
 
             fetch("api/ai_generate.php", {
                 method: "POST",
@@ -1287,11 +1646,16 @@
                     prompt: instruction,
                     model: selectedModel,
                     target_mode: "edit_selected",
+                    read_memory: false,
                     save_to_library: false,
                     current_frame_html: currentFrameHtml,
                     selected_object_html: selectedObjectHtml,
                     selected_object_attrs: selectedAttrs,
-                    frames_snapshot: framesSnapshot
+                    frames_snapshot: framesSnapshot,
+                    reference_image: attachedReferenceImage ? {
+                        data: attachedReferenceImage.data,
+                        mime_type: attachedReferenceImage.mime_type
+                    } : null
                 })
             })
                 .then(r => r.json())
@@ -1365,6 +1729,66 @@
                     window.GMCloseContextMenu(true);
                 }
             }
+        });
+    }
+
+    /**
+     * Membaca dan mengompres file gambar referensi (Multimodal Vision)
+     * agar upload cepat dan hemat bandwidth tanpa mengurangi detail tata letak visual untuk AI.
+     */
+    function compressImageFile(file, maxWidth = 1600, maxHeight = 1600, quality = 0.85) {
+        return new Promise((resolve, reject) => {
+            if (!file || !file.type || !file.type.startsWith("image/")) {
+                return reject(new Error("File yang dipilih bukan gambar"));
+            }
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const dataUrl = e.target.result;
+                if (file.size < 350 * 1024) {
+                    const parts = dataUrl.split(",");
+                    const mime = file.type || "image/png";
+                    return resolve({
+                        data: parts[1] || "",
+                        mime_type: mime,
+                        name: file.name || "referensi.png",
+                        sizeStr: (file.size / 1024).toFixed(1) + " KB",
+                        dataUrl: dataUrl
+                    });
+                }
+                const img = new Image();
+                img.onload = function () {
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > maxWidth || height > maxHeight) {
+                        if (width > height) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        } else {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+                    const canvas = document.createElement("canvas");
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(img, 0, 0, width, height);
+                    const compressedUrl = canvas.toDataURL("image/jpeg", quality);
+                    const parts = compressedUrl.split(",");
+                    const estimatedSize = Math.round((parts[1].length * 3) / 4);
+                    resolve({
+                        data: parts[1] || "",
+                        mime_type: "image/jpeg",
+                        name: file.name || "referensi.jpg",
+                        sizeStr: (estimatedSize / 1024).toFixed(1) + " KB",
+                        dataUrl: compressedUrl
+                    });
+                };
+                img.onerror = () => reject(new Error("Gagal membaca gambar"));
+                img.src = dataUrl;
+            };
+            reader.onerror = () => reject(new Error("Gagal membaca file"));
+            reader.readAsDataURL(file);
         });
     }
 
@@ -1623,6 +2047,103 @@
                 white-space: nowrap;
             }
 
+            /* Styling Upload Foto / Screenshot Referensi UI */
+            .gm-ai-upload-zone {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+            }
+            .gm-ai-upload-bar {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .gm-ai-upload-btn {
+                background: #f1f5f9;
+                color: #334155;
+                border: 1px dashed #cbd5e1;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 11px;
+                font-weight: 500;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                transition: all 0.15s ease;
+            }
+            .gm-ai-upload-btn:hover {
+                background: #e0f2fe;
+                color: #0284c7;
+                border-color: #38bdf8;
+            }
+            .gm-ai-upload-hint {
+                font-size: 10px;
+                color: #94a3b8;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .gm-ai-img-preview {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 5px;
+                padding: 4px 6px;
+            }
+            .gm-ai-preview-thumb-wrap {
+                display: flex;
+                align-items: center;
+                gap: 7px;
+            }
+            .gm-ai-preview-thumb-wrap img {
+                width: 36px;
+                height: 36px;
+                object-fit: cover;
+                border-radius: 4px;
+                border: 1px solid #cbd5e1;
+                background: #ffffff;
+            }
+            .gm-ai-preview-info {
+                flex: 1;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+            }
+            .gm-ai-preview-name {
+                font-size: 11px;
+                font-weight: 600;
+                color: #1e293b;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .gm-ai-preview-size {
+                font-size: 10px;
+                color: #64748b;
+            }
+            .gm-ai-remove-img-btn {
+                background: #fee2e2;
+                color: #ef4444;
+                border: none;
+                border-radius: 4px;
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 10px;
+                transition: background 0.15s ease;
+            }
+            .gm-ai-remove-img-btn:hover {
+                background: #fecaca;
+                color: #dc2626;
+            }
+            #gm-ai-floating-panel.gm-ai-drop-active {
+                outline: 2px dashed #0078ff !important;
+                background: #eff6ff !important;
+            }
+
             /* Styling khusus untuk AI Edit Object di dalam Menu Klik Kanan (.gm-object-menu) */
             .gm-ai-context-box {
                 padding: 8px 10px;
@@ -1714,13 +2235,14 @@
 
         panel.innerHTML = `
             <div class="gm-ai-header" id="gm-ai-drag-handle" title="Geser untuk memindahkan panel">
-                <div class="gm-ai-header-title">
+                <div class="gm-ai-header-title" style="display:flex;align-items:center;gap:6px;">
                     <i class="fas fa-wand-magic-sparkles"></i>
-                    <span>Gemini AI Builder</span>
+                    <span>Greymist AI</span>
+                    <span id="gm-ai-active-provider-pill" class="gm-ai-provider-pill" style="font-size:9.5px;padding:2px 7px;border-radius:10px;background:#fef3c7;color:#d97706;font-weight:700;cursor:pointer;" title="Klik untuk membuka Pengaturan Provider AI">Groq 70B</span>
                 </div>
                 <div class="gm-ai-header-actions">
-                    <button type="button" class="gm-ai-icon-btn" id="gm-ai-toggle-key-btn" title="Pengaturan API Key">
-                        <i class="fas fa-key"></i>
+                    <button type="button" class="gm-ai-icon-btn" id="gm-ai-toggle-settings-btn" title="Pengaturan Provider AI (Cloud & Lokal)">
+                        <i class="fas fa-sliders-h"></i>
                     </button>
                     <button type="button" class="gm-ai-icon-btn" id="gm-ai-minimize-btn" title="Minimize / Expand">
                         <i class="fas fa-minus"></i>
@@ -1732,16 +2254,72 @@
             </div>
 
             <div class="gm-ai-body">
-                <!-- Inspector Isi Frame Aktif (Tanpa Tombol Hapus — Hanya Baca & Pilih, Hapus via Prompt) -->
+                <!-- Inspector Isi Frame Aktif -->
                 <div class="gm-ai-frame-box">
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
                         <div style="display:flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:#475569;">
                             <i class="fas fa-layer-group" style="color:#0078ff;"></i>
                             <span>Isi Frame (<span id="gm-ai-frame-count">0</span>)</span>
                         </div>
-                        <span id="gm-ai-memory-badge" class="gm-ai-memory-pill" title="Memori Konteks Proyek AI">🧠 Memori AI Aktif</span>
+                        <span id="gm-ai-memory-badge" class="gm-ai-memory-pill" style="cursor:pointer;" title="Klik untuk mengaktifkan/menonaktifkan pembacaan memori proyek">⚡ Mode Kilat (Memori Off)</span>
                     </div>
                     <div class="gm-ai-frame-items" id="gm-ai-frame-items-list"></div>
+                </div>
+
+                <!-- Panel Pengaturan Provider AI (Expandable Modal) -->
+                <div id="gm-ai-settings-panel" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:7px;padding:9px;margin-bottom:8px;box-shadow:0 3px 10px rgba(0,0,0,0.06);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid #e2e8f0;">
+                        <span style="font-size:11px;font-weight:700;color:#1e293b;"><i class="fas fa-sliders-h" style="color:#0078ff;"></i> Pengaturan Provider AI</span>
+                        <button type="button" id="gm-ai-close-settings-btn" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:12px;"><i class="fas fa-xmark"></i></button>
+                    </div>
+
+                    <!-- Pilihan Provider -->
+                    <div style="margin-bottom:7px;">
+                        <label style="display:block;font-size:10px;font-weight:700;color:#475569;margin-bottom:3px;">PILIH MESIN AI:</label>
+                        <select id="gm-ai-provider-select" class="gm-ai-field" style="width:100%;font-size:11px;padding:4px 6px;font-weight:600;background:#ffffff;border:1px solid #94a3b8;">
+                            <option value="groq">🚀 Groq Cloud (Gratis & Super Cepat ~300 t/s)</option>
+                            <option value="antigravity">⚡ Antigravity Cloud Bridge (Tanpa API Key)</option>
+                            <option value="openrouter">🌐 OpenRouter Cloud (Free Tier)</option>
+                            <option value="gemini">💎 Google Gemini (API Key Pribadi)</option>
+                            <option value="smart_preset">🛠️ Smart Fallback Lokal (Offline)</option>
+                        </select>
+                    </div>
+
+                    <!-- Banner Info / Panduan Provider -->
+                    <div id="gm-ai-provider-info-box" style="font-size:10px;color:#334155;background:#f1f5f9;border-left:3px solid #0078ff;padding:5px 8px;border-radius:3px;margin-bottom:7px;line-height:1.4;">
+                    </div>
+
+                    <!-- Input API Key -->
+                    <div id="gm-ai-key-input-row" style="margin-bottom:7px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                            <label id="gm-ai-key-label" style="font-size:10px;font-weight:700;color:#475569;">API KEY:</label>
+                            <span id="gm-ai-key-status" style="font-size:9.5px;color:#16a34a;font-weight:600;"></span>
+                        </div>
+                        <div style="display:flex;gap:4px;">
+                            <input type="password" id="gm-ai-api-key-input" class="gm-ai-field" placeholder="Masukkan API Key..." style="flex:1;padding:4px 7px;font-size:11px;background:#ffffff;">
+                            <button type="button" id="gm-ai-toggle-show-key-btn" class="gm-ai-btn-secondary" style="padding:0 7px;background:#ffffff;" title="Lihat/Sembunyikan"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Pilihan Model -->
+                    <div id="gm-ai-settings-model-row" style="margin-bottom:7px;">
+                        <label style="display:block;font-size:10px;font-weight:700;color:#475569;margin-bottom:3px;">PILIH MODEL:</label>
+                        <select id="gm-ai-settings-model-select" class="gm-ai-field" style="width:100%;font-size:11px;padding:4px 6px;background:#ffffff;">
+                        </select>
+                    </div>
+
+                    <!-- Tombol Aksi Settings -->
+                    <div style="display:flex;gap:5px;margin-top:7px;">
+                        <button type="button" id="gm-ai-test-conn-btn" class="gm-ai-btn-secondary" style="flex:1;font-size:10.5px;padding:5px 6px;" title="Cek respon server cloud">
+                            <i class="fas fa-plug"></i> <span>Tes Koneksi</span>
+                        </button>
+                        <button type="button" id="gm-ai-save-settings-btn" class="gm-ai-btn-primary" style="flex:1;font-size:10.5px;padding:5px 6px;">
+                            <i class="fas fa-floppy-disk"></i> <span>Simpan</span>
+                        </button>
+                    </div>
+
+                    <!-- Hasil Tes Koneksi -->
+                    <div id="gm-ai-test-result" style="display:none;margin-top:6px;font-size:10px;padding:5px 7px;border-radius:4px;line-height:1.35;"></div>
                 </div>
 
                 <!-- Preset Cepat -->
@@ -1749,17 +2327,36 @@
                     ${presetChipsHtml}
                 </div>
 
-                <!-- Prompt Field (Untuk Buat, Edit, Tambah Frame, maupun Hapus Komponen) -->
-                <textarea id="gm-ai-prompt-input" class="gm-ai-field" rows="2" placeholder="Ketik instruksi: buat komponen/page baru, edit, atau 'Hapus bagian...'..." style="resize:vertical;line-height:1.4;"></textarea>
+                <!-- Zona Upload Foto / Screenshot Referensi UI -->
+                <div class="gm-ai-upload-zone" id="gm-ai-upload-zone">
+                    <div class="gm-ai-upload-bar">
+                        <button type="button" class="gm-ai-upload-btn" id="gm-ai-upload-btn" title="Upload foto atau screenshot referensi UI (PNG, JPG, WEBP)">
+                            <i class="fa-solid fa-camera"></i> <span>Foto Referensi</span>
+                        </button>
+                        <input type="file" id="gm-ai-img-file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;">
+                        <span class="gm-ai-upload-hint"><i class="fa-solid fa-paste"></i> Paste Ctrl+V / Drop foto</span>
+                    </div>
+                    <div class="gm-ai-img-preview" id="gm-ai-img-preview" style="display:none;">
+                        <div class="gm-ai-preview-thumb-wrap">
+                            <img id="gm-ai-preview-img" src="" alt="Referensi UI">
+                            <div class="gm-ai-preview-info">
+                                <span id="gm-ai-preview-name" class="gm-ai-preview-name">ref.png</span>
+                                <span id="gm-ai-preview-size" class="gm-ai-preview-size">120 KB</span>
+                            </div>
+                            <button type="button" class="gm-ai-remove-img-btn" id="gm-ai-remove-img-btn" title="Hapus foto referensi">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                <!-- Model Gratis & Target -->
+                <!-- Prompt Field -->
+                <textarea id="gm-ai-prompt-input" class="gm-ai-field" rows="2" placeholder="Ketik instruksi: buat komponen/page baru, edit, ubah nama project, atau buat UI dari foto..." style="resize:vertical;line-height:1.4;"></textarea>
+
+                <!-- Model & Target -->
                 <div class="gm-ai-row">
-                    <select id="gm-ai-model-select" class="gm-ai-field" title="Pilih Model Gratis (Free Tier)">
-                        <option value="gemini-3.5-flash-lite">3.5 Flash-Lite (Gratis)</option>
-                        <option value="gemini-3.6-flash">3.6 Flash (Gratis)</option>
-                        <option value="gemini-3.1-flash-lite">3.1 Flash-Lite (Gratis)</option>
-                        <option value="gemini-2.5-flash-lite">2.5 Flash-Lite (Gratis)</option>
-                        <option value="local-free">Mode Lokal (Offline)</option>
+                    <select id="gm-ai-model-select" class="gm-ai-field" title="Pilih Model Aktif">
+                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Groq)</option>
                     </select>
                     <select id="gm-ai-target-mode" class="gm-ai-field" title="Target Injeksi">
                         <option value="core">Ke Frame Aktif</option>
@@ -1777,12 +2374,13 @@
                     <input type="text" id="gm-ai-comp-name" class="gm-ai-field" placeholder="Nama page/komponen" style="padding:4px 7px;font-size:11px;max-width:135px;">
                 </div>
 
-                <!-- Panel API Key (Tersembunyi secara default) -->
-                <div id="gm-ai-key-panel" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:5px;padding:7px;">
-                    <div style="display:flex;gap:5px;">
-                        <input type="password" id="gm-ai-api-key-input" class="gm-ai-field" placeholder="GEMINI_API_KEY..." style="padding:4px 7px;font-size:11px;">
-                        <button type="button" id="gm-ai-save-key-btn" class="gm-ai-btn-secondary" style="white-space:nowrap;">Simpan</button>
-                    </div>
+                <!-- Opsi Memori Konteks Proyek (Default: OFF / Mode Kilat) -->
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;background:#f8fafc;padding:5px 8px;border-radius:5px;border:1px solid #e2e8f0;margin-top:4px;">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#334155;cursor:pointer;user-select:none;margin:0;">
+                        <input type="checkbox" id="gm-ai-read-memory" style="accent-color:#0078ff;margin:0;">
+                        <span id="gm-ai-speed-indicator" style="font-weight:600;color:#0284c7;">⚡ Mode Kilat (Memori Off)</span>
+                    </label>
+                    <span style="font-size:9.5px;color:#64748b;cursor:help;" title="Mode Kilat (Default): Respons super cepat ~3-7s tanpa membaca memori proyek. Centang jika butuh AI membaca riwayat & seluruh halaman lain.">Bantuan <i class="fa-solid fa-circle-question"></i></span>
                 </div>
 
                 <!-- Status Ringkas -->
@@ -1798,9 +2396,92 @@
                     </button>
                 </div>
             </div>
-        `;
+        `;        document.body.appendChild(panel);
 
-        document.body.appendChild(panel);
+        // Setup listener Upload Foto Referensi & Clipboard Paste
+        let attachedReferenceImage = null;
+        const uploadBtn = document.getElementById("gm-ai-upload-btn");
+        const fileInput = document.getElementById("gm-ai-img-file");
+        const previewBox = document.getElementById("gm-ai-img-preview");
+        const previewImg = document.getElementById("gm-ai-preview-img");
+        const previewName = document.getElementById("gm-ai-preview-name");
+        const previewSize = document.getElementById("gm-ai-preview-size");
+        const removeImgBtn = document.getElementById("gm-ai-remove-img-btn");
+        const promptInputEl = document.getElementById("gm-ai-prompt-input");
+
+        const setAttachedImage = (imgData) => {
+            attachedReferenceImage = imgData;
+            previewImg.src = imgData.dataUrl;
+            previewName.textContent = imgData.name;
+            previewSize.textContent = imgData.sizeStr;
+            previewBox.style.display = "block";
+            showStatus(statusEl, "info", `📸 Foto referensi "${imgData.name}" siap digunakan.`);
+        };
+
+        if (uploadBtn && fileInput) {
+            uploadBtn.addEventListener("click", () => fileInput.click());
+            fileInput.addEventListener("change", () => {
+                const f = fileInput.files && fileInput.files[0];
+                if (f) {
+                    compressImageFile(f)
+                        .then(setAttachedImage)
+                        .catch(err => showStatus(statusEl, "error", err.message));
+                }
+            });
+        }
+
+        if (removeImgBtn) {
+            removeImgBtn.addEventListener("click", () => {
+                attachedReferenceImage = null;
+                previewBox.style.display = "none";
+                if (fileInput) fileInput.value = "";
+                previewImg.src = "";
+            });
+        }
+
+        // Paste clipboard support (Ctrl+V) langsung pada textarea prompt
+        if (promptInputEl) {
+            promptInputEl.addEventListener("paste", (e) => {
+                const items = (e.clipboardData || window.clipboardData)?.items;
+                if (!items) return;
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type && items[i].type.startsWith("image/")) {
+                        const blob = items[i].getAsFile();
+                        if (blob) {
+                            e.preventDefault();
+                            compressImageFile(blob)
+                                .then(res => {
+                                    res.name = "Pasted-Screenshot.png";
+                                    setAttachedImage(res);
+                                })
+                                .catch(err => showStatus(statusEl, "error", err.message));
+                            break;
+                        }
+                    }
+                }
+            });
+        }
+
+        // Drag & Drop support on floating panel
+        panel.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            panel.classList.add("gm-ai-drop-active");
+        });
+        panel.addEventListener("dragleave", (e) => {
+            if (!panel.contains(e.relatedTarget)) {
+                panel.classList.remove("gm-ai-drop-active");
+            }
+        });
+        panel.addEventListener("drop", (e) => {
+            e.preventDefault();
+            panel.classList.remove("gm-ai-drop-active");
+            const files = e.dataTransfer?.files;
+            if (files && files.length > 0 && files[0].type.startsWith("image/")) {
+                compressImageFile(files[0])
+                    .then(setAttachedImage)
+                    .catch(err => showStatus(statusEl, "error", err.message));
+            }
+        });
 
         // Pasang juga fitur AI Edit Object pada menu klik kanan (.gm-object-menu)
         setupRightClickAiObjectEditor();
@@ -1867,49 +2548,397 @@
             });
         });
 
-        // Toggle input API Key
-        const keyPanel = document.getElementById("gm-ai-key-panel");
-        document.getElementById("gm-ai-toggle-key-btn").addEventListener("click", () => {
-            keyPanel.style.display = keyPanel.style.display === "none" ? "block" : "none";
-        });
+        // Definisi Konfigurasi Lengkap Provider AI
+        const AI_PROVIDER_CONFIG = {
+            groq: {
+                name: "Groq Cloud",
+                badge: "Groq 70B",
+                badgeBg: "#fef3c7",
+                badgeColor: "#d97706",
+                info: "Dijalankan 100% di Cloud LPU Groq. Super cepat (~300 t/s) & 0% beban laptop. Dapatkan API Key gratis di <a href='https://console.groq.com/keys' target='_blank' style='color:#0078ff;text-decoration:underline;'>console.groq.com/keys</a> (tanpa kartu kredit).",
+                needsKey: true,
+                keyPlaceholder: "gsk_...",
+                models: [
+                    { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B (Rekomendasi Cerdas)" },
+                    { id: "deepseek-r1-distill-llama-70b", name: "DeepSeek-R1 Distill 70B" },
+                    { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B (Ultra Cepat)" }
+                ]
+            },
+            antigravity: {
+                name: "Antigravity Cloud Bridge",
+                badge: "Antigravity",
+                badgeBg: "#e0f2fe",
+                badgeColor: "#0284c7",
+                info: "Terhubung ke Antigravity IDE Agent di sistem ini. Menggunakan model Cloud tingkat tinggi tanpa perlu API key pribadi Anda & 0% beban laptop.",
+                needsKey: false,
+                keyPlaceholder: "",
+                models: [
+                    { id: "antigravity-cloud", name: "Antigravity Cloud Agent (Otomatis)" }
+                ]
+            },
+            openrouter: {
+                name: "OpenRouter Cloud",
+                badge: "OpenRouter",
+                badgeBg: "#f3e8ff",
+                badgeColor: "#7e22ce",
+                info: "Koleksi model cloud open-source gratis di <a href='https://openrouter.ai/keys' target='_blank' style='color:#0078ff;text-decoration:underline;'>openrouter.ai/keys</a>.",
+                needsKey: true,
+                keyPlaceholder: "sk-or-v1-...",
+                models: [
+                    { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B (Free Tier)" },
+                    { id: "deepseek/deepseek-r1:free", name: "DeepSeek R1 (Free Tier)" },
+                    { id: "google/gemini-2.0-flash-exp:free", name: "Gemini 2.0 Flash (Free Tier)" }
+                ]
+            },
+            gemini: {
+                name: "Google Gemini",
+                badge: "Gemini",
+                badgeBg: "#dbeafe",
+                badgeColor: "#1d4ed8",
+                info: "Menggunakan API Key Google AI Studio pribadi Anda.",
+                needsKey: true,
+                keyPlaceholder: "AIzaSy...",
+                models: [
+                    { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite (Gratis & Stabil)" },
+                    { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash (Standar)" },
+                    { id: "gemini-3.1-pro-preview", name: "Gemini 3.1 Pro (Deep Reasoning - Paid Tier)" },
+                    { id: "gemini-pro-latest", name: "Gemini Pro Latest (Paid Tier)" }
+                ]
+            },
+            smart_preset: {
+                name: "Smart Fallback Lokal",
+                badge: "Offline",
+                badgeBg: "#f1f5f9",
+                badgeColor: "#475569",
+                info: "Engine aturan & regex bawaan Greymist. 100% Offline tanpa koneksi internet & 0% beban CPU.",
+                needsKey: false,
+                keyPlaceholder: "",
+                models: [
+                    { id: "local-rule-engine", name: "Local Rule Engine (Offline)" }
+                ]
+            }
+        };
 
-        // Simpan API Key ke .env
-        document.getElementById("gm-ai-save-key-btn").addEventListener("click", () => {
-            const apiKey = document.getElementById("gm-ai-api-key-input").value.trim();
-            if (!apiKey) return;
+        let currentActiveProvider = "groq";
+        let currentActiveModel = "llama-3.3-70b-versatile";
+        let providerKeys = { groq: "", openrouter: "", gemini: "" };
+        let providerMasked = { groq: "", openrouter: "", gemini: "" };
 
-            fetch("index.php?action=ai_save_api_key", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ api_key: apiKey })
-            })
+        const settingsPanel = document.getElementById("gm-ai-settings-panel");
+        const toggleSettingsBtn = document.getElementById("gm-ai-toggle-settings-btn");
+        const closeSettingsBtn = document.getElementById("gm-ai-close-settings-btn");
+        const providerPill = document.getElementById("gm-ai-active-provider-pill");
+        const providerSelect = document.getElementById("gm-ai-provider-select");
+        const providerInfoBox = document.getElementById("gm-ai-provider-info-box");
+        const keyInputRow = document.getElementById("gm-ai-key-input-row");
+        const keyLabel = document.getElementById("gm-ai-key-label");
+        const keyStatus = document.getElementById("gm-ai-key-status");
+        const apiKeyInput = document.getElementById("gm-ai-api-key-input");
+        const toggleShowKeyBtn = document.getElementById("gm-ai-toggle-show-key-btn");
+        const settingsModelSelect = document.getElementById("gm-ai-settings-model-select");
+        const mainModelSelect = document.getElementById("gm-ai-model-select");
+        const testConnBtn = document.getElementById("gm-ai-test-conn-btn");
+        const saveSettingsBtn = document.getElementById("gm-ai-save-settings-btn");
+        const testResultBox = document.getElementById("gm-ai-test-result");
+
+        // Toggle Settings Panel
+        function toggleSettings() {
+            const isHidden = settingsPanel.style.display === "none";
+            settingsPanel.style.display = isHidden ? "block" : "none";
+            if (isHidden) {
+                testResultBox.style.display = "none";
+            }
+        }
+        if (toggleSettingsBtn) toggleSettingsBtn.addEventListener("click", toggleSettings);
+        if (providerPill) providerPill.addEventListener("click", toggleSettings);
+        if (closeSettingsBtn) closeSettingsBtn.addEventListener("click", () => { settingsPanel.style.display = "none"; });
+
+        // Toggle Intip Password
+        if (toggleShowKeyBtn) {
+            toggleShowKeyBtn.addEventListener("click", () => {
+                const isPass = apiKeyInput.type === "password";
+                apiKeyInput.type = isPass ? "text" : "password";
+                toggleShowKeyBtn.innerHTML = isPass ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+            });
+        }
+
+        // Render UI Berdasarkan Provider yang Dipilih
+        function renderProviderUi(providerId) {
+            const conf = AI_PROVIDER_CONFIG[providerId] || AI_PROVIDER_CONFIG.groq;
+            currentActiveProvider = providerId;
+
+            // Update Pill di Header
+            if (providerPill) {
+                providerPill.textContent = conf.badge;
+                providerPill.style.background = conf.badgeBg;
+                providerPill.style.color = conf.badgeColor;
+            }
+
+            // Update Info Banner
+            if (providerInfoBox) {
+                providerInfoBox.innerHTML = conf.info;
+            }
+
+            // Update Key Input Row
+            if (keyInputRow) {
+                if (conf.needsKey) {
+                    keyInputRow.style.display = "block";
+                    keyLabel.textContent = `API KEY (${conf.name.toUpperCase()}):`;
+                    apiKeyInput.placeholder = conf.keyPlaceholder || "Masukkan API Key...";
+                    const hasKey = !!providerKeys[providerId] || !!providerMasked[providerId];
+                    keyStatus.textContent = hasKey ? "✓ Tersimpan" : "Belum diisi";
+                    keyStatus.style.color = hasKey ? "#16a34a" : "#dc2626";
+                    apiKeyInput.value = providerKeys[providerId] || providerMasked[providerId] || "";
+                } else {
+                    keyInputRow.style.display = "none";
+                }
+            }
+
+            // Update Dropdown Model di Settings & Main Panel
+            function populateModels(selectEl) {
+                if (!selectEl) return;
+                selectEl.innerHTML = "";
+                conf.models.forEach(m => {
+                    const opt = document.createElement("option");
+                    opt.value = m.id;
+                    opt.textContent = m.name;
+                    selectEl.appendChild(opt);
+                });
+            }
+            populateModels(settingsModelSelect);
+            populateModels(mainModelSelect);
+
+            if (conf.models.length > 0) {
+                currentActiveModel = conf.models[0].id;
+                if (settingsModelSelect) settingsModelSelect.value = currentActiveModel;
+                if (mainModelSelect) mainModelSelect.value = currentActiveModel;
+            }
+        }
+
+        if (providerSelect) {
+            providerSelect.addEventListener("change", (e) => {
+                renderProviderUi(e.target.value);
+            });
+        }
+
+        if (settingsModelSelect) {
+            settingsModelSelect.addEventListener("change", (e) => {
+                currentActiveModel = e.target.value;
+                if (mainModelSelect) mainModelSelect.value = currentActiveModel;
+            });
+        }
+
+        if (mainModelSelect) {
+            mainModelSelect.addEventListener("change", (e) => {
+                currentActiveModel = e.target.value;
+                if (settingsModelSelect) settingsModelSelect.value = currentActiveModel;
+            });
+        }
+
+        // Ambil Pengaturan Provider dari Server
+        function loadProviderSettings() {
+            fetch("index.php?action=ai_get_provider_settings")
                 .then(r => r.json())
                 .then(res => {
-                    if (res.status === "OK") {
-                        showStatus(statusEl, "success", "✓ API Key disimpan ke .env");
-                        keyPanel.style.display = "none";
-                    } else {
-                        showStatus(statusEl, "error", res.msg || "Gagal menyimpan API Key.");
+                    if (res && res.status === "OK") {
+                        currentActiveProvider = res.provider || "groq";
+                        if (providerSelect) providerSelect.value = currentActiveProvider;
+
+                        providerMasked.groq = res.groq_key_masked || "";
+                        providerMasked.openrouter = res.openrouter_key_masked || "";
+                        providerMasked.gemini = res.gemini_key_masked || "";
+
+                        renderProviderUi(currentActiveProvider);
+
+                        // Set model tersimpan jika ada
+                        if (currentActiveProvider === "groq" && res.groq_model && settingsModelSelect) {
+                            settingsModelSelect.value = res.groq_model;
+                            if (mainModelSelect) mainModelSelect.value = res.groq_model;
+                            currentActiveModel = res.groq_model;
+                        } else if (currentActiveProvider === "gemini" && res.gemini_model && settingsModelSelect) {
+                            settingsModelSelect.value = res.gemini_model;
+                            if (mainModelSelect) mainModelSelect.value = res.gemini_model;
+                            currentActiveModel = res.gemini_model;
+                        }
                     }
+                })
+                .catch(() => {
+                    renderProviderUi("groq");
                 });
-        });
+        }
+        loadProviderSettings();
+
+        // Tes Koneksi Provider
+        if (testConnBtn) {
+            testConnBtn.addEventListener("click", () => {
+                const prov = providerSelect ? providerSelect.value : currentActiveProvider;
+                const keyVal = apiKeyInput ? apiKeyInput.value.trim() : "";
+                const modelVal = settingsModelSelect ? settingsModelSelect.value : "";
+
+                testResultBox.style.display = "block";
+                testResultBox.style.background = "#eff6ff";
+                testResultBox.style.color = "#1d4ed8";
+                testResultBox.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menghubungi server cloud ${prov}...`;
+                testConnBtn.disabled = true;
+
+                fetch("index.php?action=ai_test_provider_connection", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        provider: prov,
+                        api_key: keyVal,
+                        model: modelVal
+                    })
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        testConnBtn.disabled = false;
+                        if (res.status === "OK") {
+                            testResultBox.style.background = "#f0fdf4";
+                            testResultBox.style.color = "#15803d";
+                            testResultBox.style.border = "1px solid #bbf7d0";
+                            testResultBox.innerHTML = `<strong>✓ Terhubung!</strong> Latensi: <strong>${res.latency_ms} ms</strong>.<br>${res.msg}`;
+                            if (keyStatus) {
+                                keyStatus.textContent = "✓ Terverifikasi";
+                                keyStatus.style.color = "#16a34a";
+                            }
+                        } else {
+                            testResultBox.style.background = "#fef2f2";
+                            testResultBox.style.color = "#b91c1c";
+                            testResultBox.style.border = "1px solid #fecaca";
+                            testResultBox.innerHTML = `<strong>✗ Gagal:</strong> ${res.msg || "Koneksi ditolak."}`;
+                        }
+                    })
+                    .catch(() => {
+                        testConnBtn.disabled = false;
+                        testResultBox.style.background = "#fef2f2";
+                        testResultBox.style.color = "#b91c1c";
+                        testResultBox.innerHTML = "Gagal menghubungi endpoint pengujian.";
+                    });
+            });
+        }
+
+        // Simpan Pengaturan Provider ke .env
+        if (saveSettingsBtn) {
+            saveSettingsBtn.addEventListener("click", () => {
+                const prov = providerSelect ? providerSelect.value : currentActiveProvider;
+                const keyVal = apiKeyInput ? apiKeyInput.value.trim() : "";
+                const modelVal = settingsModelSelect ? settingsModelSelect.value : "";
+
+                const payload = {
+                    provider: prov,
+                };
+                if (prov === "groq") {
+                    if (keyVal && !keyVal.includes("••••")) payload.groq_api_key = keyVal;
+                    payload.groq_model = modelVal;
+                } else if (prov === "openrouter") {
+                    if (keyVal && !keyVal.includes("••••")) payload.openrouter_api_key = keyVal;
+                    payload.openrouter_model = modelVal;
+                } else if (prov === "gemini") {
+                    if (keyVal && !keyVal.includes("••••")) payload.gemini_api_key = keyVal;
+                    payload.gemini_model = modelVal;
+                }
+
+                saveSettingsBtn.disabled = true;
+                saveSettingsBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
+
+                fetch("index.php?action=ai_save_provider_settings", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                })
+                    .then(r => r.json())
+                    .then(res => {
+                        saveSettingsBtn.disabled = false;
+                        saveSettingsBtn.innerHTML = `<i class="fas fa-floppy-disk"></i> <span>Simpan</span>`;
+                        if (res.status === "OK") {
+                            currentActiveProvider = prov;
+                            if (keyVal && !keyVal.includes("••••")) {
+                                providerKeys[prov] = keyVal;
+                            }
+                            renderProviderUi(prov);
+                            showStatus(statusEl, "success", `✓ Provider AI disetel ke: ${AI_PROVIDER_CONFIG[prov]?.name || prov}`);
+                            setTimeout(() => {
+                                settingsPanel.style.display = "none";
+                            }, 1200);
+                        } else {
+                            showStatus(statusEl, "error", res.msg || "Gagal menyimpan pengaturan provider.");
+                        }
+                    })
+                    .catch(() => {
+                        saveSettingsBtn.disabled = false;
+                        saveSettingsBtn.innerHTML = `<i class="fas fa-floppy-disk"></i> <span>Simpan</span>`;
+                        showStatus(statusEl, "error", "Gagal menghubungi server untuk menyimpan.");
+                    });
+            });
+        }
 
         // Sync dari Antigravity DB
         document.getElementById("gm-ai-sync-antigravity-btn").addEventListener("click", () => {
             syncFromAntigravityDB(statusEl);
         });
 
-        // Jalankan AI dengan Memori Proyek & Tanpa Pembatasan
+        // Setup Mode Kilat vs Memori Konteks Proyek (Default: OFF / Mode Kilat)
+        const readMemoryCheckbox = document.getElementById("gm-ai-read-memory");
+        const speedIndicator = document.getElementById("gm-ai-speed-indicator");
+        const memoryBadge = document.getElementById("gm-ai-memory-badge");
+
+        function updateSpeedModeUI() {
+            const isChecked = readMemoryCheckbox ? readMemoryCheckbox.checked : false;
+            if (speedIndicator) {
+                if (isChecked) {
+                    speedIndicator.innerHTML = `🧠 Mode Konteks Penuh (Memori On)`;
+                    speedIndicator.style.color = "#7c3aed";
+                } else {
+                    speedIndicator.innerHTML = `⚡ Mode Kilat (Memori Off)`;
+                    speedIndicator.style.color = "#0284c7";
+                }
+            }
+            if (memoryBadge) {
+                if (isChecked) {
+                    memoryBadge.innerHTML = `🧠 Memori AI Aktif`;
+                    memoryBadge.style.background = "#ede9fe";
+                    memoryBadge.style.color = "#7c3aed";
+                    memoryBadge.style.borderColor = "#c4b5fd";
+                    memoryBadge.title = "Mode Konteks Penuh aktif: AI membaca riwayat dan seluruh frame proyek (Klik untuk mematikan / Mode Kilat)";
+                } else {
+                    memoryBadge.innerHTML = `⚡ Mode Kilat (Memori Off)`;
+                    memoryBadge.style.background = "#f0f9ff";
+                    memoryBadge.style.color = "#0284c7";
+                    memoryBadge.style.borderColor = "#bae6fd";
+                    memoryBadge.title = "Mode Kilat aktif: AI merespons cepat tanpa membaca memori proyek (Klik untuk mengaktifkan Memori Konteks)";
+                }
+            }
+        }
+
+        if (readMemoryCheckbox) {
+            readMemoryCheckbox.addEventListener("change", updateSpeedModeUI);
+        }
+        if (memoryBadge) {
+            memoryBadge.addEventListener("click", () => {
+                if (readMemoryCheckbox) {
+                    readMemoryCheckbox.checked = !readMemoryCheckbox.checked;
+                    updateSpeedModeUI();
+                }
+            });
+        }
+        updateSpeedModeUI();
+
+        // Jalankan AI dengan Memori Proyek & Tanpa Pembatasan        // Jalankan AI dengan Memori Proyek & Tanpa Pembatasan
         const generateBtn = document.getElementById("gm-ai-generate-btn");
         generateBtn.addEventListener("click", () => {
-            const prompt = document.getElementById("gm-ai-prompt-input").value.trim();
+            let prompt = document.getElementById("gm-ai-prompt-input").value.trim();
             const selectedModel = document.getElementById("gm-ai-model-select").value;
             const targetMode = document.getElementById("gm-ai-target-mode").value;
             const compName = document.getElementById("gm-ai-comp-name").value.trim() || "AI Component";
             const saveToLibrary = document.getElementById("gm-ai-save-library").checked;
 
+            if (!prompt && attachedReferenceImage) {
+                prompt = "Buat tampilan antarmuka (UI) website modern yang meniru tata letak (layout), hierarki visual, dan komponen dari foto referensi ini menggunakan komponen .gm-object Greymist.";
+            }
+
             if (!prompt) {
-                showStatus(statusEl, "error", "Isi instruksi pada kolom prompt terlebih dahulu.");
+                showStatus(statusEl, "error", "Isi instruksi pada kolom prompt atau upload foto referensi terlebih dahulu.");
                 return;
             }
 
@@ -1918,22 +2947,17 @@
             let selectedObj = getSelectedObject();
             let effectiveTargetMode = targetMode;
 
-            // Deteksi apakah pengguna meminta modifikasi atribut/style pada komponen yang sudah ada
-            const isAttributeEditPrompt = /\b(ubah|ganti|rubah|font|warna|color|background|bg|ukuran|size|teks|tulisan|radius|rounded|padding|margin|shadow|jadikan)\b/i.test(prompt);
+            // Deteksi apakah pengguna meminta modifikasi atribut/style/animasi pada komponen yang sudah ada
+            const isAttributeEditPrompt = /\b(ubah|ganti|rubah|font|warna|color|background|bg|ukuran|size|teks|tulisan|radius|rounded|padding|margin|shadow|jadikan|animasi|anim|animasikan|fade|slide|zoom|bounce|loop|durasi|delay)\b/i.test(prompt);
 
-            // Jika belum ada elemen aktif yang dipilih, tetapi prompt merujuk ke elemen tertentu di frame (misal navbar, header, footer, tombol, judul)
-            if (!selectedObj && activeCore && isAttributeEditPrompt) {
-                if (/\b(navbar|header|nav)\b/i.test(prompt)) {
-                    selectedObj = activeCore.querySelector("header, nav, [class*='nav']");
-                } else if (/\b(footer|kaki)\b/i.test(prompt)) {
-                    selectedObj = activeCore.querySelector("footer");
-                } else if (/\b(tombol|button|cta)\b/i.test(prompt)) {
-                    selectedObj = activeCore.querySelector("button");
-                } else if (/\b(judul|heading|title|h1)\b/i.test(prompt)) {
-                    selectedObj = activeCore.querySelector("h1, h2, h3");
-                }
-                if (selectedObj) {
-                    document.querySelectorAll(".gm-object.gm-active").forEach(el => el.classList.remove("gm-active"));
+            // Resolusi cerdas elemen target spesifik (misal card ke-2, tombol, heading) agar animasi TIDAK lari ke root section/frame
+            if (activeCore && isAttributeEditPrompt) {
+                const specificTarget = resolveSpecificTargetElement(activeCore, selectedObj, prompt);
+                if (specificTarget) {
+                    selectedObj = specificTarget;
+                    document.querySelectorAll(".gm-object.gm-active").forEach(el => {
+                        if (el !== selectedObj) el.classList.remove("gm-active");
+                    });
                     selectedObj.classList.add("gm-active");
                     if (typeof window.GMObjectHandler !== "undefined" && typeof window.GMObjectHandler.attachTo === "function") {
                         window.GMObjectHandler.attachTo(selectedObj);
@@ -1941,7 +2965,7 @@
                 }
             }
 
-            if (selectedObj && isAttributeEditPrompt && effectiveTargetMode === "core") {
+            if (selectedObj && (isAttributeEditPrompt || effectiveTargetMode === "selected" || effectiveTargetMode === "edit_selected")) {
                 effectiveTargetMode = "edit_selected";
             }
 
@@ -1956,16 +2980,26 @@
                     fontFamily: computed.fontFamily,
                     fontSize: computed.fontSize,
                     padding: computed.padding,
-                    borderRadius: computed.borderRadius
+                    borderRadius: computed.borderRadius,
+                    anim: selectedObj.dataset.gmAnim || "",
+                    animDur: selectedObj.dataset.gmAnimDur || "",
+                    animDel: selectedObj.dataset.gmAnimDel || "",
+                    animLoop: selectedObj.dataset.gmAnimLoop || ""
                 };
             }
 
+            const readMemoryEl = document.getElementById("gm-ai-read-memory");
+            const readMemory = readMemoryEl ? readMemoryEl.checked : false;
             const projectId = getCurrentProjectId();
-            const framesSnapshot = collectAllFramesSnapshot();
+            const framesSnapshot = readMemory ? collectAllFramesSnapshot() : [];
 
             generateBtn.disabled = true;
             generateBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Proses...</span>`;
-            showStatus(statusEl, "info", "AI membaca memori proyek & memproses instruksi...");
+            if (readMemory) {
+                showStatus(statusEl, "info", "🧠 AI membaca memori proyek & memproses konteks...");
+            } else {
+                showStatus(statusEl, "info", "⚡ AI memproses instruksi (Mode Kilat)...");
+            }
 
             fetch("api/ai_generate.php", {
                 method: "POST",
@@ -1974,14 +3008,20 @@
                     project_id: projectId,
                     active_frame_id: getActiveFrameId(),
                     prompt: prompt,
+                    provider: currentActiveProvider,
                     model: selectedModel,
                     target_mode: effectiveTargetMode,
                     component_name: compName,
+                    read_memory: readMemory,
                     save_to_library: saveToLibrary,
                     current_frame_html: currentFrameHtml,
                     selected_object_html: selectedObjectHtml,
                     selected_object_attrs: selectedAttrs,
-                    frames_snapshot: framesSnapshot
+                    frames_snapshot: framesSnapshot,
+                    reference_image: attachedReferenceImage ? {
+                        data: attachedReferenceImage.data,
+                        mime_type: attachedReferenceImage.mime_type
+                    } : null
                 })
             })
                 .then(r => r.json())
@@ -2030,7 +3070,30 @@
                         }
                     }
 
+                    // 0d. Update project name di DOM Workspace jika ada permintaan ganti nama proyek
+                    if (res.renamed_project && res.renamed_project.new_name) {
+                        const projNameEl = document.getElementById("gm-project-name") || document.querySelector(".gm-project-name");
+                        if (projNameEl) {
+                            projNameEl.textContent = res.renamed_project.new_name;
+                            projNameEl.style.transition = "color 0.4s ease, transform 0.2s ease";
+                            projNameEl.style.color = "#0078ff";
+                            setTimeout(() => { projNameEl.style.color = ""; }, 2500);
+                        }
+                        if (window.GREYMIST && window.GREYMIST.project) {
+                            window.GREYMIST.project.project_name = res.renamed_project.new_name;
+                        }
+                    }
+
                     const op = res.operation || "append";
+
+                    // Penanganan operasi ganti nama proyek saja
+                    if (op === "rename_project") {
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                        showStatus(statusEl, "success", `✓ ${res.summary || res.msg || "Nama proyek berhasil diubah."}`);
+                        syncProjectAiMemory();
+                        return;
+                    }
 
                     // Penanganan operasi penambahan breakpoint saja
                     if (op === "add_breakpoints") {

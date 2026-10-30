@@ -56,9 +56,12 @@ $action_whitelist = [
     'delete_component'       => 'component_action.php',
 
     // Gemini AI Workspace Plugin Actions
-    'ai_generate_component'  => 'ai_action.php',
-    'ai_save_api_key'        => 'ai_action.php',
-    'ai_get_memory'          => 'ai_action.php',
+    'ai_generate_component'      => 'ai_action.php',
+    'ai_save_api_key'            => 'ai_action.php',
+    'ai_get_memory'              => 'ai_action.php',
+    'ai_get_provider_settings'   => 'ai_action.php',
+    'ai_save_provider_settings'  => 'ai_action.php',
+    'ai_test_provider_connection'=> 'ai_action.php',
 
     // Asset Actions
     'get_images'             => 'asset_action.php',

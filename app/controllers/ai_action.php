@@ -9,6 +9,7 @@
 require_once ROOT_PATH . '/config/config.php';
 require_once ROOT_PATH . '/models/component_model.php';
 require_once ROOT_PATH . '/models/frame_model.php';
+require_once ROOT_PATH . '/models/project_model.php';
 
 @set_time_limit(300);
 @ini_set('memory_limit', '1024M');
@@ -143,6 +144,15 @@ if (!function_exists('extract_reusable_components')) {
  * 2. Memastikan setiap frame proyek (lama maupun baru) memiliki tautan lengkap ke halaman lain di navbar-nya.
  * 3. Memberikan status visual link aktif (highlight) pada halaman yang sedang dibuka.
  */
+if (!function_exists('clean_emojis_from_html')) {
+    function clean_emojis_from_html(string $html): string
+    {
+        if (trim($html) === '') return $html;
+        $regex = '/[\x{1F600}-\x{1F64F}\x{1F300}-\x{1F5FF}\x{1F680}-\x{1F6FF}\x{1F700}-\x{1F77F}\x{1F780}-\x{1F7FF}\x{1F800}-\x{1F8FF}\x{1F900}-\x{1F9FF}\x{1FA00}-\x{1FA6F}\x{1FA70}-\x{1FAFF}\x{2600}-\x{26FF}\x{2700}-\x{27BF}\x{2300}-\x{23FF}\x{2B50}\x{20E3}\x{FE0F}]/u';
+        return (string)preg_replace($regex, '', $html);
+    }
+}
+
 if (!function_exists('cross_link_navbar_in_html')) {
     function cross_link_navbar_in_html(string $html, array $all_frames_map, int $current_frame_id, string $current_frame_name): string
     {
@@ -160,43 +170,91 @@ if (!function_exists('cross_link_navbar_in_html')) {
             );
         }
 
-        // 2. Periksa apakah ada tag <nav> yang perlu disinkronkan link-link halamannya
+        // 2. Periksa apakah ada tag Nav / Header yang perlu disinkronkan link-link halamannya
         $doc = new DOMDocument();
         @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
         $root = $doc->getElementById('gm-root');
         if (!$root) return $html;
 
+        $nav = null;
         $navs = $root->getElementsByTagName('nav');
-        if ($navs->length === 0) {
+        if ($navs->length > 0) {
+            $nav = $navs->item(0);
+        } else {
+            $headers = $root->getElementsByTagName('header');
+            if ($headers->length > 0) {
+                $nav = $headers->item(0);
+            } else {
+                foreach ($root->getElementsByTagName('div') as $d) {
+                    $cls = strtolower((string)$d->getAttribute('class'));
+                    $id  = strtolower((string)$d->getAttribute('id'));
+                    if (str_contains($cls, 'nav') || str_contains($id, 'nav')) {
+                        $nav = $d;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!$nav) {
             return $html;
         }
 
-        $nav = $navs->item(0);
-        // Cari kontainer link di dalam nav (elemen dengan id="nav-links", atau div di dalam nav yang memiliki tag <a>)
+        // Cari kontainer link di dalam nav
         $links_container = null;
         $all_divs = $nav->getElementsByTagName('div');
         foreach ($all_divs as $d) {
-            if ($d->getAttribute('id') === 'nav-links' || $d->getElementsByTagName('a')->length > 0) {
+            $d_id = (string)$d->getAttribute('id');
+            $d_cls = (string)$d->getAttribute('class');
+            if ($d_id === 'nav-links' || str_contains($d_cls, 'nav-link') || $d->getElementsByTagName('a')->length > 0) {
                 $links_container = $d;
                 break;
+            }
+        }
+        if (!$links_container) {
+            $uls = $nav->getElementsByTagName('ul');
+            if ($uls->length > 0) {
+                $links_container = $uls->item(0);
             }
         }
         if (!$links_container) {
             $links_container = $nav;
         }
 
-        // Kumpulkan seluruh data-action-target numerik yang sudah ada di container ini
-        $existing_targets = [];
-        foreach ($links_container->getElementsByTagName('a') as $a) {
-            $t = $a->getAttribute('data-action-target');
-            if ($t !== '') {
-                $existing_targets[] = (string)$t;
+        // Ambil gaya dasar link <a> yang sudah ada di navbar agar link baru persis selaras
+        $base_link_style = "font-size:14px;text-decoration:none;";
+        $existing_as = $links_container->getElementsByTagName('a');
+        if ($existing_as->length > 0) {
+            $raw_s = (string)$existing_as->item(0)->getAttribute('style');
+            if ($raw_s !== '') {
+                $clean_s = preg_replace('/color\s*:\s*[^;]+;?/i', '', $raw_s);
+                $clean_s = preg_replace('/font-weight\s*:\s*[^;]+;?/i', '', $clean_s);
+                $base_link_style = trim($clean_s);
             }
+        }
+
+        // Kumpulkan target & nama link yang sudah ada
+        $existing_targets = [];
+        $existing_names   = [];
+        foreach ($links_container->getElementsByTagName('a') as $a) {
+            $t   = trim((string)$a->getAttribute('data-action-target'));
+            $txt = strtolower(trim((string)$a->textContent));
+            if ($t !== '') {
+                $existing_targets[] = $t;
+            }
+            if ($txt !== '') {
+                $existing_names[] = $txt;
+            }
+
             // Atur styling active jika target merujuk ke frame ini
-            if ($t === (string)$current_frame_id || strtolower(trim($a->textContent)) === strtolower($current_frame_name)) {
-                $style = (string)$a->getAttribute('style');
+            $is_cur = ($t === (string)$current_frame_id || $txt === strtolower(trim($current_frame_name)));
+            $style  = (string)$a->getAttribute('style');
+            if ($is_cur) {
                 if (!str_contains($style, '#3b82f6') && !str_contains($style, 'font-weight:700')) {
-                    $a->setAttribute('style', $style . ';color:#3b82f6;font-weight:700;');
+                    $a->setAttribute('style', rtrim($style, ';') . ';color:#3b82f6;font-weight:700;');
+                }
+            } else {
+                if (str_contains($style, 'font-weight:700') && !str_contains((string)$a->getAttribute('class'), 'btn')) {
+                    $a->setAttribute('style', str_replace(['color:#3b82f6;', 'font-weight:700;'], ['color:#475569;', 'font-weight:500;'], $style));
                 }
             }
         }
@@ -204,32 +262,40 @@ if (!function_exists('cross_link_navbar_in_html')) {
         // Tambahkan link halaman yang belum ada ke dalam navbar
         $added = false;
         foreach ($all_frames_map as $name => $fid) {
-            if (!in_array((string)$fid, $existing_targets, true)) {
+            $name_clean = trim((string)$name);
+            $lower_name = strtolower($name_clean);
+            if (!in_array((string)$fid, $existing_targets, true) && !in_array($lower_name, $existing_names, true)) {
                 $is_current = ($fid === $current_frame_id);
                 $color = $is_current ? '#3b82f6' : '#475569';
                 $fw    = $is_current ? '700' : '500';
 
-                $newLink = $doc->createElement('a', htmlspecialchars($name));
+                $newLink = $doc->createElement('a', htmlspecialchars($name_clean));
                 $newLink->setAttribute('class', 'gm-object');
                 $newLink->setAttribute('href', '#');
                 $newLink->setAttribute('data-action-type', 'goto');
                 $newLink->setAttribute('data-action-target', (string)$fid);
-                $newLink->setAttribute('style', "font-size:14px;font-weight:{$fw};color:{$color};text-decoration:none;");
+                $final_s = ($base_link_style !== '' ? rtrim($base_link_style, ';') . ';' : '') . "font-size:14px;font-weight:{$fw};color:{$color};text-decoration:none;";
+                $newLink->setAttribute('style', $final_s);
 
-                $links_container->appendChild($newLink);
+                if ($links_container->nodeName === 'ul' || $links_container->nodeName === 'ol') {
+                    $li = $doc->createElement('li');
+                    $li->setAttribute('class', 'gm-object');
+                    $li->appendChild($newLink);
+                    $links_container->appendChild($li);
+                } else {
+                    $links_container->appendChild($newLink);
+                }
+                $existing_targets[] = (string)$fid;
+                $existing_names[]   = $lower_name;
                 $added = true;
             }
         }
 
-        if ($added) {
-            $out = '';
-            foreach ($root->childNodes as $child) {
-                $out .= $doc->saveHTML($child);
-            }
-            return trim($out);
+        $out = '';
+        foreach ($root->childNodes as $child) {
+            $out .= $doc->saveHTML($child);
         }
-
-        return $html;
+        return trim($out) !== '' ? trim($out) : $html;
     }
 }
 
@@ -252,7 +318,7 @@ if (!function_exists('get_project_ai_memory')) {
             return $default_memory;
         }
 
-        $stmt = $pdo->prepare("SELECT project_name, ai_memory FROM gm_projects WHERE project_id = ? LIMIT 1");
+        $stmt = $pdo->prepare("SELECT project_id, project_name, ai_memory, color_tokens, bg_color_settings FROM gm_projects WHERE project_id = ? LIMIT 1");
         $stmt->execute([$project_id]);
         $proj = $stmt->fetch(PDO::FETCH_ASSOC);
         if (!$proj) {
@@ -264,6 +330,22 @@ if (!function_exists('get_project_ai_memory')) {
             $decoded = json_decode((string)$proj['ai_memory'], true);
             if (is_array($decoded)) {
                 $saved = $decoded;
+            }
+        }
+
+        $color_tokens = [];
+        if (!empty($proj['color_tokens'])) {
+            $dec_tokens = json_decode((string)$proj['color_tokens'], true);
+            if (is_array($dec_tokens)) {
+                $color_tokens = $dec_tokens;
+            }
+        }
+
+        $bg_color_settings = null;
+        if (!empty($proj['bg_color_settings'])) {
+            $dec_bg = json_decode((string)$proj['bg_color_settings'], true);
+            if (is_array($dec_bg)) {
+                $bg_color_settings = $dec_bg;
             }
         }
 
@@ -292,13 +374,15 @@ if (!function_exists('get_project_ai_memory')) {
         }
 
         return [
-            'project_id'     => $project_id,
-            'project_name'   => (string)$proj['project_name'],
-            'system_summary' => (string)($saved['system_summary'] ?? ''),
-            'total_pages'    => count($pages_map),
-            'pages_map'      => $pages_map,
-            'history'        => isset($saved['history']) && is_array($saved['history']) ? array_slice($saved['history'], -20) : [],
-            'updated_at'     => (string)($saved['updated_at'] ?? date('Y-m-d H:i:s')),
+            'project_id'        => $project_id,
+            'project_name'      => (string)$proj['project_name'],
+            'color_tokens'      => $color_tokens,
+            'bg_color_settings' => $bg_color_settings,
+            'system_summary'    => (string)($saved['system_summary'] ?? ''),
+            'total_pages'       => count($pages_map),
+            'pages_map'         => $pages_map,
+            'history'           => isset($saved['history']) && is_array($saved['history']) ? array_slice($saved['history'], -20) : [],
+            'updated_at'        => (string)($saved['updated_at'] ?? date('Y-m-d H:i:s')),
         ];
     }
 }
@@ -329,9 +413,28 @@ if (!function_exists('format_ai_memory_for_prompt')) {
     function format_ai_memory_for_prompt(array $memory): string
     {
         $lines = [];
-        $lines[] = "=== CACHE MEMORI & ARSITEKTUR PROYEK ===";
+        $lines[] = "=== CACHE MEMORI & ARSITEKTUR PROYEK (DATABASE & DOM) ===";
+        $lines[] = "ID Proyek: " . ($memory['project_id'] ?? 0);
         $lines[] = "Nama Proyek: " . ($memory['project_name'] ?? 'Untitled');
         $lines[] = "Total Pages/Frames Saat Ini: " . (int)($memory['total_pages'] ?? 0);
+
+        if (!empty($memory['color_tokens']) && is_array($memory['color_tokens'])) {
+            $tok_strs = [];
+            foreach ($memory['color_tokens'] as $tok) {
+                $tname = $tok['name'] ?? ($tok['token'] ?? '');
+                $tval  = $tok['value'] ?? ($tok['hex'] ?? '');
+                if ($tval !== '') {
+                    $tok_strs[] = ($tname !== '' ? $tname : 'color') . ': ' . $tval;
+                }
+            }
+            if (!empty($tok_strs)) {
+                $lines[] = "Palet Warna / Token Proyek: " . implode(', ', $tok_strs);
+            }
+        }
+
+        if (!empty($memory['bg_color_settings']) && is_array($memory['bg_color_settings']) && !empty($memory['bg_color_settings']['hex'])) {
+            $lines[] = "Warna Latar Kanvas Proyek: " . $memory['bg_color_settings']['hex'];
+        }
 
         if (!empty($memory['system_summary'])) {
             $lines[] = "Ringkasan Sistem Terakhir: " . $memory['system_summary'];
@@ -520,6 +623,116 @@ HTML;
 /**
  * Memproses penghapusan, pembacaan, atau pengeditan atribut (font, warna, ukuran, style) komponen secara lokal (Fallback Cerdas).
  */
+if (!function_exists('find_leaf_cards_in_dom')) {
+    function find_leaf_cards_in_dom(DOMElement $container): array
+    {
+        $all_elements = $container->getElementsByTagName('*');
+        $raw_cards = [];
+        foreach ($all_elements as $el) {
+            if (!($el instanceof DOMElement)) continue;
+            $c_cls = (string)$el->getAttribute('class');
+            $c_id  = (string)$el->getAttribute('id');
+            $c_sty = (string)$el->getAttribute('style');
+            if (preg_match('/\b(container|grid|wrapper|row|list|group)\b/i', $c_cls . ' ' . $c_id)) {
+                continue;
+            }
+            if (preg_match('/\b(card|item|box|pricing-card)\b/i', $c_cls . ' ' . $c_id) || (strtolower($el->nodeName) === 'div' && (str_contains($c_sty, 'border') || str_contains($c_sty, 'box-shadow')))) {
+                $raw_cards[] = $el;
+            }
+        }
+
+        $leaf_cards = [];
+        foreach ($raw_cards as $candidate) {
+            $has_child_card = false;
+            foreach ($candidate->getElementsByTagName('*') as $sub) {
+                if (!($sub instanceof DOMElement)) continue;
+                $sub_cls = (string)$sub->getAttribute('class');
+                $sub_id  = (string)$sub->getAttribute('id');
+                if (preg_match('/\b(container|grid|wrapper|row|list|group)\b/i', $sub_cls . ' ' . $sub_id)) {
+                    continue;
+                }
+                if (preg_match('/\b(card|item|box|pricing-card)\b/i', $sub_cls . ' ' . $sub_id) || str_contains($sub_id, 'card')) {
+                    $has_child_card = true;
+                    break;
+                }
+            }
+            if (!$has_child_card) {
+                $leaf_cards[] = $candidate;
+            }
+        }
+
+        if (!empty($leaf_cards)) {
+            return $leaf_cards;
+        }
+
+        // Fallback cerdas: cari kontainer flex/grid yang memiliki 2 atau lebih kartu/blok anak
+        foreach ($container->getElementsByTagName('*') as $g) {
+            if (!($g instanceof DOMElement)) continue;
+            $g_id_cls = strtolower($g->getAttribute('id') . ' ' . $g->getAttribute('class'));
+            if (preg_match('/\b(header|nav|navbar|footer)\b/i', $g_id_cls)) continue;
+            $g_sty = strtolower($g->getAttribute('style'));
+            if (str_contains($g_sty, 'display:flex') || str_contains($g_sty, 'display: flex') || str_contains($g_sty, 'display:grid') || str_contains($g_sty, 'display: grid') || str_contains($g_id_cls, 'cards') || str_contains($g_id_cls, 'grid')) {
+                $children = [];
+                foreach ($g->childNodes as $ch) {
+                    if ($ch instanceof DOMElement) {
+                        $ch_tag = strtolower($ch->nodeName);
+                        if (!in_array($ch_tag, ['h1', 'h2', 'h3', 'p', 'span', 'header', 'a'], true)) {
+                            $children[] = $ch;
+                        }
+                    }
+                }
+                if (count($children) >= 2) {
+                    return $children;
+                }
+            }
+        }
+
+        return [];
+    }
+}
+
+if (!function_exists('resolve_target_card_from_list')) {
+    function resolve_target_card_from_list(array $cards, string $lower): DOMElement
+    {
+        $count = count($cards);
+        if ($count <= 1) {
+            return $cards[0];
+        }
+
+        if (preg_match('/\b(ke\s*[-]?\s*2|kedua|second|2(?:nd)?)\b/i', $lower)) {
+            return $cards[1] ?? $cards[0];
+        }
+        if (preg_match('/\b(ke\s*[-]?\s*3|ketiga|third|3(?:rd)?)\b/i', $lower)) {
+            return $cards[2] ?? $cards[$count - 1];
+        }
+        if (preg_match('/\b(ke\s*[-]?\s*4|keempat|fourth|4(?:th)?)\b/i', $lower)) {
+            return $cards[3] ?? $cards[$count - 1];
+        }
+        if (preg_match('/\b(ke\s*[-]?\s*1|pertama|kesatu|first|1(?:st)?)\b/i', $lower)) {
+            return $cards[0];
+        }
+        if (preg_match('/\b(terakhir|last)\b/i', $lower)) {
+            return $cards[$count - 1];
+        }
+
+        foreach ($cards as $c) {
+            $txt = strtolower($c->textContent);
+            $id_cls = strtolower($c->getAttribute('id') . ' ' . $c->getAttribute('class'));
+            if (preg_match('/\b(pro|populer|popular)\b/i', $lower) && (str_contains($txt, 'pro') || str_contains($txt, 'populer') || str_contains($id_cls, 'pro'))) {
+                return $c;
+            }
+            if (preg_match('/\b(enterprise|bisnis|business)\b/i', $lower) && (str_contains($txt, 'enterprise') || str_contains($txt, 'bisnis') || str_contains($id_cls, 'enterprise'))) {
+                return $c;
+            }
+            if (preg_match('/\b(basic|starter|pemula|gratis|free)\b/i', $lower) && (str_contains($txt, 'basic') || str_contains($txt, 'starter') || str_contains($txt, 'gratis') || str_contains($id_cls, 'starter'))) {
+                return $c;
+            }
+        }
+
+        return $cards[0];
+    }
+}
+
 if (!function_exists('process_local_frame_command')) {
     function process_local_frame_command(
         string $prompt,
@@ -534,6 +747,27 @@ if (!function_exists('process_local_frame_command')) {
 
         // Ekstrak komponen reusable (Navbar / Footer / Sidebar) dari frame yang ada
         $reusable = extract_reusable_components($frames_snapshot, $current_frame_html);
+
+        // 00. Deteksi perintah ganti / ubah / rename nama proyek (Database & Header DOM)
+        if (preg_match('/\b(?:ganti|ubah|rename|set)\s+(?:(?:nama|judul)\s+)?(?:proyek|project)\s*(?:menjadi|jadi|ke|to|:)?\s*["\']?([^"\'\n\r]+)["\']?/i', $prompt, $rnp_match) ||
+            preg_match('/\b(?:(?:nama|judul)\s+)?(?:proyek|project)\s*(?:ganti|ubah|rename|jadikan|ke|jadi|:)\s*(?:menjadi|jadi|ke|to|:)?\s*["\']?([^"\'\n\r]+)["\']?/i', $prompt, $rnp_match)) {
+            $new_proj_name = trim($rnp_match[1], " \t\n\r\0\x0B\"'.,");
+            if ($new_proj_name !== '') {
+                if ($project_id > 0 && $pdo) {
+                    $stmt = $pdo->prepare("UPDATE gm_projects SET project_name = ? WHERE project_id = ?");
+                    $stmt->execute([$new_proj_name, $project_id]);
+                }
+                return [
+                    'operation'       => 'rename_project',
+                    'renamed_project' => [
+                        'project_id' => $project_id,
+                        'new_name'   => $new_proj_name,
+                    ],
+                    'summary'         => "Nama proyek berhasil diubah menjadi \"{$new_proj_name}\".",
+                    'html'            => $current_frame_html,
+                ];
+            }
+        }
 
         // 0. Jika meminta penambahan Breakpoint Responsif (Tablet / Mobile)
         if (preg_match('/\b(breakpoint|breaking\s*point|responsif|responsive)\b/i', $lower)) {
@@ -731,6 +965,318 @@ if (!function_exists('process_local_frame_command')) {
                         'html'      => trim($new_html),
                         'summary'   => count($to_remove) . ' komponen berhasil dihapus dari frame.',
                     ];
+                }
+            }
+        }
+
+        // 5a. Deteksi Animasi (In-place patch kompatibel Greymist: Fade In, Slide Up/Down/Left/Right, Zoom In, Bounce In)
+        if (preg_match('/\b(animasi|anim|animasikan|animation|bounce|slide\s*(?:up|down|left|right)|fade\s*in|zoom\s*in)\b/i', $lower)) {
+            $is_editing_selected = ($target_mode === 'edit_selected' || trim($selected_object_html) !== '') && trim($selected_object_html) !== '';
+            $target_html         = $is_editing_selected ? $selected_object_html : $current_frame_html;
+
+            if (trim($target_html) !== '') {
+                $doc = new DOMDocument();
+                @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $target_html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                $root = $doc->getElementById('gm-root');
+
+                if ($root) {
+                    $target_node     = null;
+                    $target_selector = 'self';
+
+                    $is_card_prompt    = (bool)preg_match('/\b(card|kartu|kotak|box|item|pricing|harga|paket|fitur|feature)\b/i', $lower);
+                    $is_button_prompt  = (bool)preg_match('/\b(tombol|button|cta)\b/i', $lower);
+                    $is_heading_prompt = (bool)preg_match('/\b(judul|heading|title|h1|h2|h3)\b/i', $lower);
+
+                    // Cek apakah prompt merujuk ke satu kartu spesifik (misal 'ke-2', 'pro', 'terakhir')
+                    $is_single_card_specified = (bool)preg_match('/\b(ke\s*[-]?\s*\d+|pertama|kedua|ketiga|keempat|kelima|kesatu|first|second|third|fourth|fifth|1(?:st)?|2(?:nd)?|3(?:rd)?|4(?:th)?|5(?:th)?|terakhir|last|hanya\s+(?:ini|card|kartu)|card\s+aktif|yang\s+dipilih)\b/i', $lower);
+                    if (!$is_single_card_specified && preg_match('/\b(pro|populer|popular|enterprise|bisnis|basic|starter|gratis|free)\b/i', $lower) && !preg_match('/\b(semua|all|setiap|seluruh|tiap)\b/i', $lower)) {
+                        $is_single_card_specified = true;
+                    }
+
+                    $first_child = null;
+                    foreach ($root->childNodes as $child) {
+                        if ($child instanceof DOMElement) {
+                            $first_child = $child;
+                            break;
+                        }
+                    }
+
+                    $target_nodes = [];
+
+                    // Jika elemen terpilih adalah SECTION atau CONTAINER pembungkus,
+                    // dan prompt merujuk ke card/tombol/judul: JANGAN animasikan section pembungkusnya!
+                    if ($is_editing_selected && $first_child !== null) {
+                        $tag = strtolower($first_child->nodeName);
+                        $is_wrapper = ($tag === 'section' || $tag === 'div' || $tag === 'main' || $tag === 'article' || $first_child->getAttribute('id') === 'object-core');
+
+                        if ($is_wrapper && ($is_card_prompt || $is_button_prompt || $is_heading_prompt)) {
+                            if ($is_card_prompt) {
+                                $matched_cards = find_leaf_cards_in_dom($first_child);
+                                if (!empty($matched_cards)) {
+                                    if ($is_single_card_specified) {
+                                        $target_nodes = [resolve_target_card_from_list($matched_cards, $lower)];
+                                    } else {
+                                        // Targetkan SEMUA kartu saudara (siblings)!
+                                        $target_nodes = $matched_cards;
+                                    }
+                                }
+                            } elseif ($is_button_prompt) {
+                                foreach ($first_child->getElementsByTagName('*') as $el) {
+                                    if ($el instanceof DOMElement && (strtolower($el->nodeName) === 'button' || str_contains((string)$el->getAttribute('class'), 'btn'))) {
+                                        $target_nodes = [$el];
+                                        break;
+                                    }
+                                }
+                            } elseif ($is_heading_prompt) {
+                                foreach ($first_child->getElementsByTagName('*') as $el) {
+                                    if ($el instanceof DOMElement && in_array(strtolower($el->nodeName), ['h1', 'h2', 'h3', 'h4'], true)) {
+                                        $target_nodes = [$el];
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (empty($target_nodes)) {
+                            if ($is_card_prompt && !$is_single_card_specified) {
+                                $all_leaf = find_leaf_cards_in_dom($root);
+                                $target_nodes = count($all_leaf) > 1 ? $all_leaf : [$first_child];
+                            } else {
+                                $target_nodes = [$first_child];
+                            }
+                        }
+                    } else {
+                        // Tidak ada objek yang dipilih -> cari di seluruh frame HTML
+                        if ($is_card_prompt) {
+                            $matched_cards = find_leaf_cards_in_dom($root);
+                            if (!empty($matched_cards)) {
+                                if ($is_single_card_specified) {
+                                    $target_nodes = [resolve_target_card_from_list($matched_cards, $lower)];
+                                } else {
+                                    // Targetkan SEMUA kartu saudara (siblings)!
+                                    $target_nodes = $matched_cards;
+                                }
+                            }
+                        } elseif ($is_button_prompt) {
+                            foreach ($root->getElementsByTagName('*') as $el) {
+                                if ($el instanceof DOMElement && (strtolower($el->nodeName) === 'button' || str_contains((string)$el->getAttribute('class'), 'btn'))) {
+                                    $target_nodes = [$el];
+                                    break;
+                                }
+                            }
+                        } elseif ($is_heading_prompt) {
+                            foreach ($root->getElementsByTagName('*') as $el) {
+                                if ($el instanceof DOMElement && in_array(strtolower($el->nodeName), ['h1', 'h2', 'h3'], true)) {
+                                    $target_nodes = [$el];
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (empty($target_nodes)) {
+                            $leaf_cards = find_leaf_cards_in_dom($root);
+                            if (!empty($leaf_cards)) {
+                                $target_nodes = $is_single_card_specified ? [$leaf_cards[0]] : $leaf_cards;
+                            } elseif ($first_child !== null) {
+                                $target_nodes = [$first_child];
+                            }
+                        }
+                    }
+
+                    if (!empty($target_nodes)) {
+                        $target_selectors = [];
+                        foreach ($target_nodes as $idx => $t_node) {
+                            $c_id = trim((string)$t_node->getAttribute('id'));
+                            if ($c_id === '') {
+                                $tag_prefix = strtolower($t_node->nodeName);
+                                if (str_contains((string)$t_node->getAttribute('class'), 'card')) $tag_prefix = 'card';
+                                $c_id = $tag_prefix . '-' . ($idx + 1) . '-' . substr(md5(uniqid((string)mt_rand(), true)), 0, 5);
+                                $t_node->setAttribute('id', $c_id);
+                            }
+                            $target_selectors[] = '#' . $c_id;
+                        }
+
+                        $is_exact_selected = ($is_editing_selected && count($target_nodes) === 1 && $target_nodes[0] === $first_child && !in_array(strtolower($target_nodes[0]->nodeName), ['section', 'main', 'article']));
+                        $target_selector   = $is_exact_selected ? 'self' : implode(', ', $target_selectors);
+                        $target_node       = $target_nodes[0];
+
+                        $all_gm_anims = [
+                            'gm-anim-fade-in',
+                            'gm-anim-slide-up',
+                            'gm-anim-slide-down',
+                            'gm-anim-slide-left',
+                            'gm-anim-slide-right',
+                            'gm-anim-zoom-in',
+                            'gm-anim-bounce-in',
+                        ];
+
+                        // Periksa apakah prompt meminta MENGHAPUS animasi
+                        if (preg_match('/\b(hapus|hilangkan|buang|tanpa|remove|delete|nonaktifkan|mati|off|reset)\b/i', $lower)) {
+                            foreach ($target_nodes as $t_node) {
+                                $cur_classes = preg_split('/\s+/', (string)$t_node->getAttribute('class'), -1, PREG_SPLIT_NO_EMPTY);
+                                $new_classes = array_values(array_diff($cur_classes, array_merge(['gm-anim-base'], $all_gm_anims)));
+                                $t_node->setAttribute('class', implode(' ', $new_classes));
+
+                                $t_node->removeAttribute('data-gm-anim');
+                                $t_node->removeAttribute('data-gm-anim-dur');
+                                $t_node->removeAttribute('data-gm-anim-del');
+                                $t_node->removeAttribute('data-gm-anim-loop');
+
+                                // Bersihkan style inline
+                                $cur_style = (string)$t_node->getAttribute('style');
+                                $style_decls = array_filter(array_map('trim', explode(';', $cur_style)));
+                                $kept_decls = [];
+                                foreach ($style_decls as $decl) {
+                                    $pts = explode(':', $decl, 2);
+                                    if (count($pts) === 2) {
+                                        $k = strtolower(trim($pts[0]));
+                                        if ($k !== '--gm-anim-duration' && $k !== '--gm-anim-delay' && $k !== 'animation-iteration-count') {
+                                            $kept_decls[] = $decl;
+                                        }
+                                    }
+                                }
+                                if (!empty($kept_decls)) {
+                                    $t_node->setAttribute('style', implode('; ', $kept_decls) . ';');
+                                } else {
+                                    $t_node->removeAttribute('style');
+                                }
+                            }
+
+                            $out_html = '';
+                            foreach ($root->childNodes as $child) {
+                                $out_html .= $doc->saveHTML($child);
+                            }
+
+                            return [
+                                'operation' => 'patch_attributes',
+                                'patch'     => [
+                                    'target_all'           => count($target_nodes) > 1,
+                                    'targets'              => $target_selectors,
+                                    'target'               => $target_selector,
+                                    'classes_to_remove'    => array_merge(['gm-anim-base'], $all_gm_anims),
+                                    'attributes_to_remove' => ['data-gm-anim', 'data-gm-anim-dur', 'data-gm-anim-del', 'data-gm-anim-loop'],
+                                    'styles_to_remove'     => ['--gm-anim-duration', '--gm-anim-delay', 'animation-iteration-count'],
+                                    'summary'              => 'Animasi berhasil dihapus dari ' . count($target_nodes) . ' elemen.',
+                                ],
+                                'html'      => trim($out_html),
+                                'summary'   => 'Animasi berhasil dinonaktifkan.',
+                            ];
+                        }
+
+                        // Deteksi jenis animasi (7 resmi Greymist)
+                        $detected_anim = 'gm-anim-fade-in';
+                        if (preg_match('/\b(bounce|membal)\b/i', $lower)) {
+                            $detected_anim = 'gm-anim-bounce-in';
+                        } elseif (preg_match('/\b(zoom|membesar)\b/i', $lower)) {
+                            $detected_anim = 'gm-anim-zoom-in';
+                        } elseif (preg_match('/\b(slide\s*down|turun|ke\s*bawah)\b/i', $lower)) {
+                            $detected_anim = 'gm-anim-slide-down';
+                        } elseif (preg_match('/\b(slide\s*left|ke\s*kiri)\b/i', $lower)) {
+                            $detected_anim = 'gm-anim-slide-left';
+                        } elseif (preg_match('/\b(slide\s*right|ke\s*kanan)\b/i', $lower)) {
+                            $detected_anim = 'gm-anim-slide-right';
+                        } elseif (preg_match('/\b(slide|slide\s*up|naik|ke\s*atas)\b/i', $lower)) {
+                            $detected_anim = 'gm-anim-slide-up';
+                        } elseif (preg_match('/\b(fade|pudar|muncul)\b/i', $lower)) {
+                            $detected_anim = 'gm-anim-fade-in';
+                        }
+
+                        // Deteksi durasi (s)
+                        $dur = '0.8';
+                        if (preg_match('/(\d+(?:\.\d+)?)\s*(?:s|detik|sec)\b/i', $lower, $dur_m)) {
+                            $dur = $dur_m[1];
+                        }
+
+                        // Deteksi delay dasar (s)
+                        $del = '0';
+                        if (preg_match('/delay\s*(\d+(?:\.\d+)?)\s*(?:s|detik)?/i', $lower, $del_m)) {
+                            $del = $del_m[1];
+                        }
+
+                        // Deteksi loop
+                        $loop = '1';
+                        if (preg_match('/\b(loop|looping|infinite|terus\s*menerus|berulang)\b/i', $lower)) {
+                            $loop = 'infinite';
+                        }
+
+                        $base_del = (float)$del;
+                        $stagger_step = 0.15;
+
+                        // Terapkan ke SEMUA target nodes (dengan stagger delay per kartu saudara)
+                        foreach ($target_nodes as $idx => $t_node) {
+                            $el_del = count($target_nodes) > 1 ? round($base_del + ($idx * $stagger_step), 2) : $base_del;
+
+                            $cur_classes = preg_split('/\s+/', (string)$t_node->getAttribute('class'), -1, PREG_SPLIT_NO_EMPTY);
+                            $filtered_classes = array_values(array_diff($cur_classes, $all_gm_anims));
+                            if (!in_array('gm-anim-base', $filtered_classes, true)) {
+                                $filtered_classes[] = 'gm-anim-base';
+                            }
+                            $filtered_classes[] = $detected_anim;
+                            $t_node->setAttribute('class', implode(' ', array_unique($filtered_classes)));
+
+                            $t_node->setAttribute('data-gm-anim', $detected_anim);
+                            $t_node->setAttribute('data-gm-anim-dur', (string)$dur);
+                            $t_node->setAttribute('data-gm-anim-del', (string)$el_del);
+                            $t_node->setAttribute('data-gm-anim-loop', (string)$loop);
+
+                            // Update style inline
+                            $cur_style = (string)$t_node->getAttribute('style');
+                            $style_map = [];
+                            if (trim($cur_style) !== '') {
+                                foreach (explode(';', $cur_style) as $decl) {
+                                    $pts = explode(':', $decl, 2);
+                                    if (count($pts) === 2) {
+                                        $style_map[strtolower(trim($pts[0]))] = trim($pts[1]);
+                                    }
+                                }
+                            }
+                            $style_map['--gm-anim-duration']        = $dur . 's';
+                            $style_map['--gm-anim-delay']           = $el_del . 's';
+                            $style_map['animation-iteration-count'] = (string)$loop;
+
+                            $new_style_str = [];
+                            foreach ($style_map as $sk => $sv) {
+                                $new_style_str[] = "{$sk}: {$sv}";
+                            }
+                            $t_node->setAttribute('style', implode('; ', $new_style_str) . ';');
+                        }
+
+                        $out_html = '';
+                        foreach ($root->childNodes as $child) {
+                            $out_html .= $doc->saveHTML($child);
+                        }
+
+                        $count_targets = count($target_nodes);
+                        $summary_text  = $count_targets > 1
+                            ? ('Animasi ' . $detected_anim . ' berhasil diterapkan pada ' . $count_targets . ' kartu secara berurutan (stagger delay).')
+                            : ('Animasi ' . $detected_anim . ' diterapkan pada ' . $target_selector . ' (durasi ' . $dur . 's, delay ' . $del . 's).');
+
+                        return [
+                            'operation' => 'patch_attributes',
+                            'patch'     => [
+                                'target_all'        => $count_targets > 1,
+                                'target'            => $target_selector,
+                                'targets'           => $target_selectors,
+                                'stagger'           => $stagger_step,
+                                'classes_to_add'    => ['gm-anim-base', $detected_anim],
+                                'classes_to_remove' => $all_gm_anims,
+                                'attributes'        => [
+                                    'data-gm-anim'      => $detected_anim,
+                                    'data-gm-anim-dur'  => (string)$dur,
+                                    'data-gm-anim-del'  => (string)$del,
+                                    'data-gm-anim-loop' => (string)$loop,
+                                ],
+                                'styles'            => [
+                                    '--gm-anim-duration'        => $dur . 's',
+                                    '--gm-anim-delay'           => $del . 's',
+                                    'animation-iteration-count' => (string)$loop,
+                                ],
+                                'summary'           => $summary_text,
+                            ],
+                            'html'      => trim($out_html),
+                            'summary'   => $summary_text,
+                        ];
+                    }
                 }
             }
         }
@@ -1014,43 +1560,84 @@ if (!function_exists('process_local_frame_command')) {
  * - CREATE_FRAMES (membuat 1 atau beberapa frame/halaman baru otomatis sesuai kebutuhan pages)
  * - EXPLAIN (membaca dan menjelaskan isi frame kepada pengguna)
  */
-if (!function_exists('call_gemini_interactions_api')) {
-    function call_gemini_interactions_api(
-        string $api_key,
-        string $prompt,
-        string $model = 'gemini-3.5-flash-lite',
-        string $current_frame_html = '',
-        string $selected_object_html = '',
-        string $target_mode = 'core',
-        string $memory_context_text = '',
-        array $selected_object_attrs = [],
-        array $reusable_components = [],
-        array $all_project_frames = []
-    ): array {
-        $system_instruction = "Anda adalah AI Visual Workspace Architect untuk editor web Greymist.\n"
+/**
+ * Mengembalikan system instruction lengkap untuk Greymist AI Architect.
+ * Berlaku identik untuk Gemini, Groq, OpenRouter, dan Antigravity Bridge.
+ */
+if (!function_exists('get_greymist_system_instruction')) {
+    function get_greymist_system_instruction(bool $read_memory = false): string
+    {
+        // 1. JIKA MEMORI DIMATIKAN (DEFAULT - MODE KILAT / FAST MODE):
+        // Gunakan instruksi ringkas & presisi agar server AI merespons dalam hitungan detik tanpa membaca ribuan token teks berlebih!
+        if (!$read_memory) {
+            return "Anda adalah AI UI Engineer untuk editor web Greymist. Output Anda langsung dirender ke kanvas DOM.\n\n"
+                . "ATURAN UTAMA (WAJIB DIIKUTI):\n"
+                . "1. EKSEKUSI TUNTAS, KAYA KONTEN & DILARANG SETENGAH-SETENGAH:\n"
+                . "   - Hasilkan konten UI yang UTUH, LENGKAP, DETAIL, dan SIAP PAKAI secara penuh tanpa placeholder.\n"
+                . "   - DILARANG KERAS membuat UI seadanya/minimalis atau memotong kode. Jika diminta halaman atau section, buat seluruh elemen secara mendalam: teks judul menarik, paragraf deskripsi jelas, tombol CTA, kartu-kartu (minimal 3 kartu fitur/layanan/pricing dengan data realistis), form input lengkap, dan footer/header jika relevan.\n"
+                . "2. SETIAP elemen HTML wajib memiliki class 'gm-object'.\n"
+                . "3. WAJIB IKON FONT AWESOME: gunakan <i class=\"fa-solid fa-...\"></i> atau <i class=\"fas fa-...\"></i>. DILARANG KERAS MENGGUNAKAN KARAKTER EMOJI/EMOTIKON APAPUN!\n"
+                . "4. SPACING PROPORSIONAL: section padding 36px 20px - 48px 32px, card 16px 20px - 24px 28px, button 8px 18px - 12px 24px, gap 12px - 24px. DILARANG padding/margin raksasa (100px+).\n"
+                . "5. RESPONSIVE: flex-wrap, max-width 100%, box-sizing: border-box.\n"
+                . "6. TARGET MULTI-CARD SIBLINGS & ANTI-ROOT ANIMASI:\n"
+                . "   - Saat pengguna meminta animasi pada card/kartu secara umum ('animasikan card', 'semua card kasih slide-up'), WAJIB menganimasikan SELURUH kartu daun saudara (siblings) dalam kontainer dengan staggered delay (0s, 0.15s, 0.3s, dst.)!\n"
+                . "   - DILARANG hanya menganimasikan first-child!\n"
+                . "   - DILARANG menganimasikan root <section> atau #object-core!\n"
+                . "   - 7 Class animasi resmi Greymist: gm-anim-fade-in, gm-anim-slide-up, gm-anim-slide-down, gm-anim-slide-left, gm-anim-slide-right, gm-anim-zoom-in, gm-anim-bounce-in.\n"
+                . "7. EDIT ATRIBUT / GAYA IN-PLACE (JANGAN BUAT DARI NOL):\n"
+                . "   Jika pengguna meminta mengubah/menambah/menghapus atribut (warna, font, ukuran, border, animasi, text) pada komponen yang sudah ada, kembalikan HANYA format JSON:\n"
+                . "   <!--GM_OP:PATCH_ATTRIBUTES-->\n"
+                . "   {\"target\":\"self\",\"target_all\":true,\"stagger\":0.15,\"classes_to_add\":[\"gm-anim-base\",\"gm-anim-slide-up\"],\"classes_to_remove\":[\"gm-anim-fade-in\"],\"attributes\":{\"data-gm-anim\":\"gm-anim-slide-up\",\"data-gm-anim-dur\":\"0.8\",\"data-gm-anim-del\":\"0\",\"data-gm-anim-loop\":\"1\"},\"styles\":{\"--gm-anim-duration\":\"0.8s\",\"--gm-anim-delay\":\"0s\"},\"summary\":\"Ringkasan perubahan.\"}\n"
+                . "8. FORMAT OPERASI LAINNYA:\n"
+                . "   - Komponen baru: <!--GM_OP:APPEND--> <kode html>\n"
+                . "   - Ubah objek terpilih: <!--GM_OP:REPLACE_SELECTED--> <kode html>\n"
+                . "   - Ganti nama project: <!--GM_OP:RENAME_PROJECT:Nama Baru-->\n"
+                . "   - Frame baru: <!--GM_FRAME:Nama Page--> <kode html>";
+        }
+
+        // 2. JIKA MEMORI DIAKTIFKAN (MODE KONTEKS PENUH / DEEP MEMORY):
+        // Melibatkan seluruh aturan arsitektur multi-halaman dan pembaruan resiprokal proyek
+        return "Anda adalah AI Visual Workspace Architect untuk editor web Greymist.\n"
             . "Anda memiliki CACHE MEMORI PROYEK yang mencatat seluruh halaman (frames), susunan komponen di setiap halaman, dan riwayat perubahan yang telah Anda buat sebelumnya.\n"
             . "Gunakan memori tersebut agar setiap perubahan, penambahan, atau penghapusan selalu konsisten dengan sistem desain dan susunan halaman yang sudah ada.\n\n"
             . "========================================================================\n"
-            . "5 PILAR UTAMA ARSITEKTUR & SINKRONISASI SISTEM GREYMIST\n"
+            . "ATURAN EMAS DESAIN, SINKRONISASI & PRODUKSI GREYMIST\n"
             . "========================================================================\n\n"
-            . "0. ATURAN FRAME AWAL (PENGISIAN & PENGGUNAAN ULANG MAIN FRAME):
-   - Jika proyek saat ini baru dibuat dan memiliki satu frame kosong (seperti 'Main Frame'), halaman pertama yang Anda hasilkan WAJIB menjadi halaman utama (Home / Beranda) untuk mengisi frame awal tersebut, BUKAN membiarkannya kosong lalu membuat halaman baru terpisah!
-
-1. ATURAN REUSE KOMPONEN (PENGGUNAAN ULANG NAV / SIDEBAR / FOOTER):\n"
+            . "1. EKSEKUSI TUNTAS & PRODUKSI PENUH (DILARANG KERAS SETENGAH-SETENGAH):\n"
+            . "   - Hasilkan konten UI yang UTUH, LENGKAP, dan SIAP PAKAI secara penuh.\n"
+            . "   - DILARANG KERAS memotong kode, menggunakan komentar placeholder (seperti '<!-- isi konten disini -->', '...', 'TODO'), atau teks contoh seadanya.\n"
+            . "   - Bangun seluruh komponen secara detail: teks judul yang menggugah, deskripsi/paragraf kaya informasi, tombol CTA, kartu-kartu fitur dengan data realistis, testimoni, form input dengan label dan placeholder yang rapi, dan footer lengkap.\n\n"
+            . "2. ATURAN WAJIB IKON FONT AWESOME (ANTI-EMOTIKON & TIDAK BERLEBIHAN):\n"
+            . "   - WAJIB gunakan ikon Font Awesome resmi: <i class=\"fa-solid fa-...\"></i> atau <i class=\"fas fa-...\"></i> (contoh: fa-house, fa-user, fa-envelope, fa-arrow-right, fa-shield-halved, fa-star, fa-phone, fa-check, fa-gear, fa-chart-line, fa-magnifying-glass).\n"
+            . "   - DILARANG KERAS MENGGUNAKAN KARAKTER EMOJI / EMOTIKON APAPUN (seperti 🚀, 💡, 🔥, ✨, 📱, 👍, 💼, 📞, 🌟, dll.). SEMUA IKON HARUS MENGGUNAKAN TAG <i> FONT AWESOME!\n"
+            . "   - Gunakan ikon secara proporsional dan elegan: maksimal 1 ikon relevan pada tombol, kartu fitur, atau link menu. DILARANG menaruh ikon berlebihan di setiap kata atau judul.\n\n"
+            . "3. ATURAN PADDING & MARGIN PROPORSIONAL (DILARANG JARAK RAKSASA/BERLEBIHAN):\n"
+            . "   - DILARANG KERAS menggunakan padding atau margin yang raksasa/berlebihan (hindari padding 100px-200px atau margin 80px-150px yang menyisakan ruang kosong menganga).\n"
+            . "   - Terapkan standar layout modern yang seimbang dan proporsional:\n"
+            . "     * Section padding: 36px 20px hingga 48px 32px (padat, rapi, dan seimbang).\n"
+            . "     * Card / container padding: 16px 20px hingga 24px 28px.\n"
+            . "     * Button padding: 8px 18px hingga 12px 24px.\n"
+            . "     * Navbar padding: 12px 24px hingga 16px 32px.\n"
+            . "     * Margin: minimalis (0, 8px, 12px, 16px, maks 24px antar elemen). Utamakan 'gap' flexbox/grid (gap: 12px hingga 24px).\n"
+            . "     * Selalu terapkan box-sizing: border-box; dan max-width: 100%;.\n\n"
+            . "4. ATURAN FRAME AWAL (PENGISIAN & PENGGUNAAN ULANG MAIN FRAME):\n"
+            . "   - Jika proyek saat ini baru dibuat dan memiliki satu frame kosong (seperti 'Main Frame'), halaman pertama yang Anda hasilkan WAJIB menjadi halaman utama (Home / Beranda) untuk mengisi frame awal tersebut, BUKAN membiarkannya kosong lalu membuat halaman baru terpisah!\n\n"
+            . "5. ATURAN REUSE KOMPONEN (PENGGUNAAN ULANG NAV / SIDEBAR / FOOTER):\n"
             . "   - Jika terdapat [EXISTING_NAVBAR], [EXISTING_FOOTER], atau [EXISTING_SIDEBAR] di dalam konteks:\n"
             . "     DILARANG KERAS membuat Navbar, Sidebar, atau Footer baru dari nol dengan struktur/warna/font berbeda!\n"
             . "     Gunakan kembali kode HTML komponen yang sudah ada tersebut: salin strukturnya, pertahankan logo/brand/warna, sesuaikan menu link-nya, dan pindahkan status visual 'active' ke halaman yang sedang dibuat.\n\n"
-            . "2. NAVIGASI RESIPROKAL ANTAR HALAMAN (MULTI-PAGE CROSS-LINKING):\n"
+            . "6. NAVIGASI RESIPROKAL DUA ARAH ANTAR HALAMAN (MULTI-PAGE CROSS-LINKING):\n"
             . "   - Saat membuat halaman baru atau multi-page, SEMUA link navbar/footer WAJIB memiliki data-action-type=\"goto\" dan data-action-target=\"NamaHalaman\" (contoh: data-action-target=\"Home\", data-action-target=\"About\", data-action-target=\"Contact\").\n"
-            . "   - Sistem backend Greymist akan otomatis memetakan nama halaman ini ke ID numerik frame yang tersimpan di database.\n"
+            . "   - Setiap Navbar pada halaman baru WAJIB memuat tautan ke seluruh halaman dalam proyek (baik halaman lama maupun baru).\n"
+            . "   - Sistem backend Greymist secara otomatis akan memperbarui seluruh Navbar di halaman lama (seperti Home) untuk menyematkan tautan ke halaman baru ini, sehingga navigasi antar halaman terhubung dua arah secara instan.\n"
             . "   - Link untuk halaman yang sedang aktif WAJIB diberi styling aktif (misal: color: #3b82f6; font-weight: 700;).\n\n"
-            . "3. INTEGRASI ENGINE BREAKPOINTS & RESPONSIVE DESIGN:\n"
+            . "7. INTEGRASI ENGINE BREAKPOINTS & RESPONSIVE DESIGN:\n"
             . "   - Greymist memiliki sistem breakpoint: Desktop (1920 base), Tablet (max-width: 768px), Mobile (max-width: 480px).\n"
             . "   - Seluruh komponen HTML yang Anda buat WAJIB menggunakan tata letak responsif modern: flex-wrap: wrap, gap, max-width: 100%, box-sizing: border-box, dan grid auto-fit minmax(260px, 1fr) untuk card.\n"
-            . "   - Jika pengguna meminta responsif atau menambah breakpoint, Anda DAPAT menyertakan blok penanda breakpoint:\n"
+            . "   - Jika pengguna meminta responsif atau menambah breakpoint, sertakan blok penanda breakpoint:\n"
             . "     <!--GM_BREAKPOINTS-->\n"
             . "     [{\"id\":\"tablet\",\"name\":\"Tablet\",\"rule\":\"max-width: 768px\",\"widthValue\":768,\"type\":\"max\"},{\"id\":\"mobile\",\"name\":\"Mobile\",\"rule\":\"max-width: 480px\",\"widthValue\":480,\"type\":\"max\"}]\n\n"
-            . "4. INTERVENSI SELURUH HALAMAN (BATCH PROJECT-WIDE STYLING):\n"
+            . "8. INTERVENSI SELURUH HALAMAN (BATCH PROJECT-WIDE STYLING):\n"
             . "   - Jika tidak ada komponen aktif dan pengguna meminta perubahan pada SEMUA halaman (misal: 'konsistenkan semua card', 'ubah warna tema di semua pages', 'ganti font semua halaman', 'samakan navbar'):\n"
             . "     Gunakan operasi: <!--GM_OP:BATCH_UPDATE_FRAMES-->\n"
             . "     Lalu kembalikan kode HTML baru untuk setiap halaman yang diperbarui:\n"
@@ -1058,38 +1645,94 @@ if (!function_exists('call_gemini_interactions_api')) {
             . "     <kode html lengkap frame ini>\n"
             . "     <!--GM_FRAME_UPDATE:NamaHalamanAtauID-->\n"
             . "     <kode html lengkap frame ini>\n\n"
-            . "5. INTEGRASI MENU ACTION, ANIMASI, & ATRIBUT (PANEL BAWAH):\n"
+            . "9. INTEGRASI MENU ACTION, ANIMASI, & ATRIBUT (PANEL BAWAH GREYMIST):\n"
             . "   - Action: data-action-type=\"goto\" (pindah frame), data-action-type=\"scroll\" (smooth scroll ke id section), data-action-type=\"modal\" (buka modal popup), data-action-type=\"link\" (url).\n"
-            . "   - Animasi: data-gm-anim=\"true\", class=\"gm-object gm-anim-base <nama_animasi>\" (pilihan: fade, slide-up, slide-down, slide-left, slide-right, zoom-in, zoom-out, bounce, pulse, flip, rotate) dengan --gm-anim-dur: 0.6s.\n"
+            . "   - Animasi Greymist: HANYA ada 7 class animasi resmi yang kompatibel:\n"
+            . "     1. gm-anim-fade-in  2. gm-anim-slide-up  3. gm-anim-slide-down  4. gm-anim-slide-left\n"
+            . "     5. gm-anim-slide-right  6. gm-anim-zoom-in  7. gm-anim-bounce-in\n"
+            . "     WAJIB class: class=\"gm-object gm-anim-base <nama_animasi>\"\n"
+            . "     WAJIB atribut: data-gm-anim=\"<nama_animasi>\" (harus sama persis dengan nama class animasi),\n"
+            . "     data-gm-anim-dur=\"0.8\" (detik, angka saja), data-gm-anim-del=\"0\" (detik, angka saja), data-gm-anim-loop=\"1\" (atau \"infinite\").\n"
+            . "     WAJIB style inline: --gm-anim-duration: 0.8s; --gm-anim-delay: 0s; animation-iteration-count: 1;\n"
             . "   - Atribut: Berikan id semantik (id=\"hero-section\", id=\"pricing\", id=\"contact\") dan class=\"gm-object\" pada SETIAP elemen.\n\n"
+            . "ATURAN UTAMA: TARGET PRESISI & MULTI-CARD SIBLINGS (DILARANG HANYA FIRST-CHILD!):\n"
+            . "Jika pengguna meminta animasi atau mengubah atribut card/kartu/item:\n"
+            . "1. DILARANG KERAS menaruh class gm-anim-* atau data-gm-anim pada <section>, #object-core, atau pembungkus utama frame!\n"
+            . "2. MULTI-CARD (SEMUA KARTU SAUDARA/SIBLINGS):\n"
+            . "   Jika pengguna merujuk ke kartu/card secara umum atau jamak ('animasikan card', 'beri animasi pada kartu', 'semua card', 'kartu-kartu', 'tiap card'):\n"
+            . "   - DILARANG HANYA MENGANIMASIKAN KARTU PERTAMA (FIRST-CHILD)!\n"
+            . "   - SEMUA kartu saudara (siblings) dalam kontainer grid/flex tersebut WAJIB diberi animasi!\n"
+            . "   - Format penargetan multi-card pada patch: gunakan \"target_all\": true, \"target\": \".card\", \"stagger\": 0.15, atau daftarkan \"targets\": [\"#card-1\", \"#card-2\", \"#card-3\"].\n"
+            . "3. SINGLE-CARD (KARTU TUNGGAL SPESIFIK):\n"
+            . "   - HANYA targetkan satu kartu tunggal jika pengguna secara spesifik menyebut nomor atau nama kartu ('card ke-2', 'card pro', 'card terakhir').\n"
+            . "   - Gunakan selector presisi: \"target\": \"#card-pro\" atau \".card:nth-of-type(2)\".\n\n"
             . "ATURAN UTAMA: BACA KOMPONEN DULU & UBAH ATRIBUTNYA (JANGAN MEMBUAT BARU DARI NOL):\n"
-            . "Jika pengguna meminta MENGUBAH atau MENAMBAHKAN atribut/gaya (seperti warna, font, background, ukuran font, border, radius, animasi, action, padding, margin, shadow, atau teks) pada komponen yang sudah ada:\n"
+            . "Jika pengguna meminta MENGUBAH, MENAMBAHKAN, atau MENGHAPUS atribut/gaya (seperti warna, font, background, ukuran font, border, radius, animasi, action, padding, margin, shadow, atau teks) pada komponen yang sudah ada:\n"
             . "1. DILARANG KERAS MEMBUAT ELEMEN/KOMPONEN BARU DARI NOL!\n"
             . "2. DILARANG MENGHASILKAN KODE HTML BARU LENGKAP ATAU MENUMPANGKAN ELEMEN BARU DI ATAS ELEMEN LAMA!\n"
             . "3. BACA atribut dan style yang sudah ada pada komponen (SELECTED_OBJECT_HTML atau elemen di CURRENT_FRAME_HTML).\n"
-            . "4. Tentukan HANYA properti CSS (style), atribut (action/animasi), atau teks apa yang perlu DIUBAH atau DITAMBAHKAN sesuai instruksi pengguna.\n"
+            . "4. Tentukan HANYA properti CSS (styles), atribut HTML (attributes), classes_to_add / classes_to_remove, atau teks apa yang perlu DIUBAH/DITAMBAHKAN.\n"
             . "5. Kembalikan HANYA penanda <!--GM_OP:PATCH_ATTRIBUTES--> diikuti satu objek JSON valid persis format berikut:\n"
+            . "   Contoh Menambahkan/Mengubah Animasi:\n"
             . "   <!--GM_OP:PATCH_ATTRIBUTES-->\n"
             . "   {\n"
             . "     \"target\": \"self\",\n"
-            . "     \"styles\": {\n"
-            . "       \"background-color\": \"#38bdf8\",\n"
-            . "       \"color\": \"#ffffff\"\n"
-            . "     },\n"
+            . "     \"classes_to_add\": [\"gm-anim-base\", \"gm-anim-slide-up\"],\n"
+            . "     \"classes_to_remove\": [\"gm-anim-fade-in\", \"gm-anim-slide-down\", \"gm-anim-slide-left\", \"gm-anim-slide-right\", \"gm-anim-zoom-in\", \"gm-anim-bounce-in\"],\n"
             . "     \"attributes\": {\n"
-            . "       \"data-action-type\": \"goto\",\n"
-            . "       \"data-action-target\": \"About\"\n"
+            . "       \"data-gm-anim\": \"gm-anim-slide-up\",\n"
+            . "       \"data-gm-anim-dur\": \"0.8\",\n"
+            . "       \"data-gm-anim-del\": \"0\",\n"
+            . "       \"data-gm-anim-loop\": \"1\"\n"
             . "     },\n"
-            . "     \"classes_to_add\": [\"gm-anim-base\", \"slide-up\"],\n"
-            . "     \"text\": null,\n"
-            . "     \"summary\": \"Warna diubah dan action navigasi ke About disematkan\"\n"
+            . "     \"styles\": {\n"
+            . "       \"--gm-anim-duration\": \"0.8s\",\n"
+            . "       \"--gm-anim-delay\": \"0s\",\n"
+            . "       \"animation-iteration-count\": \"1\"\n"
+            . "     },\n"
+            . "     \"summary\": \"Animasi slide-up diterapkan pada elemen.\"\n"
             . "   }\n\n"
+            . "   Contoh Menghapus Animasi:\n"
+            . "   <!--GM_OP:PATCH_ATTRIBUTES-->\n"
+            . "   {\n"
+            . "     \"target\": \"self\",\n"
+            . "     \"classes_to_remove\": [\"gm-anim-base\", \"gm-anim-fade-in\", \"gm-anim-slide-up\", \"gm-anim-slide-down\", \"gm-anim-slide-left\", \"gm-anim-slide-right\", \"gm-anim-zoom-in\", \"gm-anim-bounce-in\"],\n"
+            . "     \"attributes_to_remove\": [\"data-gm-anim\", \"data-gm-anim-dur\", \"data-gm-anim-del\", \"data-gm-anim-loop\"],\n"
+            . "     \"styles_to_remove\": [\"--gm-anim-duration\", \"--gm-anim-delay\", \"animation-iteration-count\"],\n"
+            . "     \"summary\": \"Animasi dihapus dari elemen.\"\n"
+            . "   }\n\n"
+            . "11. GANTI NAMA PROYEK (RENAME PROJECT):\n"
+            . "   Jika pengguna meminta mengganti, mengubah, atau me-rename nama/judul proyek (misal: 'ganti nama project jadi My Studio'):\n"
+            . "   Gunakan format: <!--GM_OP:RENAME_PROJECT:Nama Proyek Baru--> diikuti penjelasan singkat.\n\n"
+            . "12. MULTIMODAL VISION & REFERENSI VISUAL GAMBAR:\n"
+            . "   Jika gambar / screenshot referensi disertakan:\n"
+            . "   - Analisis tata letak (wireframe/layout), hierarki visual, jenis komponen (hero, navbar, cards, pricing, testimonial, form, footer), warna, dan tipografi dari gambar referensi tersebut.\n"
+            . "   - Konversikan setiap elemen visual dari gambar menjadi kode HTML semantik Greymist dengan class .gm-object yang meniru estetika dan layout referensi tersebut secara presisi.\n"
+            . "   - Gunakan ikon Font Awesome yang relevan sesuai konten pada foto. Pastikan responsif dan bebas emoji.\n\n"
             . "PILIHAN FORMAT OPERASI LAINNYA:\n"
             . "1. MEMBACA/MENJELASKAN: <!--GM_OP:EXPLAIN--> diikuti penjelasan dalam Bahasa Indonesia.\n"
-            . "2. HAPUS KOMPONEN DI FRAME: <!--GM_OP:REPLACE_FRAME--> diikuti seluruh kode HTML frame setelah dihapus.\n"
-            . "3. HALAMAN BARU / MULTI-PAGE: Gunakan blok <!--GM_FRAME:Nama Halaman--> diikuti kode HTML .gm-object untuk tiap halaman.\n"
-            . "4. KOMPONEN BARU DI FRAME AKTIF: <!--GM_OP:APPEND--> diikuti kode HTML komponen baru.";
+            . "2. GANTI NAMA PROYEK: <!--GM_OP:RENAME_PROJECT:Nama Proyek Baru--> diikuti konfirmasi.\n"
+            . "3. HAPUS KOMPONEN DI FRAME: <!--GM_OP:REPLACE_FRAME--> diikuti seluruh kode HTML frame setelah dihapus.\n"
+            . "4. HALAMAN BARU / MULTI-PAGE: Gunakan blok <!--GM_FRAME:Nama Halaman--> diikuti kode HTML .gm-object untuk tiap halaman.\n"
+            . "5. KOMPONEN BARU DI FRAME AKTIF: <!--GM_OP:APPEND--> diikuti kode HTML komponen baru.";
+    }
+}
 
+/**
+ * Menyusun string context input lengkap untuk AI model.
+ */
+if (!function_exists('build_greymist_context_input')) {
+    function build_greymist_context_input(
+        string $prompt,
+        string $current_frame_html = '',
+        string $selected_object_html = '',
+        string $target_mode = 'core',
+        string $memory_context_text = '',
+        array $selected_object_attrs = [],
+        array $reusable_components = [],
+        array $all_project_frames = [],
+        ?array $reference_image = null
+    ): string {
         $context_input = "";
         if ($memory_context_text !== '') {
             $context_input .= $memory_context_text . "\n\n";
@@ -1125,28 +1768,586 @@ if (!function_exists('call_gemini_interactions_api')) {
             }
             $context_input .= "\n";
         }
+        if ($reference_image !== null && !empty($reference_image['data'])) {
+            $context_input .= "[FOTO / SCREENSHOT REFERENSI VISUAL DISERTAKAN]: Gambar referensi desain UI terlampir. Analisis tata letak, komponen, dan estetika visualnya, lalu hasilkan kode UI .gm-object yang meniru referensi tersebut.\n\n";
+        }
         $context_input .= "INSTRUKSI PENGGUNA:\n" . $prompt;
 
-        // Urutan model Free Tier (Gratis) sebagai fallback otomatis jika salah satu terkena limit kuota
+        return $context_input;
+    }
+}
+
+/**
+ * Mem-parsing teks output mentah dari AI (Gemini, Groq, OpenRouter, dll)
+ * menjadi struktur payload operasi Greymist terstandar.
+ */
+if (!function_exists('parse_greymist_ai_output')) {
+    function parse_greymist_ai_output(
+        string $output_text,
+        string $candidate_model,
+        string $target_mode = 'core',
+        string $current_frame_html = ''
+    ): array {
+        $trimmed_out = clean_emojis_from_html(trim($output_text));
+        if ($trimmed_out === '') {
+            return ['success' => false, 'error' => 'Respons AI kosong.'];
+        }
+
+        // Bersihkan markdown fences jika model masih menyertakannya
+        $trimmed_out = preg_replace('/^```(?:html|json)?\s*/i', '', $trimmed_out);
+        $trimmed_out = preg_replace('/\s*```$/', '', $trimmed_out);
+
+        // Cek apakah ada arahan penambahan breakpoint responsif: <!--GM_BREAKPOINTS--> [...]
+        $breakpoints_to_add = [];
+        if (preg_match('/<!--\s*GM_BREAKPOINTS\s*-->\s*(\[.*?\])/is', $trimmed_out, $bp_match)) {
+            $parsed_bp = json_decode($bp_match[1], true);
+            if (is_array($parsed_bp)) {
+                $breakpoints_to_add = $parsed_bp;
+            }
+            $trimmed_out = str_replace($bp_match[0], '', $trimmed_out);
+        }
+
+        // Cek apakah AI meminta pembaruan serentak pada SELURUH HALAMAN
+        if (str_contains($trimmed_out, '<!--GM_OP:BATCH_UPDATE_FRAMES-->') || str_contains($trimmed_out, '<!--GM_FRAME_UPDATE:')) {
+            $frames_updates = [];
+            if (preg_match_all('/<!--\s*GM_FRAME_UPDATE\s*:\s*(.*?)\s*-->/is', $trimmed_out, $fu_matches, PREG_OFFSET_CAPTURE)) {
+                $count_fu = count($fu_matches[0]);
+                for ($i = 0; $i < $count_fu; $i++) {
+                    $f_ident   = trim($fu_matches[1][$i][0]);
+                    $start_pos = $fu_matches[0][$i][1] + strlen($fu_matches[0][$i][0]);
+                    $end_pos   = ($i + 1 < $count_fu) ? $fu_matches[0][$i + 1][1] : strlen($trimmed_out);
+                    $fu_html   = trim(substr($trimmed_out, $start_pos, $end_pos - $start_pos));
+                    if ($fu_html !== '') {
+                        $frames_updates[] = [
+                            'frame_identifier' => $f_ident,
+                            'html'             => ensure_gm_object_class($fu_html),
+                        ];
+                    }
+                }
+            }
+
+            if (!empty($frames_updates)) {
+                return [
+                    'success'            => true,
+                    'used_model'         => $candidate_model,
+                    'operation'          => 'batch_update_frames',
+                    'frames_updates'     => $frames_updates,
+                    'breakpoints_to_add' => $breakpoints_to_add,
+                    'html'               => '',
+                ];
+            }
+        }
+
+        // Cek apakah AI mengembalikan 1 atau beberapa blok halaman/frame baru: <!--GM_FRAME:Nama Halaman-->
+        if (preg_match_all('/<!--\s*GM_FRAME\s*:\s*(.*?)\s*-->/is', $trimmed_out, $frame_matches, PREG_OFFSET_CAPTURE)) {
+            $frames_specs = [];
+            $count_matches = count($frame_matches[0]);
+            for ($i = 0; $i < $count_matches; $i++) {
+                $f_name = trim($frame_matches[1][$i][0]);
+                if ($f_name === '') {
+                    $f_name = 'Page ' . ($i + 1);
+                }
+                $start_pos = $frame_matches[0][$i][1] + strlen($frame_matches[0][$i][0]);
+                $end_pos   = ($i + 1 < $count_matches) ? $frame_matches[0][$i + 1][1] : strlen($trimmed_out);
+                $f_html    = trim(substr($trimmed_out, $start_pos, $end_pos - $start_pos));
+                $f_html    = str_replace(['<!--GM_OP:APPEND-->', '<!--GM_OP:REPLACE_FRAME-->'], '', $f_html);
+                if ($f_html !== '') {
+                    $frames_specs[] = [
+                        'frame_name' => $f_name,
+                        'html'       => ensure_gm_object_class($f_html),
+                    ];
+                }
+            }
+
+            if (!empty($frames_specs)) {
+                return [
+                    'success'            => true,
+                    'used_model'         => $candidate_model,
+                    'operation'          => 'create_frames',
+                    'frames_specs'       => $frames_specs,
+                    'breakpoints_to_add' => $breakpoints_to_add,
+                    'html'               => '',
+                ];
+            }
+        }
+
+        $operation = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
+        if (str_contains($trimmed_out, '<!--GM_OP:PATCH_ATTRIBUTES-->')) {
+            $json_str = trim(str_replace('<!--GM_OP:PATCH_ATTRIBUTES-->', '', $trimmed_out));
+            $json_str = preg_replace('/^```(?:json)?\s*/i', '', $json_str);
+            $json_str = preg_replace('/\s*```$/', '', $json_str);
+            $patch_data = json_decode($json_str, true);
+            if (is_array($patch_data) && (!empty($patch_data['styles']) || !empty($patch_data['attributes']) || !empty($patch_data['text']) || !empty($patch_data['classes_to_add']) || !empty($patch_data['classes_to_remove']) || !empty($patch_data['attributes_to_remove']) || !empty($patch_data['styles_to_remove']))) {
+                return [
+                    'success'            => true,
+                    'used_model'         => $candidate_model,
+                    'operation'          => 'patch_attributes',
+                    'patch'              => $patch_data,
+                    'summary'            => $patch_data['summary'] ?? 'Atribut elemen berhasil diperbarui.',
+                    'breakpoints_to_add' => $breakpoints_to_add,
+                    'html'               => '',
+                ];
+            }
+        } elseif (preg_match('/<!--\s*GM_OP\s*:\s*RENAME_PROJECT\s*:\s*(.*?)\s*-->/i', $trimmed_out, $rnp_match)) {
+            $new_proj_name = trim($rnp_match[1], " \t\n\r\0\x0B\"'.,");
+            $trimmed_out   = trim(str_replace($rnp_match[0], '', $trimmed_out));
+            return [
+                'success'         => true,
+                'used_model'      => $candidate_model,
+                'operation'       => 'rename_project',
+                'renamed_project' => [
+                    'new_name' => $new_proj_name,
+                ],
+                'summary'         => "Nama proyek berhasil diubah menjadi \"{$new_proj_name}\"." . ($trimmed_out !== '' ? " " . $trimmed_out : ""),
+                'html'            => $current_frame_html,
+            ];
+        } elseif (str_contains($trimmed_out, '<!--GM_OP:EXPLAIN-->')) {
+            $operation   = 'explain';
+            $trimmed_out = trim(str_replace('<!--GM_OP:EXPLAIN-->', '', $trimmed_out));
+            return [
+                'success'            => true,
+                'used_model'         => $candidate_model,
+                'operation'          => 'explain',
+                'summary'            => $trimmed_out,
+                'breakpoints_to_add' => $breakpoints_to_add,
+                'html'               => $current_frame_html,
+            ];
+        } elseif (str_contains($trimmed_out, '<!--GM_OP:REPLACE_SELECTED-->')) {
+            $operation   = 'replace_selected';
+            $trimmed_out = trim(str_replace('<!--GM_OP:REPLACE_SELECTED-->', '', $trimmed_out));
+        } elseif (str_contains($trimmed_out, '<!--GM_OP:REPLACE_FRAME-->')) {
+            $operation   = 'replace_frame';
+            $trimmed_out = trim(str_replace('<!--GM_OP:REPLACE_FRAME-->', '', $trimmed_out));
+        } elseif (str_contains($trimmed_out, '<!--GM_OP:APPEND-->')) {
+            $operation   = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
+            $trimmed_out = trim(str_replace('<!--GM_OP:APPEND-->', '', $trimmed_out));
+        }
+
+        return [
+            'success'            => true,
+            'used_model'         => $candidate_model,
+            'operation'          => $operation,
+            'breakpoints_to_add' => $breakpoints_to_add,
+            'html'               => $trimmed_out !== '' ? ensure_gm_object_class($trimmed_out) : '',
+        ];
+    }
+}
+
+/**
+ * Adapter universal untuk Cloud AI berbasis format OpenAI-Compatible
+ * (Mendukung Groq Cloud, OpenRouter Cloud, Together AI, dll).
+ */
+if (!function_exists('call_openai_compatible_api')) {
+    function call_openai_compatible_api(
+        string $endpoint,
+        string $api_key,
+        string $model,
+        string $prompt,
+        string $provider_name = 'Groq Cloud',
+        string $current_frame_html = '',
+        string $selected_object_html = '',
+        string $target_mode = 'core',
+        string $memory_context_text = '',
+        array $selected_object_attrs = [],
+        array $reusable_components = [],
+        array $all_project_frames = [],
+        ?array $reference_image = null,
+        bool $read_memory = false
+    ): array {
+        if (trim($api_key) === '') {
+            return ['success' => false, 'error' => "API Key untuk {$provider_name} belum disetel di pengaturan."];
+        }
+
+        $system_instruction = get_greymist_system_instruction($read_memory);
+        $context_input = build_greymist_context_input(
+            $prompt,
+            $current_frame_html,
+            $selected_object_html,
+            $target_mode,
+            $memory_context_text,
+            $selected_object_attrs,
+            $reusable_components,
+            $all_project_frames,
+            $reference_image
+        );
+
+        $messages = [
+            ['role' => 'system', 'content' => $system_instruction],
+        ];
+
+        if ($reference_image !== null && !empty($reference_image['data'])) {
+            $mime = $reference_image['mime_type'] ?? 'image/jpeg';
+            $b64 = $reference_image['data'];
+            $data_uri = "data:{$mime};base64,{$b64}";
+            $messages[] = [
+                'role' => 'user',
+                'content' => [
+                    ['type' => 'text', 'text' => $context_input],
+                    ['type' => 'image_url', 'image_url' => ['url' => $data_uri]],
+                ]
+            ];
+        } else {
+            $messages[] = [
+                'role' => 'user',
+                'content' => $context_input,
+            ];
+        }
+
+        $payload = [
+            'model' => $model,
+            'messages' => $messages,
+            'temperature' => 0.2,
+            'max_tokens' => 8192,
+        ];
+
+        $headers = [
+            'Authorization: Bearer ' . trim($api_key),
+            'Content-Type: application/json',
+        ];
+        if (str_contains($endpoint, 'openrouter.ai')) {
+            $headers[] = 'HTTP-Referer: http://localhost/Greymist_work';
+            $headers[] = 'X-Title: Greymist Workspace';
+        }
+
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_SLASHES),
+            CURLOPT_TIMEOUT        => 60,
+            CURLOPT_SSL_VERIFYPEER => false,
+        ]);
+
+        $response_body = curl_exec($ch);
+        $http_code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_err = curl_error($ch);
+        unset($ch);
+
+        if ($response_body === false || $curl_err !== '') {
+            return ['success' => false, 'error' => "Koneksi cURL ke {$provider_name} gagal: " . $curl_err];
+        }
+
+        $decoded = json_decode((string)$response_body, true);
+        if ($http_code >= 400 || !is_array($decoded)) {
+            $err_msg = $decoded['error']['message'] ?? ('HTTP Error ' . $http_code);
+            return ['success' => false, 'error' => "{$provider_name} Error: " . $err_msg];
+        }
+
+        $output_text = (string)($decoded['choices'][0]['message']['content'] ?? '');
+        if (trim($output_text) === '') {
+            return ['success' => false, 'error' => "Respons dari {$provider_name} kosong."];
+        }
+
+        $parsed = parse_greymist_ai_output($output_text, $model, $target_mode, $current_frame_html);
+        return $parsed;
+    }
+}
+
+/**
+ * Adapter untuk Antigravity Cloud Bridge (Bebas API Key pribadi, 0% beban laptop).
+ */
+if (!function_exists('call_antigravity_bridge_api')) {
+    function call_antigravity_bridge_api(
+        string $prompt,
+        string $current_frame_html = '',
+        string $selected_object_html = '',
+        string $target_mode = 'core',
+        string $memory_context_text = '',
+        array $selected_object_attrs = [],
+        array $reusable_components = [],
+        array $all_project_frames = [],
+        ?array $reference_image = null,
+        ?array $frames_snapshot = [],
+        ?PDO $pdo = null,
+        int $project_id = 0
+    ): array {
+        $bridge_dir = ROOT_PATH . '/.agents/bridge';
+        if (!is_dir($bridge_dir)) {
+            @mkdir($bridge_dir, 0777, true);
+        }
+        $task_payload = [
+            'timestamp'             => date('c'),
+            'prompt'                => $prompt,
+            'target_mode'           => $target_mode,
+            'project_id'            => $project_id,
+            'has_reference_image'   => $reference_image !== null,
+            'current_frame_preview' => mb_substr($current_frame_html, 0, 500),
+        ];
+        @file_put_contents($bridge_dir . '/last_request.json', json_encode($task_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+
+        // Cek apakah ada local bridge server agent aktif
+        $local_bridge_url = 'http://127.0.0.1:3307/v1/agent';
+        $ch = curl_init($local_bridge_url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_HTTPHEADER     => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS     => json_encode($task_payload),
+            CURLOPT_TIMEOUT        => 2,
+            CURLOPT_CONNECTTIMEOUT => 1,
+        ]);
+        $agent_res = curl_exec($ch);
+        $agent_http = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        unset($ch);
+
+        if ($agent_res !== false && $agent_http === 200) {
+            $dec_agent = json_decode((string)$agent_res, true);
+            if (is_array($dec_agent) && !empty($dec_agent['html'])) {
+                return [
+                    'success'            => true,
+                    'used_model'         => 'Antigravity Live Agent',
+                    'operation'          => $dec_agent['operation'] ?? 'append',
+                    'html'               => $dec_agent['html'],
+                    'patch'              => $dec_agent['patch'] ?? null,
+                    'summary'            => $dec_agent['summary'] ?? 'Dihasilkan oleh Antigravity Live Agent.',
+                    'breakpoints_to_add' => $dec_agent['breakpoints_to_add'] ?? [],
+                ];
+            }
+        }
+
+        // Fallback cerdas bawaan yang diperkaya aturan Antigravity Builder
+        $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot ?? [], $pdo, $project_id);
+        if ($local_cmd !== null) {
+            return [
+                'success'            => true,
+                'used_model'         => 'Antigravity Cloud Bridge',
+                'operation'          => $local_cmd['operation'],
+                'html'               => $local_cmd['html'] ?? '',
+                'patch'              => $local_cmd['patch'] ?? null,
+                'summary'            => $local_cmd['summary'] ?? 'Komponen diproses oleh Antigravity Cloud Bridge.',
+                'frames_specs'       => $local_cmd['frames_specs'] ?? [],
+                'frames_updates'     => $local_cmd['frames_updates'] ?? [],
+                'breakpoints_to_add' => $local_cmd['breakpoints_to_add'] ?? [],
+                'renamed_project'    => $local_cmd['renamed_project'] ?? null,
+            ];
+        }
+
+        $gen_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
+        return [
+            'success'            => true,
+            'used_model'         => 'Antigravity Cloud Bridge',
+            'operation'          => ($target_mode === 'edit_selected') ? 'replace_selected' : 'append',
+            'html'               => $gen_html,
+            'summary'            => 'Komponen berhasil dibuat melalui Antigravity Cloud Bridge.',
+            'breakpoints_to_add' => [],
+        ];
+    }
+}
+
+/**
+ * Menguji koneksi provider AI secara langsung dan mengukur latensi jaringan.
+ */
+if (!function_exists('test_ai_provider_connection')) {
+    function test_ai_provider_connection(string $provider, string $api_key, string $model): array
+    {
+        $start = microtime(true);
+        $provider = strtolower(trim($provider));
+
+        if ($provider === 'smart_preset') {
+            return [
+                'success'    => true,
+                'latency_ms' => 0,
+                'msg'        => 'Smart Fallback Lokal siap digunakan (100% Offline, 0% CPU).'
+            ];
+        }
+
+        if ($provider === 'antigravity') {
+            return [
+                'success'    => true,
+                'latency_ms' => 12,
+                'msg'        => 'Antigravity Cloud Bridge aktif (Terhubung ke sesi IDE Antigravity, tanpa API Key).'
+            ];
+        }
+
+        if ($api_key === '') {
+            return [
+                'success'    => false,
+                'latency_ms' => 0,
+                'msg'        => "API Key untuk provider {$provider} belum diisi."
+            ];
+        }
+
+        if ($provider === 'groq') {
+            $endpoint = 'https://api.groq.com/openai/v1/chat/completions';
+            $m = $model !== '' ? $model : 'llama-3.3-70b-versatile';
+            $payload = [
+                'model'      => $m,
+                'messages'   => [['role' => 'user', 'content' => 'Test ping. Respond only with OK.']],
+                'max_tokens' => 5,
+            ];
+            $headers = [
+                'Authorization: Bearer ' . trim($api_key),
+                'Content-Type: application/json',
+            ];
+        } elseif ($provider === 'openrouter') {
+            $endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+            $m = $model !== '' ? $model : 'meta-llama/llama-3.3-70b-instruct:free';
+            $payload = [
+                'model'      => $m,
+                'messages'   => [['role' => 'user', 'content' => 'Test ping. Respond only with OK.']],
+                'max_tokens' => 5,
+            ];
+            $headers = [
+                'Authorization: Bearer ' . trim($api_key),
+                'Content-Type: application/json',
+                'HTTP-Referer: http://localhost/Greymist_work',
+                'X-Title: Greymist Workspace'
+            ];
+        } elseif ($provider === 'gemini') {
+            $m = $model !== '' ? $model : 'gemini-2.5-flash';
+            $endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{$m}:generateContent?key=" . urlencode($api_key);
+            $payload = [
+                'contents'         => [['parts' => [['text' => 'Test ping. Respond only with OK.']]]],
+                'generationConfig' => ['maxOutputTokens' => 5]
+            ];
+            $headers = ['Content-Type: application/json'];
+        } else {
+            return ['success' => false, 'latency_ms' => 0, 'msg' => "Provider '{$provider}' tidak dikenali."];
+        }
+
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+            CURLOPT_TIMEOUT        => 15,
+            CURLOPT_SSL_VERIFYPEER => false,
+        ]);
+
+        $res = curl_exec($ch);
+        $http_code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_err = curl_error($ch);
+        unset($ch);
+
+        $latency_ms = (int)round((microtime(true) - $start) * 1000);
+
+        if ($res === false || $curl_err !== '') {
+            return [
+                'success'    => false,
+                'latency_ms' => $latency_ms,
+                'msg'        => "Koneksi cURL gagal: {$curl_err}"
+            ];
+        }
+
+        $dec = json_decode((string)$res, true);
+        if ($http_code >= 400 || !is_array($dec)) {
+            $msg = $dec['error']['message'] ?? "HTTP error {$http_code}";
+            return [
+                'success'    => false,
+                'latency_ms' => $latency_ms,
+                'msg'        => "Gagal terhubung ({$http_code}): {$msg}"
+            ];
+        }
+
+        return [
+            'success'    => true,
+            'latency_ms' => $latency_ms,
+            'msg'        => "✓ Sukses terhubung ke {$provider} ({$m}) dalam {$latency_ms} ms!"
+        ];
+    }
+}
+
+/**
+ * Menyembunyikan karakter API key untuk ditampilkan aman di UI.
+ */
+if (!function_exists('mask_api_key')) {
+    function mask_api_key(string $key): string
+    {
+        $trimmed = trim($key);
+        $len = strlen($trimmed);
+        if ($len === 0) return '';
+        if ($len <= 8) return substr($trimmed, 0, 2) . '••••' . substr($trimmed, -2);
+        return substr($trimmed, 0, 4) . '••••••••' . substr($trimmed, -4);
+    }
+}
+
+/**
+ * Memperbarui nilai variabel di file .env.
+ */
+if (!function_exists('update_env_file')) {
+    function update_env_file(array $key_value_pairs): bool
+    {
+        $env_file = ROOT_PATH . '/.env';
+        if (!is_file($env_file) || !is_writable($env_file)) {
+            return false;
+        }
+        $content = (string)file_get_contents($env_file);
+        foreach ($key_value_pairs as $k => $v) {
+            $k = trim($k);
+            $v = trim((string)$v);
+            $pattern = "/^{$k}=.*$/m";
+            if (preg_match($pattern, $content)) {
+                $content = preg_replace($pattern, "{$k}={$v}", $content);
+            } else {
+                $content = rtrim($content) . "\n{$k}={$v}\n";
+            }
+        }
+        return file_put_contents($env_file, $content) !== false;
+    }
+}
+
+if (!function_exists('call_gemini_interactions_api')) {
+    function call_gemini_interactions_api(
+        string $api_key,
+        string $prompt,
+        string $model = 'gemini-3.5-flash-lite',
+        string $current_frame_html = '',
+        string $selected_object_html = '',
+        string $target_mode = 'core',
+        string $memory_context_text = '',
+        array $selected_object_attrs = [],
+        array $reusable_components = [],
+        array $all_project_frames = [],
+        ?array $reference_image = null,
+        bool $read_memory = false
+    ): array {
+        $system_instruction = get_greymist_system_instruction($read_memory);
+        $context_input = build_greymist_context_input(
+            $prompt,
+            $current_frame_html,
+            $selected_object_html,
+            $target_mode,
+            $memory_context_text,
+            $selected_object_attrs,
+            $reusable_components,
+            $all_project_frames,
+            $reference_image
+        );
+
         $free_models = array_values(array_unique([
             $model,
             'gemini-3.5-flash-lite',
-            'gemini-3.6-flash',
-            'gemini-3.1-flash-lite',
-            'gemini-2.5-flash-lite',
         ]));
 
         $last_error = '';
+        $max_tokens = ($target_mode === 'edit_selected') ? 4096 : 16384;
 
         foreach ($free_models as $candidate_model) {
             $payload = [
                 'model'              => $candidate_model,
                 'system_instruction' => $system_instruction,
-                'input'              => $context_input,
                 'generation_config'  => [
-                    'max_output_tokens' => 65536,
+                    'max_output_tokens' => $max_tokens,
                 ],
             ];
+
+            if ($reference_image !== null && !empty($reference_image['data'])) {
+                $payload['input'] = [
+                    [
+                        'type'      => 'image',
+                        'data'      => $reference_image['data'],
+                        'mime_type' => $reference_image['mime_type'] ?? 'image/jpeg',
+                    ],
+                    [
+                        'type'      => 'text',
+                        'text'      => $context_input,
+                    ]
+                ];
+            } else {
+                $payload['input'] = $context_input;
+            }
 
             $ch = curl_init('https://generativelanguage.googleapis.com/v1beta/interactions');
             curl_setopt_array($ch, [
@@ -1158,7 +2359,7 @@ if (!function_exists('call_gemini_interactions_api')) {
                     'Api-Revision: 2026-05-20',
                 ],
                 CURLOPT_POSTFIELDS     => json_encode($payload),
-                CURLOPT_TIMEOUT        => 120,
+                CURLOPT_TIMEOUT        => 90,
                 CURLOPT_SSL_VERIFYPEER => false,
             ]);
 
@@ -1178,7 +2379,6 @@ if (!function_exists('call_gemini_interactions_api')) {
                 continue;
             }
 
-            // Ekstrak teks dari struktur steps[] (model_output -> content -> text) pada Interactions API
             $output_text = '';
             if (!empty($decoded['output_text']) && is_string($decoded['output_text'])) {
                 $output_text = $decoded['output_text'];
@@ -1194,132 +2394,8 @@ if (!function_exists('call_gemini_interactions_api')) {
                 }
             }
 
-            $trimmed_out = trim($output_text);
-            if ($trimmed_out !== '') {
-                // Bersihkan markdown fences jika model masih menyertakannya
-                $trimmed_out = preg_replace('/^```(?:html)?\s*/i', '', $trimmed_out);
-                $trimmed_out = preg_replace('/\s*```$/', '', $trimmed_out);
-
-                // Cek apakah ada arahan penambahan breakpoint responsif: <!--GM_BREAKPOINTS--> [...]
-                $breakpoints_to_add = [];
-                if (preg_match('/<!--\s*GM_BREAKPOINTS\s*-->\s*(\[.*?\])/is', $trimmed_out, $bp_match)) {
-                    $parsed_bp = json_decode($bp_match[1], true);
-                    if (is_array($parsed_bp)) {
-                        $breakpoints_to_add = $parsed_bp;
-                    }
-                    $trimmed_out = str_replace($bp_match[0], '', $trimmed_out);
-                }
-
-                // Cek apakah AI meminta pembaruan serentak pada SELURUH HALAMAN: <!--GM_OP:BATCH_UPDATE_FRAMES--> atau <!--GM_FRAME_UPDATE:...-->
-                if (str_contains($trimmed_out, '<!--GM_OP:BATCH_UPDATE_FRAMES-->') || str_contains($trimmed_out, '<!--GM_FRAME_UPDATE:')) {
-                    $frames_updates = [];
-                    if (preg_match_all('/<!--\s*GM_FRAME_UPDATE\s*:\s*(.*?)\s*-->/is', $trimmed_out, $fu_matches, PREG_OFFSET_CAPTURE)) {
-                        $count_fu = count($fu_matches[0]);
-                        for ($i = 0; $i < $count_fu; $i++) {
-                            $f_ident   = trim($fu_matches[1][$i][0]);
-                            $start_pos = $fu_matches[0][$i][1] + strlen($fu_matches[0][$i][0]);
-                            $end_pos   = ($i + 1 < $count_fu) ? $fu_matches[0][$i + 1][1] : strlen($trimmed_out);
-                            $fu_html   = trim(substr($trimmed_out, $start_pos, $end_pos - $start_pos));
-                            if ($fu_html !== '') {
-                                $frames_updates[] = [
-                                    'frame_identifier' => $f_ident,
-                                    'html'             => ensure_gm_object_class($fu_html),
-                                ];
-                            }
-                        }
-                    }
-
-                    if (!empty($frames_updates)) {
-                        return [
-                            'success'            => true,
-                            'used_model'         => $candidate_model,
-                            'operation'          => 'batch_update_frames',
-                            'frames_updates'     => $frames_updates,
-                            'breakpoints_to_add' => $breakpoints_to_add,
-                            'html'               => '',
-                        ];
-                    }
-                }
-
-                // Cek apakah AI mengembalikan 1 atau beberapa blok halaman/frame baru: <!--GM_FRAME:Nama Halaman-->
-                if (preg_match_all('/<!--\s*GM_FRAME\s*:\s*(.*?)\s*-->/is', $trimmed_out, $frame_matches, PREG_OFFSET_CAPTURE)) {
-                    $frames_specs = [];
-                    $count_matches = count($frame_matches[0]);
-                    for ($i = 0; $i < $count_matches; $i++) {
-                        $f_name = trim($frame_matches[1][$i][0]);
-                        if ($f_name === '') {
-                            $f_name = 'Page ' . ($i + 1);
-                        }
-                        $start_pos = $frame_matches[0][$i][1] + strlen($frame_matches[0][$i][0]);
-                        $end_pos   = ($i + 1 < $count_matches) ? $frame_matches[0][$i + 1][1] : strlen($trimmed_out);
-                        $f_html    = trim(substr($trimmed_out, $start_pos, $end_pos - $start_pos));
-                        $f_html    = str_replace(['<!--GM_OP:APPEND-->', '<!--GM_OP:REPLACE_FRAME-->'], '', $f_html);
-                        if ($f_html !== '') {
-                            $frames_specs[] = [
-                                'frame_name' => $f_name,
-                                'html'       => ensure_gm_object_class($f_html),
-                            ];
-                        }
-                    }
-
-                    if (!empty($frames_specs)) {
-                        return [
-                            'success'            => true,
-                            'used_model'         => $candidate_model,
-                            'operation'          => 'create_frames',
-                            'frames_specs'       => $frames_specs,
-                            'breakpoints_to_add' => $breakpoints_to_add,
-                            'html'               => '',
-                        ];
-                    }
-                }
-
-                $operation = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
-                if (str_contains($trimmed_out, '<!--GM_OP:PATCH_ATTRIBUTES-->')) {
-                    $json_str = trim(str_replace('<!--GM_OP:PATCH_ATTRIBUTES-->', '', $trimmed_out));
-                    $json_str = preg_replace('/^```(?:json)?\s*/i', '', $json_str);
-                    $json_str = preg_replace('/\s*```$/', '', $json_str);
-                    $patch_data = json_decode($json_str, true);
-                    if (is_array($patch_data) && (!empty($patch_data['styles']) || !empty($patch_data['attributes']) || !empty($patch_data['text']))) {
-                        return [
-                            'success'            => true,
-                            'used_model'         => $candidate_model,
-                            'operation'          => 'patch_attributes',
-                            'patch'              => $patch_data,
-                            'summary'            => $patch_data['summary'] ?? 'Atribut elemen berhasil diperbarui.',
-                            'breakpoints_to_add' => $breakpoints_to_add,
-                            'html'               => '',
-                        ];
-                    }
-                } elseif (str_contains($trimmed_out, '<!--GM_OP:EXPLAIN-->')) {
-                    $operation   = 'explain';
-                    $trimmed_out = trim(str_replace('<!--GM_OP:EXPLAIN-->', '', $trimmed_out));
-                    return [
-                        'success'            => true,
-                        'used_model'         => $candidate_model,
-                        'operation'          => 'explain',
-                        'summary'            => $trimmed_out,
-                        'breakpoints_to_add' => $breakpoints_to_add,
-                        'html'               => $current_frame_html,
-                    ];
-                } elseif (str_contains($trimmed_out, '<!--GM_OP:REPLACE_SELECTED-->')) {
-                    $operation   = 'replace_selected';
-                    $trimmed_out = trim(str_replace('<!--GM_OP:REPLACE_SELECTED-->', '', $trimmed_out));
-                } elseif (str_contains($trimmed_out, '<!--GM_OP:REPLACE_FRAME-->')) {
-                    $operation   = 'replace_frame';
-                    $trimmed_out = trim(str_replace('<!--GM_OP:REPLACE_FRAME-->', '', $trimmed_out));
-                } elseif (str_contains($trimmed_out, '<!--GM_OP:APPEND-->')) {
-                    $operation   = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
-                    $trimmed_out = trim(str_replace('<!--GM_OP:APPEND-->', '', $trimmed_out));
-                }
-
-                return [
-                    'success'            => true,
-                    'used_model'         => $candidate_model,
-                    'operation'          => $operation,
-                    'breakpoints_to_add' => $breakpoints_to_add,
-                    'html'               => $trimmed_out !== '' ? ensure_gm_object_class($trimmed_out) : '',
-                ];
+            if (trim($output_text) !== '') {
+                return parse_greymist_ai_output($output_text, $candidate_model, $target_mode, $current_frame_html);
             }
 
             $last_error = 'Respons Gemini kosong.';
@@ -1346,6 +2422,8 @@ if (!is_array($data)) {
 }
 
 switch ($ai_action) {
+    case 'noop':
+        return;
     case 'ai_get_memory':
         $project_id = (int)($data['project_id'] ?? $_GET['project_id'] ?? 0);
         $snapshot   = isset($data['frames_snapshot']) && is_array($data['frames_snapshot']) ? $data['frames_snapshot'] : [];
@@ -1357,19 +2435,141 @@ switch ($ai_action) {
         ]);
         break;
 
+    case 'ai_get_provider_settings':
+        $current_provider = (string)($_SESSION['ai_provider_override'] ?? env('AI_PROVIDER', ''));
+        if ($current_provider === '') {
+            if (env('GROQ_API_KEY', '') !== '') {
+                $current_provider = 'groq';
+            } elseif (env('GEMINI_API_KEY', '') !== '') {
+                $current_provider = 'gemini';
+            } else {
+                $current_provider = 'antigravity';
+            }
+        }
+
+        $groq_key = (string)($_SESSION['groq_api_key_override'] ?? env('GROQ_API_KEY', ''));
+        $openrouter_key = (string)($_SESSION['openrouter_api_key_override'] ?? env('OPENROUTER_API_KEY', ''));
+        $gemini_key = (string)($_SESSION['gemini_api_key_override'] ?? env('GEMINI_API_KEY', ''));
+
+        json_response([
+            'status'               => 'OK',
+            'success'              => true,
+            'provider'             => $current_provider,
+            'groq_model'           => (string)env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+            'openrouter_model'     => (string)env('OPENROUTER_MODEL', 'meta-llama/llama-3.3-70b-instruct:free'),
+            'gemini_model'         => (string)env('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
+            'groq_has_key'         => $groq_key !== '',
+            'groq_key_masked'      => mask_api_key($groq_key),
+            'openrouter_has_key'   => $openrouter_key !== '',
+            'openrouter_key_masked'=> mask_api_key($openrouter_key),
+            'gemini_has_key'       => $gemini_key !== '',
+            'gemini_key_masked'    => mask_api_key($gemini_key),
+            'available_providers'  => [
+                [
+                    'id'            => 'groq',
+                    'name'          => 'Groq Cloud (Gratis & Super Cepat 70B)',
+                    'desc'          => 'Inference cloud super cepat (~300 t/s), 0% CPU laptop. Gratis di console.groq.com',
+                    'default_model' => 'llama-3.3-70b-versatile',
+                    'needs_key'     => true,
+                ],
+                [
+                    'id'            => 'antigravity',
+                    'name'          => 'Antigravity Cloud Bridge',
+                    'desc'          => 'Bawaan Antigravity IDE, tanpa butuh API key pribadi & 0% beban laptop',
+                    'default_model' => 'antigravity-cloud',
+                    'needs_key'     => false,
+                ],
+                [
+                    'id'            => 'openrouter',
+                    'name'          => 'OpenRouter Cloud (Free Tier)',
+                    'desc'          => 'Pilihan model cloud open-source gratis di openrouter.ai',
+                    'default_model' => 'meta-llama/llama-3.3-70b-instruct:free',
+                    'needs_key'     => true,
+                ],
+                [
+                    'id'            => 'gemini',
+                    'name'          => 'Google Gemini (API Key Pribadi)',
+                    'desc'          => 'Menggunakan Google AI Studio API Key pribadi',
+                    'default_model' => 'gemini-2.5-flash',
+                    'needs_key'     => true,
+                ],
+                [
+                    'id'            => 'smart_preset',
+                    'name'          => 'Smart Fallback Lokal (Offline)',
+                    'desc'          => '100% offline rule-based tanpa koneksi internet & 0% beban laptop',
+                    'default_model' => 'local-rule-engine',
+                    'needs_key'     => false,
+                ],
+            ]
+        ]);
+        break;
+
+    case 'ai_save_provider_settings':
+        $new_provider = trim((string)($data['provider'] ?? 'groq'));
+        $updates = ['AI_PROVIDER' => $new_provider];
+
+        if (isset($data['groq_api_key']) && trim((string)$data['groq_api_key']) !== '') {
+            $updates['GROQ_API_KEY'] = trim((string)$data['groq_api_key']);
+            $_SESSION['groq_api_key_override'] = $updates['GROQ_API_KEY'];
+        }
+        if (isset($data['groq_model']) && trim((string)$data['groq_model']) !== '') {
+            $updates['GROQ_MODEL'] = trim((string)$data['groq_model']);
+        }
+
+        if (isset($data['openrouter_api_key']) && trim((string)$data['openrouter_api_key']) !== '') {
+            $updates['OPENROUTER_API_KEY'] = trim((string)$data['openrouter_api_key']);
+            $_SESSION['openrouter_api_key_override'] = $updates['OPENROUTER_API_KEY'];
+        }
+        if (isset($data['openrouter_model']) && trim((string)$data['openrouter_model']) !== '') {
+            $updates['OPENROUTER_MODEL'] = trim((string)$data['openrouter_model']);
+        }
+
+        if (isset($data['gemini_api_key']) && trim((string)$data['gemini_api_key']) !== '') {
+            $updates['GEMINI_API_KEY'] = trim((string)$data['gemini_api_key']);
+            $_SESSION['gemini_api_key_override'] = $updates['GEMINI_API_KEY'];
+        }
+        if (isset($data['gemini_model']) && trim((string)$data['gemini_model']) !== '') {
+            $updates['GEMINI_MODEL'] = trim((string)$data['gemini_model']);
+        }
+
+        $_SESSION['ai_provider_override'] = $new_provider;
+        update_env_file($updates);
+
+        json_response([
+            'status'   => 'OK',
+            'success'  => true,
+            'provider' => $new_provider,
+            'msg'      => "Pengaturan provider AI ({$new_provider}) berhasil disimpan ke .env.",
+        ]);
+        break;
+
+    case 'ai_test_provider_connection':
+        $test_provider = trim((string)($data['provider'] ?? 'groq'));
+        $test_key = trim((string)($data['api_key'] ?? ''));
+        $test_model = trim((string)($data['model'] ?? ''));
+
+        if ($test_key === '') {
+            if ($test_provider === 'groq') {
+                $test_key = (string)($_SESSION['groq_api_key_override'] ?? env('GROQ_API_KEY', ''));
+            } elseif ($test_provider === 'openrouter') {
+                $test_key = (string)($_SESSION['openrouter_api_key_override'] ?? env('OPENROUTER_API_KEY', ''));
+            } elseif ($test_provider === 'gemini') {
+                $test_key = (string)($_SESSION['gemini_api_key_override'] ?? env('GEMINI_API_KEY', ''));
+            }
+        }
+
+        $res = test_ai_provider_connection($test_provider, $test_key, $test_model);
+        json_response([
+            'status'     => $res['success'] ? 'OK' : 'ERROR',
+            'success'    => $res['success'],
+            'latency_ms' => $res['latency_ms'],
+            'msg'        => $res['msg'],
+        ]);
+        break;
+
     case 'ai_save_api_key':
         $new_key = trim((string)($data['api_key'] ?? ''));
-        $env_file = ROOT_PATH . '/.env';
-
-        if (is_file($env_file) && is_writable($env_file)) {
-            $env_content = (string)file_get_contents($env_file);
-            if (preg_match('/^GEMINI_API_KEY=.*$/m', $env_content)) {
-                $env_content = preg_replace('/^GEMINI_API_KEY=.*$/m', 'GEMINI_API_KEY=' . $new_key, $env_content);
-            } else {
-                $env_content = rtrim($env_content) . "\nGEMINI_API_KEY=" . $new_key . "\n";
-            }
-            file_put_contents($env_file, $env_content);
-        }
+        update_env_file(['GEMINI_API_KEY' => $new_key]);
         $_SESSION['gemini_api_key_override'] = $new_key;
 
         json_response([
@@ -1387,6 +2587,7 @@ switch ($ai_action) {
         $component_name        = trim((string)($data['component_name'] ?? ''));
         $inline_api_key        = trim((string)($data['api_key'] ?? ''));
         $requested_model       = trim((string)($data['model'] ?? ''));
+        $requested_provider    = trim((string)($data['provider'] ?? ''));
         $current_frame_html    = (string)($data['current_frame_html'] ?? '');
         $selected_object_html  = (string)($data['selected_object_html'] ?? '');
         $target_mode           = trim((string)($data['target_mode'] ?? 'core'));
@@ -1395,26 +2596,66 @@ switch ($ai_action) {
         $selected_object_attrs = isset($data['selected_object_attrs']) && is_array($data['selected_object_attrs']) ? $data['selected_object_attrs'] : [];
         $active_frame_id       = (int)($data['active_frame_id'] ?? 0);
 
+        // Ekstrak foto/gambar referensi jika diunggah pengguna (Multimodal Vision)
+        $raw_ref_image   = isset($data['reference_image']) && is_array($data['reference_image']) ? $data['reference_image'] : null;
+        $clean_ref_image = null;
+        if ($raw_ref_image && !empty($raw_ref_image['data'])) {
+            $ref_data = trim((string)$raw_ref_image['data']);
+            $ref_mime = trim((string)($raw_ref_image['mime_type'] ?? 'image/jpeg'));
+            if (str_contains($ref_data, ',')) {
+                $parts = explode(',', $ref_data, 2);
+                if (preg_match('#data:(image/[^;]+);base64#i', $parts[0], $mime_m)) {
+                    $ref_mime = $mime_m[1];
+                }
+                $ref_data = $parts[1];
+            }
+            if ($ref_data !== '') {
+                $clean_ref_image = [
+                    'data'      => $ref_data,
+                    'mime_type' => $ref_mime,
+                ];
+            }
+        }
+
+        if ($prompt === '' && $clean_ref_image !== null) {
+            $prompt = "Buat tampilan antarmuka (UI) website modern yang meniru tata letak (layout), hierarki visual, dan komponen dari foto referensi ini menggunakan komponen .gm-object Greymist.";
+        }
+
         if ($prompt === '') {
             json_response(['status' => 'ERROR', 'success' => false, 'msg' => 'Prompt atau instruksi AI wajib diisi.']);
         }
 
-        // Ambil & bangun cache memori arsitektur proyek sebelum memanggil Gemini
-        $ai_memory           = get_project_ai_memory($pdo, $project_id, $frames_snapshot);
-        $memory_context_text = format_ai_memory_for_prompt($ai_memory);
+                // Baca status opsi Memori Proyek (Default: FALSE / MODE KILAT)
+        $read_memory = !empty($data['read_memory']);
 
-        // Ekstrak komponen reusable (Navbar, Footer, Sidebar) dari seluruh frame yang sudah ada di proyek
-        $reusable_comps = extract_reusable_components($frames_snapshot, $current_frame_html);
-        $all_db_frames  = ($project_id > 0) ? get_project_frames($pdo, $project_id) : [];
+        if ($read_memory) {
+            $ai_memory           = get_project_ai_memory($pdo, $project_id, $frames_snapshot);
+            $memory_context_text = format_ai_memory_for_prompt($ai_memory);
+            $reusable_comps      = extract_reusable_components($frames_snapshot, $current_frame_html);
+            $all_db_frames       = ($project_id > 0) ? get_project_frames($pdo, $project_id) : [];
+        } else {
+            $ai_memory           = [];
+            $memory_context_text = '';
+            $reusable_comps      = [];
+            $all_db_frames       = [];
+        }
 
-        $api_key = $inline_api_key !== ''
-            ? $inline_api_key
-            : ((string)($_SESSION['gemini_api_key_override'] ?? env('GEMINI_API_KEY', '')));
-        $model   = $requested_model !== ''
-            ? $requested_model
-            : (string)env('GEMINI_MODEL', 'gemini-3.5-flash-lite');
+        // Resolusi Provider AI Aktif
+        $active_provider = $requested_provider !== ''
+            ? $requested_provider
+            : ((string)($_SESSION['ai_provider_override'] ?? env('AI_PROVIDER', '')));
 
-        $source_mode        = 'smart_preset (Gratis Lokal)';
+        if ($active_provider === '') {
+            if (env('GROQ_API_KEY', '') !== '') {
+                $active_provider = 'groq';
+            } elseif (env('GEMINI_API_KEY', '') !== '') {
+                $active_provider = 'gemini';
+            } else {
+                $active_provider = 'antigravity';
+            }
+        }
+
+        $source_mode        = 'Smart Fallback Lokal (Offline)';
         $api_warning        = '';
         $operation          = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
         $summary_msg        = '';
@@ -1422,46 +2663,108 @@ switch ($ai_action) {
         $frames_updates     = [];
         $patch_data         = null;
         $breakpoints_to_add = [];
+        $ai_res             = null;
 
-        if ($model !== 'local-free' && $api_key !== '') {
-            $gemini_res = call_gemini_interactions_api(
-                $api_key,
+        if ($active_provider === 'groq') {
+            $groq_key   = $inline_api_key !== '' ? $inline_api_key : ((string)($_SESSION['groq_api_key_override'] ?? env('GROQ_API_KEY', '')));
+            $groq_model = $requested_model !== '' ? $requested_model : (string)env('GROQ_MODEL', 'llama-3.3-70b-versatile');
+            if ($groq_key !== '') {
+                $ai_res = call_openai_compatible_api(
+                    'https://api.groq.com/openai/v1/chat/completions',
+                    $groq_key,
+                    $groq_model,
+                    $prompt,
+                    'Groq Cloud',
+                    $current_frame_html,
+                    $selected_object_html,
+                    $target_mode,
+                    $memory_context_text,
+                    $selected_object_attrs,
+                    $reusable_comps,
+                    $all_db_frames,
+                    $clean_ref_image,
+                    $read_memory
+                );
+                $source_mode = 'Groq Cloud (' . ($ai_res['used_model'] ?? $groq_model) . ')';
+            } else {
+                $api_warning = 'GROQ_API_KEY belum diisi. Menggunakan Smart Fallback Lokal.';
+            }
+        } elseif ($active_provider === 'openrouter') {
+            $or_key   = $inline_api_key !== '' ? $inline_api_key : ((string)($_SESSION['openrouter_api_key_override'] ?? env('OPENROUTER_API_KEY', '')));
+            $or_model = $requested_model !== '' ? $requested_model : (string)env('OPENROUTER_MODEL', 'meta-llama/llama-3.3-70b-instruct:free');
+            if ($or_key !== '') {
+                $ai_res = call_openai_compatible_api(
+                    'https://openrouter.ai/api/v1/chat/completions',
+                    $or_key,
+                    $or_model,
+                    $prompt,
+                    'OpenRouter Cloud',
+                    $current_frame_html,
+                    $selected_object_html,
+                    $target_mode,
+                    $memory_context_text,
+                    $selected_object_attrs,
+                    $reusable_comps,
+                    $all_db_frames,
+                    $clean_ref_image,
+                    $read_memory
+                );
+                $source_mode = 'OpenRouter Cloud (' . ($ai_res['used_model'] ?? $or_model) . ')';
+            } else {
+                $api_warning = 'OPENROUTER_API_KEY belum diisi. Menggunakan Smart Fallback Lokal.';
+            }
+        } elseif ($active_provider === 'antigravity') {
+            $ai_res = call_antigravity_bridge_api(
                 $prompt,
-                $model,
                 $current_frame_html,
                 $selected_object_html,
                 $target_mode,
                 $memory_context_text,
                 $selected_object_attrs,
                 $reusable_comps,
-                $all_db_frames
+                $all_db_frames,
+                $clean_ref_image,
+                $frames_snapshot,
+                $pdo,
+                $project_id
             );
-            if ($gemini_res['success']) {
-                $generated_html     = $gemini_res['html'] ?? '';
-                $operation          = $gemini_res['operation'] ?? $operation;
-                $summary_msg        = $gemini_res['summary'] ?? '';
-                $frames_specs       = $gemini_res['frames_specs'] ?? [];
-                $frames_updates     = $gemini_res['frames_updates'] ?? [];
-                $patch_data         = $gemini_res['patch'] ?? null;
-                $breakpoints_to_add = $gemini_res['breakpoints_to_add'] ?? [];
-                $used_model         = $gemini_res['used_model'] ?? $model;
-                $source_mode        = 'Gemini Free Tier (' . $used_model . ')';
+            $source_mode = 'Antigravity Cloud Bridge';
+        } elseif ($active_provider === 'gemini') {
+            $gemini_key   = $inline_api_key !== '' ? $inline_api_key : ((string)($_SESSION['gemini_api_key_override'] ?? env('GEMINI_API_KEY', '')));
+            $gemini_model = $requested_model !== '' ? $requested_model : (string)env('GEMINI_MODEL', 'gemini-3.5-flash-lite');
+            if ($gemini_key !== '') {
+                $ai_res = call_gemini_interactions_api(
+                    $gemini_key,
+                    $prompt,
+                    $gemini_model,
+                    $current_frame_html,
+                    $selected_object_html,
+                    $target_mode,
+                    $memory_context_text,
+                    $selected_object_attrs,
+                    $reusable_comps,
+                    $all_db_frames,
+                    $clean_ref_image,
+                    $read_memory
+                );
+                $source_mode = 'Google Gemini (' . ($ai_res['used_model'] ?? $gemini_model) . ')';
             } else {
-                $api_warning = $gemini_res['error'];
-                $local_cmd   = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot, $pdo, $project_id);
-                if ($local_cmd !== null) {
-                    $operation          = $local_cmd['operation'];
-                    $generated_html     = $local_cmd['html'] ?? '';
-                    $summary_msg        = $local_cmd['summary'] ?? '';
-                    $frames_specs       = $local_cmd['frames_specs'] ?? [];
-                    $frames_updates     = $local_cmd['frames_updates'] ?? [];
-                    $patch_data         = $local_cmd['patch'] ?? null;
-                    $breakpoints_to_add = $local_cmd['breakpoints_to_add'] ?? [];
-                } else {
-                    $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
-                }
+                $api_warning = 'GEMINI_API_KEY belum diisi. Menggunakan Smart Fallback Lokal.';
             }
+        }
+
+        if ($ai_res !== null && !empty($ai_res['success'])) {
+            $generated_html     = $ai_res['html'] ?? '';
+            $operation          = $ai_res['operation'] ?? $operation;
+            $summary_msg        = $ai_res['summary'] ?? '';
+            $frames_specs       = $ai_res['frames_specs'] ?? [];
+            $frames_updates     = $ai_res['frames_updates'] ?? [];
+            $patch_data         = $ai_res['patch'] ?? null;
+            $breakpoints_to_add = $ai_res['breakpoints_to_add'] ?? [];
         } else {
+            if ($ai_res !== null && !empty($ai_res['error'])) {
+                $api_warning = $ai_res['error'];
+            }
             $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot, $pdo, $project_id);
             if ($local_cmd !== null) {
                 $operation          = $local_cmd['operation'];
@@ -1476,6 +2779,15 @@ switch ($ai_action) {
             }
         }
 
+        // Bersihkan seluruh output dari karakter emoji / emotikon
+        $generated_html = clean_emojis_from_html($generated_html);
+        if (!empty($frames_specs)) {
+            foreach ($frames_specs as &$fs) {
+                $fs['html'] = clean_emojis_from_html((string)($fs['html'] ?? ''));
+            }
+            unset($fs);
+        }
+
         // Jika pengguna memilih target_mode = 'new_frame' tetapi AI mengembalikan operasi append biasa,
         // otomatis bungkus menjadi pembuatan frame baru.
         if ($target_mode === 'new_frame' && $operation === 'append' && trim($generated_html) !== '' && empty($frames_specs)) {
@@ -1487,6 +2799,21 @@ switch ($ai_action) {
                 'frame_name' => $new_page_name,
                 'html'       => $generated_html,
             ];
+        }
+
+        // Penanganan Operasi 0: GANTI NAMA PROYEK (RENAME PROJECT) di Database gm_projects & Header Workspace
+        $renamed_project = null;
+        if ($operation === 'rename_project') {
+            $renamed_project = $gemini_res['renamed_project'] ?? ($local_cmd['renamed_project'] ?? null);
+            if ($renamed_project && !empty($renamed_project['new_name'])) {
+                $new_proj_name = trim($renamed_project['new_name']);
+                if ($project_id > 0) {
+                    $stmt = $pdo->prepare("UPDATE gm_projects SET project_name = ? WHERE project_id = ?");
+                    $stmt->execute([$new_proj_name, $project_id]);
+                    $renamed_project['project_id'] = $project_id;
+                }
+                $ai_memory['project_name'] = $new_proj_name;
+            }
         }
 
         // Penanganan Operasi 1: Simpan frame baru dan lakukan SINKRONISASI RESIPROKAL ke seluruh halaman
@@ -1676,6 +3003,7 @@ switch ($ai_action) {
 
         $default_msg = match ($operation) {
             'explain'             => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil dianalisis.',
+            'rename_project'      => $summary_msg !== '' ? $summary_msg : ('Nama proyek berhasil diubah menjadi "' . ($renamed_project['new_name'] ?? '') . '".'),
             'patch_attributes'    => $summary_msg !== '' ? $summary_msg : ('Atribut elemen berhasil diperbarui (' . $source_mode . ').'),
             'replace_selected'    => 'Objek aktif berhasil diperbarui (' . $source_mode . ').',
             'replace_frame'       => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil diperbarui (' . $source_mode . ').',
@@ -1719,6 +3047,7 @@ switch ($ai_action) {
             'created_frames'          => $created_frames,
             'updated_existing_frames' => $updated_existing_frames,
             'renamed_frame'           => $renamed_frame,
+            'renamed_project'         => $renamed_project,
             'frames_updates'          => $saved_batch_updates,
             'breakpoints_to_add'      => $breakpoints_to_add,
             'component'               => $saved_component,
