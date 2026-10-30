@@ -53,8 +53,14 @@ const GMObjectHandler = (() => {
     }
 
     function attachTo(obj) {
-        detach();
+        if (!obj) {
+            detach(true);
+            return;
+        }
+        detach(false);
         activeObj = obj;
+        activeObj.classList.add('gm-active');
+        window.lastSelectedGmObject = activeObj;
         scale = getCurrentScale();
 
         // ====== Handlers ======
@@ -149,6 +155,12 @@ const GMObjectHandler = (() => {
         startFollowLoop();
         observeDeletion();
 
+        const detail = { target: activeObj };
+        document.dispatchEvent(new CustomEvent('gm-selection-change', { detail }));
+        window.dispatchEvent(new CustomEvent('gm-selection-change', { detail }));
+        document.dispatchEvent(new CustomEvent('gm-active-tick', { detail }));
+        window.dispatchEvent(new CustomEvent('gm-active-tick', { detail }));
+
 
 
         function applyInputValue(type) {
@@ -207,7 +219,7 @@ const GMObjectHandler = (() => {
 
 
 
-    function detach() {
+    function detach(deselectAll = true) {
         if (observer) {
             observer.disconnect();
             observer = null;
@@ -216,7 +228,19 @@ const GMObjectHandler = (() => {
         for (const l in labels) labels[l]?.remove();
         handlers = {};
         labels = {};
-        activeObj = null;
+        if (activeObj) {
+            if (deselectAll) activeObj.classList.remove('gm-active');
+            activeObj = null;
+        }
+        if (deselectAll) {
+            document.querySelectorAll('.gm-object.gm-active').forEach(el => el.classList.remove('gm-active'));
+            window.lastSelectedGmObject = null;
+            const detail = { target: null };
+            document.dispatchEvent(new CustomEvent('gm-selection-change', { detail }));
+            window.dispatchEvent(new CustomEvent('gm-selection-change', { detail }));
+            document.dispatchEvent(new CustomEvent('gm-active-tick', { detail }));
+            window.dispatchEvent(new CustomEvent('gm-active-tick', { detail }));
+        }
     }
 
     function observeDeletion() {
@@ -361,17 +385,47 @@ document.addEventListener('mousedown', e => {
     const active = GMObjectHandler.getActive(); // buat getter aktif object
     if (!active) return;
 
+    if (GMObjectHandler.isScaling()) return;
+
     const clickedInsideObj = active.contains(e.target);
-    const clickedHandler = e.target.closest('.gm-handler');
-    const clickedLabel = e.target.closest('.gm-label');
-    const clickedAsideLeft = e.target.closest('.gm-aside-left');
-    const clickedMenu = e.target.closest('.gm-object-menu, .gm-object-info-modal');
+    if (clickedInsideObj) return;
 
-    if (clickedInsideObj || clickedHandler || clickedLabel || clickedAsideLeft || clickedMenu || GMObjectHandler.isScaling()) {
-        // klik di dalam object / handler / label / aside-left / menu / sedang scaling → tetap aktif
-        return;
-    }
+    const clickedOtherGmObj = e.target.closest('.gm-object');
+    if (clickedOtherGmObj && !clickedOtherGmObj.classList.contains('gm-object-core')) return;
 
-    // klik di luar → detach
+    const safeAreas = [
+        '.gm-top-menu-right',
+        '.gm-color-dropdown',
+        '#colorMenuBtn',
+        '#gmGradientModal',
+        '.gm-object-menu',
+        '.gm-object-info-modal',
+        '.gm-handler',
+        '.gm-label',
+        '.gm-aside-left',
+        '.gm-aside-right',
+        '#gm-display-modal',
+        '.gm-object-attribute',
+        '.gm-token-editor-popup',
+        '.gm-token-popup',
+        '#gm-bp-modal',
+        '#gm-save-comp-modal',
+        '.gm-comp-modal-overlay',
+        '.gm-comp-modal-container',
+        '#gm-view-comp-modal',
+        '.gm-view-comp-modal-overlay',
+        '.gm-view-comp-container',
+        '.gm-comp-card-view-btn',
+        '.gm-thumb-quick-view',
+        '.gm-interaction-toggle',
+        '.gm-full-height-toggle',
+        '#gm-breakpoint-toolbar',
+        '.gm-breakpoint-toolbar',
+        '#gm-ai-floating-panel',
+        '.gm-ai-plugin-toggle'
+    ];
+
+    if (safeAreas.some(sel => e.target.closest(sel))) return;
+
     GMObjectHandler.detach();
 });

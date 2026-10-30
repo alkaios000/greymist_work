@@ -83,7 +83,21 @@ framePreview?.addEventListener('click', e => {
     if (editingEl) return; // Sedang dalam mode edit, biarkan kursor berjalan normal
 
     const obj = e.target.closest('.gm-object');
-    if (!obj) return;
+    // Jika klik di belakang frame atau di kanvas kosong (bukan pada elemen .gm-object konten):
+    if (!obj || obj.classList.contains('gm-object-core')) {
+        if (currentEditingEl) disableEditing(currentEditingEl);
+        document.querySelectorAll('.gm-object.gm-active').forEach(o => o.classList.remove('gm-active'));
+        if (typeof GMObjectHandler !== 'undefined' && typeof GMObjectHandler.detach === 'function') {
+            GMObjectHandler.detach();
+        }
+        window.lastSelectedGmObject = null;
+        const detail = { target: null };
+        window.dispatchEvent(new CustomEvent('gm-selection-change', { detail }));
+        document.dispatchEvent(new CustomEvent('gm-selection-change', { detail }));
+        window.dispatchEvent(new CustomEvent('gm-active-tick', { detail }));
+        document.dispatchEvent(new CustomEvent('gm-active-tick', { detail }));
+        return;
+    }
 
     const core = obj.closest('.gm-object-core');
     if (!core) return;
@@ -112,10 +126,14 @@ framePreview?.addEventListener('click', e => {
     }
 
     window.lastSelectedGmObject = obj;
-    window.dispatchEvent(new CustomEvent('gm-selection-change', { detail: { target: obj } }));
-    document.dispatchEvent(new CustomEvent('gm-selection-change', { detail: { target: obj } }));
-    window.dispatchEvent(new CustomEvent('gm-active-tick', { detail: { target: obj } }));
-    document.dispatchEvent(new CustomEvent('gm-active-tick', { detail: { target: obj } }));
+    if (typeof GMObjectHandler !== 'undefined' && typeof GMObjectHandler.attachTo === 'function') {
+        GMObjectHandler.attachTo(obj);
+    } else {
+        window.dispatchEvent(new CustomEvent('gm-selection-change', { detail: { target: obj } }));
+        document.dispatchEvent(new CustomEvent('gm-selection-change', { detail: { target: obj } }));
+        window.dispatchEvent(new CustomEvent('gm-active-tick', { detail: { target: obj } }));
+        document.dispatchEvent(new CustomEvent('gm-active-tick', { detail: { target: obj } }));
+    }
 
     isObjectClicked = true;
     setTimeout(() => isObjectClicked = false, 0);
@@ -126,7 +144,21 @@ framePreview?.addEventListener('dblclick', e => {
     if (document.body.classList.contains('gm-interaction-mode-on')) return; // Disable edit in interaction mode
 
     const obj = e.target.closest('.gm-object');
-    if (!obj) return;
+    // Jika klik di belakang frame atau di kanvas kosong (bukan pada elemen .gm-object konten):
+    if (!obj || obj.classList.contains('gm-object-core')) {
+        if (currentEditingEl) disableEditing(currentEditingEl);
+        document.querySelectorAll('.gm-object.gm-active').forEach(o => o.classList.remove('gm-active'));
+        if (typeof GMObjectHandler !== 'undefined' && typeof GMObjectHandler.detach === 'function') {
+            GMObjectHandler.detach();
+        }
+        window.lastSelectedGmObject = null;
+        const detail = { target: null };
+        window.dispatchEvent(new CustomEvent('gm-selection-change', { detail }));
+        document.dispatchEvent(new CustomEvent('gm-selection-change', { detail }));
+        window.dispatchEvent(new CustomEvent('gm-active-tick', { detail }));
+        document.dispatchEvent(new CustomEvent('gm-active-tick', { detail }));
+        return;
+    }
     const core = obj.closest('.gm-object-core');
     if (!core) return;
 
@@ -142,8 +174,9 @@ document.addEventListener('click', e => {
     const isLabel = e.target.closest('.gm-label');
     const scaling = GMObjectHandler.isScaling?.();
     const isEditing = e.target.closest('[data-gm-editing]');
+    const isGmObject = e.target.closest('.gm-object');
 
-    if (isObjectClicked || isHandler || isLabel || scaling || isEditing) return;
+    if (isObjectClicked || isHandler || isLabel || scaling || isEditing || (isGmObject && !isGmObject.classList.contains('gm-object-core'))) return;
 
     const safeAreas = [
         '.gm-top-menu-right',
@@ -172,7 +205,9 @@ document.addEventListener('click', e => {
         '.gm-interaction-toggle',
         '.gm-full-height-toggle',
         '#gm-breakpoint-toolbar',
-        '.gm-breakpoint-toolbar'
+        '.gm-breakpoint-toolbar',
+        '#gm-ai-floating-panel',
+        '.gm-ai-plugin-toggle'
     ];
     const clickedInSafeArea = safeAreas.some(sel => e.target.closest(sel));
 
@@ -180,9 +215,14 @@ document.addEventListener('click', e => {
         // Matikan mode edit
         if (currentEditingEl) disableEditing(currentEditingEl);
         document.querySelectorAll('.gm-object.gm-active').forEach(o => o.classList.remove('gm-active'));
-        GMObjectHandler.detach();
+        if (typeof GMObjectHandler !== 'undefined' && typeof GMObjectHandler.detach === 'function') {
+            GMObjectHandler.detach();
+        }
+        window.lastSelectedGmObject = null;
         window.dispatchEvent(new CustomEvent('gm-selection-change', { detail: { target: null } }));
         document.dispatchEvent(new CustomEvent('gm-selection-change', { detail: { target: null } }));
+        window.dispatchEvent(new CustomEvent('gm-active-tick', { detail: { target: null } }));
+        document.dispatchEvent(new CustomEvent('gm-active-tick', { detail: { target: null } }));
     }
 });
 

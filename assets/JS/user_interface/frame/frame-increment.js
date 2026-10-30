@@ -1,81 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     let copiedFrame = null;
-    let isObjectClicked = false;
 
     const frameThumbnailsContainer = document.getElementById('gm-frame-thumbnails');
     const framePreviewContainer = document.getElementById('gm-frame-preview');
     const addFrameBtn = document.getElementById('gm-add-frame-btn');
-
-    // ======================= Object Active / Multi-Select =======================
-    // contoh integrasi (tetap gunakan event delegation di framePreviewContainer)
-    framePreviewContainer.addEventListener('click', function (e) {
-        if (document.body.classList.contains('gm-interaction-mode-on')) {
-            const core = e.target.closest('.gm-object-core');
-            if (core) {
-                core.querySelectorAll('.gm-object').forEach(o => o.classList.remove('gm-active'));
-            }
-            if (typeof GMObjectHandler !== 'undefined') {
-                GMObjectHandler.detach();
-            }
-            return;
-        }
-
-        const obj = e.target.closest('.gm-object');
-        if (!obj) return;
-
-        const core = obj.closest('.gm-object-core');
-        if (!core) return;
-
-        e.stopPropagation();
-        isObjectClicked = true;
-
-        const objects = core.querySelectorAll('.gm-object');
-
-        if (e.shiftKey) {
-            obj.classList.add('gm-active');
-        } else {
-            objects.forEach(o => o.classList.remove('gm-active'));
-            obj.classList.add('gm-active');
-        }
-
-        // attach handler
-        GMObjectHandler.attachTo(obj);
-
-        setTimeout(() => isObjectClicked = false, 0);
-    });
-
-
-    // ======================= Klik di luar untuk hapus active =======================
-    document.addEventListener('click', function (e) {
-        if (isObjectClicked) return; // jangan hapus saat klik object
-
-        const safeAreas = [
-            '.gm-top-menu-right',
-            '.gm-color-dropdown',
-            '#colorMenuBtn',
-            '#gmGradientModal',
-            '.gm-object-menu',
-            '.gm-object-info-modal',
-            '.gm-handler',
-            '.gm-label',
-            // Tambahan baru:
-            '.gm-aside-left',
-            '.gm-aside-right',
-            '#gm-display-modal',
-            '.gm-object-attribute',
-            'body'
-
-        ];
-
-        const clickedInSafeArea = safeAreas.some(sel => e.target.closest(sel));
-        if (!clickedInSafeArea) {
-            document.querySelectorAll('.gm-object.gm-active').forEach(o => o.classList.remove('gm-active'));
-        }
-    });
-
-    function getAllActiveObjects() {
-        return Array.from(document.querySelectorAll('.gm-object-core .gm-object.gm-active'));
-    }
 
     // ======================= Frame Management =======================
     function getNextFrameId() {

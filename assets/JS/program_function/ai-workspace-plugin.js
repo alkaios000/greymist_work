@@ -165,34 +165,129 @@
     }
 
     /**
-     * Membangun pohon elemen di dalam kanvas secara instan & tanpa throttling (kecepatan penuh).
+     * Membangun pohon elemen per elemen secara realtime dengan latensi sangat rendah (Ultra-Low Latency 60 FPS).
+     * Elemen muncul polos di layar kanvas terlebih dahulu, lalu gayanya (style) teraplikasikan secara realtime secepat kilat.
      */
     function buildElementsLiveUnstyledToStyled(sourceRootElements, targetContainer, statusEl, onComplete, insertBeforeNode = null) {
+        const steps = [];
+
+        function collectSteps(sourceNode, liveParent, refBeforeNode = null) {
+            const tag = sourceNode.tagName.toLowerCase();
+            const liveEl = document.createElement(tag);
+
+            Array.from(sourceNode.attributes).forEach(attr => {
+                if (attr.name.toLowerCase() !== "style") {
+                    liveEl.setAttribute(attr.name, attr.value);
+                }
+            });
+            if (!["script", "style", "br", "hr"].includes(tag)) {
+                liveEl.classList.add("gm-object");
+            }
+
+            const directTexts = [];
+            Array.from(sourceNode.childNodes).forEach(childNode => {
+                if (childNode.nodeType === Node.TEXT_NODE && childNode.nodeValue.trim() !== "") {
+                    directTexts.push(childNode.nodeValue);
+                }
+            });
+
+            const savedStyle = sourceNode.getAttribute("style") || "";
+
+            // Tahap 1: Munculkan elemen mentah/polos di kanvas
+            steps.push({
+                type: "mount_raw",
+                el: liveEl,
+                parent: liveParent,
+                beforeNode: refBeforeNode,
+                directTexts: directTexts,
+                tag: tag
+            });
+
+            // Tahap 2: Terapkan atribut style secara live
+            if (savedStyle.trim() !== "") {
+                steps.push({
+                    type: "apply_style",
+                    el: liveEl,
+                    style: savedStyle,
+                    tag: tag
+                });
+            }
+
+            Array.from(sourceNode.children).forEach(childEl => {
+                collectSteps(childEl, liveEl, null);
+            });
+
+            return liveEl;
+        }
+
         const createdRoots = [];
-
         sourceRootElements.forEach(srcRoot => {
-            const clone = srcRoot.cloneNode(true);
-            if (!["script", "style", "br", "hr"].includes(clone.tagName.toLowerCase())) {
-                clone.classList.add("gm-object");
-            }
-            clone.classList.add("gm-ai-fade-in");
-
-            if (insertBeforeNode && insertBeforeNode.parentNode === targetContainer) {
-                targetContainer.insertBefore(clone, insertBeforeNode);
-            } else {
-                targetContainer.appendChild(clone);
-            }
-
-            if (typeof window.initLoadedObjects === "function") {
-                window.initLoadedObjects(clone);
-            }
-
-            createdRoots.push(clone);
+            const liveRoot = collectSteps(srcRoot, targetContainer, insertBeforeNode);
+            createdRoots.push(liveRoot);
         });
 
-        if (typeof onComplete === "function") {
-            onComplete(createdRoots);
+        const totalSteps = steps.length;
+        if (totalSteps === 0) {
+            if (typeof onComplete === "function") onComplete(createdRoots);
+            return;
         }
+
+        // Kecepatan adaptif realtime ultra-rendah latensi: 6ms - 14ms per langkah
+        const stepDelay = Math.max(6, Math.min(14, Math.floor(420 / totalSteps)));
+        let idx = 0;
+
+        function runNextStep() {
+            if (idx >= totalSteps) {
+                createdRoots.forEach(root => {
+                    root.classList.remove("gm-ai-live-morph");
+                    root.querySelectorAll(".gm-ai-live-morph").forEach(el => {
+                        el.classList.remove("gm-ai-live-morph");
+                    });
+                });
+                if (typeof onComplete === "function") {
+                    onComplete(createdRoots);
+                }
+                return;
+            }
+
+            const step = steps[idx];
+
+            if (step.type === "mount_raw") {
+                step.directTexts.forEach(txt => {
+                    step.el.appendChild(document.createTextNode(txt));
+                });
+                if (step.beforeNode && step.beforeNode.parentNode === step.parent) {
+                    step.parent.insertBefore(step.el, step.beforeNode);
+                } else {
+                    step.parent.appendChild(step.el);
+                }
+
+                if (idx === 0) {
+                    try {
+                        step.el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                    } catch (_) {}
+                }
+                if (statusEl && idx % 4 === 0) {
+                    showStatus(statusEl, "info", `⚡ Realtime: merakit <${step.tag}>...`);
+                }
+            } else if (step.type === "apply_style") {
+                step.el.classList.add("gm-ai-live-morph");
+                step.el.setAttribute("style", step.style);
+            }
+
+            idx++;
+
+            // Gunakan timer mikro (6-14ms) agar proses terlihat nyata tapi secepat kilat
+            if (stepDelay <= 8) {
+                requestAnimationFrame(runNextStep);
+            } else {
+                setTimeout(() => {
+                    requestAnimationFrame(runNextStep);
+                }, stepDelay);
+            }
+        }
+
+        requestAnimationFrame(runNextStep);
     }
 
     /**
@@ -689,7 +784,7 @@
     }
 
     /**
-     * Membangun seluruh frame yang baru dibuat secara instan dan simultan (tanpa penundaan buatan).
+     * Membangun frame baru halaman demi halaman, dan elemen demi elemen secara realtime dengan latensi sangat rendah.
      */
     function buildCreatedFramesSequentially(createdFrames, statusEl, onAllDone) {
         if (!Array.isArray(createdFrames) || createdFrames.length === 0) {
@@ -697,25 +792,57 @@
             return;
         }
 
-        // Render seluruh frame secara instan tanpa pembatasan atau delay buatan
-        createdFrames.forEach((frameInfo, idx) => {
+        let fIdx = 0;
+
+        function buildNextFrame() {
+            if (fIdx >= createdFrames.length) {
+                // Aktifkan kembali frame pertama di akhir agar kanvas siap dipakai
+                if (createdFrames[0] && typeof window.activateFrame === "function") {
+                    window.activateFrame(createdFrames[0].frame_id);
+                }
+                refreshWorkspaceAfterChange();
+                if (typeof onAllDone === "function") onAllDone(createdFrames.length);
+                return;
+            }
+
+            const frameInfo = createdFrames[fIdx];
+            if (statusEl) {
+                showStatus(
+                    statusEl,
+                    "info",
+                    `⚡ Realtime (${fIdx + 1}/${createdFrames.length}): Merakit elemen di "${frameInfo.frame_name}"...`
+                );
+            }
+
             const newCore = ensureWorkspaceFrameMounted(frameInfo);
-            if (newCore) {
-                newCore.innerHTML = (frameInfo.core_content || "").trim();
+            if (!newCore) {
+                fIdx++;
+                buildNextFrame();
+                return;
+            }
+
+            // Aktifkan frame yang sedang dirakit ke layar kanvas agar pengguna melihat prosesnya secara realtime
+            if (typeof window.activateFrame === "function") {
+                window.activateFrame(frameInfo.frame_id);
+            }
+
+            newCore.innerHTML = "";
+            const temp = document.createElement("div");
+            temp.innerHTML = (frameInfo.core_content || "").trim();
+            const sourceRoots = Array.from(temp.children);
+
+            // Alirkan elemen per elemen dengan latensi sangat rendah (Ultra-Low Latency)
+            buildElementsLiveUnstyledToStyled(sourceRoots, newCore, statusEl, () => {
                 if (typeof window.initLoadedObjects === "function") {
                     window.initLoadedObjects(newCore);
                 }
                 refreshWorkspaceAfterChange(frameInfo.frame_id);
-            }
-        });
-
-        // Aktifkan frame pertama yang baru dibuat agar pengguna langsung melihat hasilnya
-        if (createdFrames[0] && typeof window.activateFrame === "function") {
-            window.activateFrame(createdFrames[0].frame_id);
+                fIdx++;
+                setTimeout(buildNextFrame, 75);
+            });
         }
 
-        refreshWorkspaceAfterChange();
-        if (typeof onAllDone === "function") onAllDone(createdFrames.length);
+        buildNextFrame();
     }
 
     function injectHtmlIntoCanvasProgressive(htmlString, targetMode, statusEl, callback) {
@@ -736,16 +863,18 @@
         temp.innerHTML = trimmed;
         const sourceRoots = Array.from(temp.children);
 
-        sourceRoots.forEach(node => {
-            node.classList.add("gm-ai-fade-in");
-            container.appendChild(node);
-            if (typeof window.initLoadedObjects === "function") {
-                window.initLoadedObjects(node);
+        // Alirkan elemen per elemen secara realtime dengan latensi sangat rendah
+        buildElementsLiveUnstyledToStyled(sourceRoots, container, statusEl, createdRoots => {
+            if (Array.isArray(createdRoots)) {
+                createdRoots.forEach(root => {
+                    if (typeof window.initLoadedObjects === "function") {
+                        window.initLoadedObjects(root);
+                    }
+                });
             }
+            refreshWorkspaceAfterChange();
+            if (callback) callback(Array.isArray(createdRoots) ? createdRoots.length : 0);
         });
-
-        refreshWorkspaceAfterChange();
-        if (callback) callback(sourceRoots.length);
     }
 
     /**
@@ -791,13 +920,14 @@
             return;
         }
 
-        // Jika frame memang masih kosong (0 elemen), render langsung secara instan
-        core.innerHTML = trimmed;
-        if (typeof window.initLoadedObjects === "function") {
-            window.initLoadedObjects(core);
-        }
-        refreshWorkspaceAfterChange();
-        if (callback) callback(true);
+        // Jika frame masih kosong, bangun elemen demi elemen secara realtime
+        buildElementsLiveUnstyledToStyled(sourceRoots, core, statusEl, () => {
+            if (typeof window.initLoadedObjects === "function") {
+                window.initLoadedObjects(core);
+            }
+            refreshWorkspaceAfterChange();
+            if (callback) callback(true);
+        });
     }
 
     function summarizeElementLabel(el, idx) {
