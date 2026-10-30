@@ -337,17 +337,24 @@ Pastikan **semua** lolos:
 
 ---
 
-## 14. Multimodal UI Cloning dari Foto / Screenshot Referensi
+## 14. Multimodal UI Cloning dari Foto / Screenshot Referensi (Mendukung Multi-Foto)
 
-Ketika pengguna mengunggah gambar, screenshot web, mock-up Figma, atau wireframe ke Floating Panel AI:
+Ketika pengguna mengunggah gambar, screenshot web, mock-up Figma, atau wireframe ke Floating Panel AI (mendukung hingga 6 foto sekaligus):
 
-1. **Analisis Visual Komprehensif:**
+1. **Dukungan Multi-Foto:**
+   - Pengguna dapat memilih banyak file sekaligus lewat dialog file, drag & drop banyak gambar, atau melakukan copy-paste (Ctrl+V) tangkapan layar berulang kali ke panel AI.
+   - Jika terdapat beberapa foto (misal: Foto 1 adalah Header/Hero, Foto 2 adalah Tabel Data / Pricing, Foto 3 adalah Footer), AI wajib mengombinasikan seluruh referensi visual tersebut ke dalam satu tampilan halaman yang harmonis dan utuh.
+
+2. **Analisis Visual Komprehensif:**
    - **Layout & Spacing:** Identifikasi susunan (grid multi-kolom, flexbox horizontal/vertikal, hero banner, split-screen, kartu bertumpuk).
    - **Skema Warna (Palette):** Ambil warna latar belakang, warna primer aksen tombol, warna kartu, dan warna teks dominan dari gambar.
    - **Tipografi & Hierarki:** Identifikasi judul besar (H1), sub-judul (H2/H3), badge/pill, paragraf, dan label tombol.
    - **Komponen Spesifik:** Deteksi navbar (logo + link + CTA), kartu fitur (ikon + judul + deskripsi), tabel harga, testimoni, formulir kontak, dan footer.
 
-2. **Aturan Eksekusi UI Cloning:**
+3. **Aturan Eksekusi UI Cloning:**
+   - **Deteksi Semantik Tabel vs Div dari Gambar:**
+     * Jika gambar memuat tabel data, jadwal, matriks perbandingan fitur/harga, atau invoice: WAJIB gunakan `<table class="gm-object">` murni (`<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>`) dibungkus `<div class="gm-object" style="width: 100%; overflow-x: auto;">`. DILARANG membuat tabel di gambar menggunakan `<div>`!
+     * Jika gambar memuat kartu (cards), grid visual, atau hero section: gunakan `<section class="gm-object">` dan `<div class="gm-object">` flex/grid.
    - Gunakan kelas `.gm-object` pada setiap elemen yang dihasilkan.
    - Gunakan ikon Font Awesome resmi `<i class="fa-solid fa-..."></i>` yang relevan dengan ikon yang tampak pada gambar referensi. DILARANG menggunakan emotikon.
    - Pastikan spasi proporsional modern (`padding: 36px 20px`, `gap: 16px-24px`, tanpa padding raksasa).
@@ -378,3 +385,88 @@ Pengguna dapat menyetel mesin AI langsung lewat antarmuka modal (tombol sliders/
 
 5. **Smart Fallback Lokal (Offline):**
    - Rule engine dan parser regex bawaan jika koneksi internet terputus atau API key belum diisi. Tetap mendukung multi-card sibling animations, project renaming, dan manipulasi atribut tanpa error.
+
+---
+
+## 16. Aturan Semantik HTML5 & Ketepatan Penggunaan Tabel (Table vs Div)
+
+AI wajib memperhatikan semantik HTML dan struktur elemen secara akurat:
+
+### A. Kapan Wajib Menggunakan `<table>` (DILARANG Menggunakan `<div>`):
+Jika instruksi atau konten memuat data tabular:
+- **Tabel Data & Laporan:** Daftar transaksi, log pesanan, daftar pengguna/karyawan, inventaris barang, data analitik.
+- **Jadwal & Agenda (Schedule):** Kalender kegiatan, jadwal penerbangan/kereta, timeline bertanggal/berwaktu.
+- **Perbandingan Fitur / Harga (Comparison Matrix):** Perbandingan spesifikasi paket (Free vs Pro vs Enterprise), matriks fitur dengan tanda centang `<i class="fa-solid fa-check"></i>`.
+- **Faktur / Invoice:** Rincian barang, kuantitas, harga satuan, dan total harga.
+
+**Aturan Penulisan Tabel Greymist:**
+1. **Wajib Elemen Semantik Tabel Murni:** Gunakan tag semantik resmi:
+   - `<table class="gm-object">`
+   - `<thead class="gm-object"><tr class="gm-object"><th class="gm-object">...</th></tr></thead>`
+   - `<tbody class="gm-object"><tr class="gm-object"><td class="gm-object">...</td></tr></tbody>`
+   - DILARANG KERAS mensimulasikan tabel menggunakan rentetan `<div>` flexbox/grid!
+2. **Wajib Pembungkus Responsif (Responsive Scroll Wrapper):**
+   - Selalu bungkus `<table>` di dalam `<div class="gm-object" style="width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box;">`.
+   - Hal ini memastikan tabel dapat digeser horizontal di layar HP (Mobile) tanpa merusak atau memperlebar kanvas utama editor.
+3. **Standar Styling Tabel Modern:**
+   - Tabel: `width: 100%; border-collapse: collapse; text-align: left; font-size: 14px;`
+   - Header `<th>`: Background lembut (mis. `#f8fafc`), font-weight 600, warna `#475569`, padding `12px 16px`, border-bottom `2px solid #e2e8f0`.
+   - Baris Data `<td>`: Padding `12px 16px`, border-bottom `1px solid #f1f5f9`, warna `#334155`.
+   - Hover row: Baris data rapi dengan `tr:hover` styling yang kontras lembut.
+
+### B. Kapan Wajib Menggunakan `<div>` (Bukan `<table>`):
+- Gunakan `<div>` untuk container layout, wrapper kartu (card grid), hero section, visual flexbox rows, box bayangan, dan modal popup.
+- DILARANG KERAS menggunakan `<table>` untuk tata letak halaman (layouting)!
+
+### C. Pemilihan Tag Semantik Terbaik (Semantic HTML5):
+- **Navigasi:** Selalu gunakan `<nav class="gm-object">`.
+- **Bagian Konten:** Selalu gunakan `<section class="gm-object">` dengan ID semantik (`id="hero"`, `id="features"`, `id="pricing"`, `id="schedule"`).
+- **Tombol Aksi:** Selalu gunakan `<button class="gm-object">` untuk aksi/modal/klik (bukan `<div>` atau `<span>`).
+- **Tautan / Pindah Halaman:** Selalu gunakan `<a class="gm-object" data-action-type="...">`.
+- **Formulir:** Selalu gunakan `<form class="gm-object">`, `<label class="gm-object">`, `<input class="gm-object">`, `<select class="gm-object">`, `<textarea class="gm-object">`.
+- **Judul & Teks:** Gunakan `<h1>` s/d `<h6>` sesuai hierarki, `<p>` untuk paragraf, `<span>` / `<strong>` untuk teks pendek inline.
+
+---
+
+## 17. Standar Pembuatan Web Presentation / PPT Slides Multi-Frame (Interaktif & Bisa Pindah-Pindah)
+
+Ketika pengguna meminta presentasi web / PPT slide (misal: *"bikin PPT web banyak slide"*, *"slide presentasi jadi frame terpisah"*, *"bikin slide tentang X"*):
+
+### 1. Larangan Mutlak `display: none;` (Penyebab Slide Putih Kosong)
+- **DILARANG KERAS** menggunakan `display: none;` pada frame slide mana pun (baik Slide 1, Slide 2, s/d Slide 10).
+- Di Greymist, setiap slide dibuat menjadi **Frame terpisah**. Workspace Greymist yang mengatur pergantian aktif frame.
+- Kontainer utama setiap slide WAJIB selalu berstatus visible:
+  `style="display: flex; flex-direction: column; justify-content: center; min-height: 540px; padding: 40px 24px; box-sizing: border-box; width: 100%;"`
+
+### 2. Navigasi Pindah-Pindah Slide Wajib (Interaktif)
+Di bagian bawah setiap slide, WAJIB sertakan Slide Navigation Bar yang saling terhubung:
+```html
+<div class="gm-object slide-navigation" style="display: flex; align-items: center; justify-content: space-between; margin-top: 36px; padding-top: 18px; border-top: 1px solid #e2e8f0; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; box-sizing: border-box;">
+  <!-- Tombol Sebelumnya (Hanya jika bukan slide 1) -->
+  <button class="gm-object gm-slide-nav-btn" data-action-type="goto" data-action-target="Slide 1" style="padding: 9px 18px; background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+    <i class="fa-solid fa-arrow-left gm-object"></i> Sebelumnya
+  </button>
+  
+  <!-- Indikator Halaman -->
+  <div class="gm-object" style="text-align: center;">
+    <span class="gm-object" style="font-size: 13px; font-weight: 600; color: #64748b; background: #f1f5f9; padding: 4px 14px; border-radius: 20px;">Slide 2 / 5</span>
+  </div>
+  
+  <!-- Tombol Selanjutnya (Hanya jika bukan slide terakhir) -->
+  <button class="gm-object gm-slide-nav-btn" data-action-type="goto" data-action-target="Slide 3" style="padding: 9px 20px; background: #0078ff; color: #ffffff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(0,120,255,0.25);">
+    Selanjutnya <i class="fa-solid fa-arrow-right gm-object"></i>
+  </button>
+</div>
+```
+
+### 3. Pintasan Navigasi Keyboard (Bisa Pindah-Pindah)
+- Pengguna dapat berpindah slide dengan:
+  1. Menekan tombol panah keyboard: **Panah Kanan (`→`)** untuk slide berikutnya, **Panah Kiri (`←`)** untuk slide sebelumnya.
+  2. Mengklik tombol **Sebelumnya / Selanjutnya** langsung pada slide canvas.
+  3. Mengklik thumbnail slide di bilah atas frame.
+
+### 4. Struktur Konten Presentasi Berbobot
+- **Slide 1 (Judul):** Judul besar H1 (36px), subjudul penjelas (18px), nama presenter / tim dengan ikon Font Awesome resmi.
+- **Slide 2 - N-1 (Isi & Analisis):** H2 (28px), kartu-kartu poin bernomor (1, 2, 3) atau grid perbandingan visual dengan padding dan kontras yang proporsional.
+- **Slide Akhir (Penutup & Kesimpulan):** Ringkasan takeaway, kutipan penutup, CTA, atau ucapan terima kasih.
+- **Tanpa Emotikon:** Selalu gunakan ikon Font Awesome (`<i class="fa-solid fa-..."></i>`).

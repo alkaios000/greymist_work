@@ -17,6 +17,7 @@
         { label: "Navbar", prompt: "Buat Navbar navigasi horizontal dengan logo brand di kiri, menu link di tengah, dan tombol CTA di kanan" },
         { label: "Pricing", prompt: "Buat bagian kartu harga (Pricing Table) 3 kolom: Starter, Pro (Populer), dan Enterprise" },
         { label: "Kontak", prompt: "Buat kartu Formulir Kontak minimalis dengan input Nama, Email, Pesan, dan tombol Kirim" },
+        { label: "📊 Web PPT", prompt: "Buat 5 slide presentasi web (Web PPT) interaktif dengan topik [Tulis Topik Di Sini], masing-masing slide menjadi frame terpisah (Slide 1 s/d Slide 5), visible (tanpa display: none), lengkap dengan tombol navigasi Sebelumnya & Selanjutnya yang bisa diklik untuk berpindah slide." },
         { label: "+Page Baru", prompt: "Buat frame halaman baru untuk halaman Login lengkap dengan Navbar dan Form Login" },
         { label: "Multi-Page", prompt: "Buat 3 frame halaman website terpisah: Beranda, Layanan & Harga, dan Hubungi Kami" },
         { label: "Baca Proyek", prompt: "Baca dan jelaskan susunan proyek, halaman-halaman, serta komponen di dalamnya" },
@@ -1652,9 +1653,14 @@
                     selected_object_html: selectedObjectHtml,
                     selected_object_attrs: selectedAttrs,
                     frames_snapshot: framesSnapshot,
-                    reference_image: attachedReferenceImage ? {
-                        data: attachedReferenceImage.data,
-                        mime_type: attachedReferenceImage.mime_type
+                    reference_images: (typeof attachedReferenceImages !== "undefined" && Array.isArray(attachedReferenceImages)) ? attachedReferenceImages.map(img => ({
+                        data: img.data,
+                        mime_type: img.mime_type,
+                        name: img.name
+                    })) : [],
+                    reference_image: (typeof attachedReferenceImages !== "undefined" && Array.isArray(attachedReferenceImages) && attachedReferenceImages.length > 0) ? {
+                        data: attachedReferenceImages[0].data,
+                        mime_type: attachedReferenceImages[0].mime_type
                     } : null
                 })
             })
@@ -2087,21 +2093,57 @@
             .gm-ai-img-preview {
                 background: #f8fafc;
                 border: 1px solid #e2e8f0;
-                border-radius: 5px;
-                padding: 4px 6px;
+                border-radius: 6px;
+                padding: 6px 8px;
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
             }
-            .gm-ai-preview-thumb-wrap {
+            .gm-ai-preview-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 10.5px;
+                font-weight: 600;
+                color: #334155;
+            }
+            .gm-ai-clear-all-btn {
+                background: none;
+                border: none;
+                color: #ef4444;
+                font-size: 10px;
+                font-weight: 500;
+                cursor: pointer;
+                padding: 0;
+                text-decoration: underline;
+            }
+            .gm-ai-clear-all-btn:hover {
+                color: #b91c1c;
+            }
+            .gm-ai-preview-list {
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+                max-height: 125px;
+                overflow-y: auto;
+            }
+            .gm-ai-preview-item {
                 display: flex;
                 align-items: center;
                 gap: 7px;
+                background: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 4px;
+                padding: 3px 6px;
             }
-            .gm-ai-preview-thumb-wrap img {
-                width: 36px;
-                height: 36px;
+            .gm-ai-preview-item img {
+                width: 32px;
+                height: 32px;
                 object-fit: cover;
                 border-radius: 4px;
                 border: 1px solid #cbd5e1;
                 background: #ffffff;
+                flex-shrink: 0;
             }
             .gm-ai-preview-info {
                 flex: 1;
@@ -2110,7 +2152,7 @@
                 flex-direction: column;
             }
             .gm-ai-preview-name {
-                font-size: 11px;
+                font-size: 10.5px;
                 font-weight: 600;
                 color: #1e293b;
                 white-space: nowrap;
@@ -2118,7 +2160,7 @@
                 text-overflow: ellipsis;
             }
             .gm-ai-preview-size {
-                font-size: 10px;
+                font-size: 9.5px;
                 color: #64748b;
             }
             .gm-ai-remove-img-btn {
@@ -2134,6 +2176,7 @@
                 justify-content: center;
                 font-size: 10px;
                 transition: background 0.15s ease;
+                flex-shrink: 0;
             }
             .gm-ai-remove-img-btn:hover {
                 background: #fecaca;
@@ -2327,26 +2370,21 @@
                     ${presetChipsHtml}
                 </div>
 
-                <!-- Zona Upload Foto / Screenshot Referensi UI -->
+                <!-- Zona Upload Foto / Screenshot Referensi UI (Bisa Multi-Foto) -->
                 <div class="gm-ai-upload-zone" id="gm-ai-upload-zone">
                     <div class="gm-ai-upload-bar">
-                        <button type="button" class="gm-ai-upload-btn" id="gm-ai-upload-btn" title="Upload foto atau screenshot referensi UI (PNG, JPG, WEBP)">
+                        <button type="button" class="gm-ai-upload-btn" id="gm-ai-upload-btn" title="Upload foto atau screenshot referensi UI (Bisa pilih multi-foto sekaligus)">
                             <i class="fa-solid fa-camera"></i> <span>Foto Referensi</span>
                         </button>
-                        <input type="file" id="gm-ai-img-file" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;">
-                        <span class="gm-ai-upload-hint"><i class="fa-solid fa-paste"></i> Paste Ctrl+V / Drop foto</span>
+                        <input type="file" id="gm-ai-img-file" accept="image/png,image/jpeg,image/webp,image/gif" multiple style="display:none;">
+                        <span class="gm-ai-upload-hint"><i class="fa-solid fa-paste"></i> Multi-foto / Paste Ctrl+V</span>
                     </div>
                     <div class="gm-ai-img-preview" id="gm-ai-img-preview" style="display:none;">
-                        <div class="gm-ai-preview-thumb-wrap">
-                            <img id="gm-ai-preview-img" src="" alt="Referensi UI">
-                            <div class="gm-ai-preview-info">
-                                <span id="gm-ai-preview-name" class="gm-ai-preview-name">ref.png</span>
-                                <span id="gm-ai-preview-size" class="gm-ai-preview-size">120 KB</span>
-                            </div>
-                            <button type="button" class="gm-ai-remove-img-btn" id="gm-ai-remove-img-btn" title="Hapus foto referensi">
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
+                        <div class="gm-ai-preview-header" id="gm-ai-preview-header">
+                            <span id="gm-ai-preview-count"><i class="fa-solid fa-images"></i> 1 Foto Terpilih</span>
+                            <button type="button" class="gm-ai-clear-all-btn" id="gm-ai-clear-all-btn">Hapus Semua</button>
                         </div>
+                        <div class="gm-ai-preview-list" id="gm-ai-preview-list"></div>
                     </div>
                 </div>
 
@@ -2356,7 +2394,7 @@
                 <!-- Model & Target -->
                 <div class="gm-ai-row">
                     <select id="gm-ai-model-select" class="gm-ai-field" title="Pilih Model Aktif">
-                        <option value="llama-3.3-70b-versatile">Llama 3.3 70B (Groq)</option>
+                        <option value="openai/gpt-oss-120b">GPT OSS 120B (Groq LPU)</option>
                     </select>
                     <select id="gm-ai-target-mode" class="gm-ai-field" title="Target Injeksi">
                         <option value="core">Ke Frame Aktif</option>
@@ -2398,66 +2436,119 @@
             </div>
         `;        document.body.appendChild(panel);
 
-        // Setup listener Upload Foto Referensi & Clipboard Paste
-        let attachedReferenceImage = null;
+        // Setup listener Upload Multi-Foto Referensi & Clipboard Paste
+        let attachedReferenceImages = [];
+        let pasteCounter = 0;
         const uploadBtn = document.getElementById("gm-ai-upload-btn");
         const fileInput = document.getElementById("gm-ai-img-file");
         const previewBox = document.getElementById("gm-ai-img-preview");
-        const previewImg = document.getElementById("gm-ai-preview-img");
-        const previewName = document.getElementById("gm-ai-preview-name");
-        const previewSize = document.getElementById("gm-ai-preview-size");
-        const removeImgBtn = document.getElementById("gm-ai-remove-img-btn");
+        const previewCount = document.getElementById("gm-ai-preview-count");
+        const previewList = document.getElementById("gm-ai-preview-list");
+        const clearAllBtn = document.getElementById("gm-ai-clear-all-btn");
         const promptInputEl = document.getElementById("gm-ai-prompt-input");
 
-        const setAttachedImage = (imgData) => {
-            attachedReferenceImage = imgData;
-            previewImg.src = imgData.dataUrl;
-            previewName.textContent = imgData.name;
-            previewSize.textContent = imgData.sizeStr;
-            previewBox.style.display = "block";
-            showStatus(statusEl, "info", `📸 Foto referensi "${imgData.name}" siap digunakan.`);
+        const renderAttachedImages = () => {
+            if (!previewBox || !previewList) return;
+            if (attachedReferenceImages.length === 0) {
+                previewBox.style.display = "none";
+                previewList.innerHTML = "";
+                if (fileInput) fileInput.value = "";
+                return;
+            }
+            previewBox.style.display = "flex";
+            if (previewCount) {
+                previewCount.innerHTML = `<i class="fa-solid fa-images"></i> ${attachedReferenceImages.length} Foto Referensi`;
+            }
+            previewList.innerHTML = attachedReferenceImages.map((img, idx) => `
+                <div class="gm-ai-preview-item" data-idx="${idx}">
+                    <img src="${img.dataUrl}" alt="${img.name}">
+                    <div class="gm-ai-preview-info">
+                        <span class="gm-ai-preview-name" title="${img.name}">${img.name}</span>
+                        <span class="gm-ai-preview-size">${img.sizeStr}</span>
+                    </div>
+                    <button type="button" class="gm-ai-remove-img-btn" data-idx="${idx}" title="Hapus foto ini">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+            `).join("");
+        };
+
+        const addImagesFromFiles = async (files, isPasted = false) => {
+            const maxTotal = 6;
+            const validFiles = Array.from(files).filter(f => f && f.type && f.type.startsWith("image/"));
+            if (validFiles.length === 0) return;
+
+            let addedCount = 0;
+            for (const f of validFiles) {
+                if (attachedReferenceImages.length >= maxTotal) {
+                    showStatus(statusEl, "info", `Batas maksimal ${maxTotal} foto referensi tercapai.`);
+                    break;
+                }
+                try {
+                    const imgData = await compressImageFile(f);
+                    if (isPasted) {
+                        pasteCounter++;
+                        imgData.name = `Screenshot-${pasteCounter}.png`;
+                    }
+                    attachedReferenceImages.push(imgData);
+                    addedCount++;
+                } catch (err) {
+                    showStatus(statusEl, "error", err.message || "Gagal mengompresi foto.");
+                }
+            }
+            if (addedCount > 0) {
+                renderAttachedImages();
+                showStatus(statusEl, "info", `📸 ${attachedReferenceImages.length} foto referensi siap digunakan.`);
+            }
         };
 
         if (uploadBtn && fileInput) {
             uploadBtn.addEventListener("click", () => fileInput.click());
-            fileInput.addEventListener("change", () => {
-                const f = fileInput.files && fileInput.files[0];
-                if (f) {
-                    compressImageFile(f)
-                        .then(setAttachedImage)
-                        .catch(err => showStatus(statusEl, "error", err.message));
+            fileInput.addEventListener("change", async () => {
+                const files = fileInput.files;
+                if (files && files.length > 0) {
+                    await addImagesFromFiles(files);
+                    fileInput.value = "";
                 }
             });
         }
 
-        if (removeImgBtn) {
-            removeImgBtn.addEventListener("click", () => {
-                attachedReferenceImage = null;
-                previewBox.style.display = "none";
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener("click", () => {
+                attachedReferenceImages = [];
+                renderAttachedImages();
                 if (fileInput) fileInput.value = "";
-                previewImg.src = "";
+            });
+        }
+
+        if (previewList) {
+            previewList.addEventListener("click", (e) => {
+                const removeBtn = e.target.closest(".gm-ai-remove-img-btn");
+                if (removeBtn) {
+                    const idx = parseInt(removeBtn.dataset.idx, 10);
+                    if (!isNaN(idx) && idx >= 0 && idx < attachedReferenceImages.length) {
+                        attachedReferenceImages.splice(idx, 1);
+                        renderAttachedImages();
+                    }
+                }
             });
         }
 
         // Paste clipboard support (Ctrl+V) langsung pada textarea prompt
         if (promptInputEl) {
-            promptInputEl.addEventListener("paste", (e) => {
+            promptInputEl.addEventListener("paste", async (e) => {
                 const items = (e.clipboardData || window.clipboardData)?.items;
                 if (!items) return;
+                const imageFiles = [];
                 for (let i = 0; i < items.length; i++) {
                     if (items[i].type && items[i].type.startsWith("image/")) {
                         const blob = items[i].getAsFile();
-                        if (blob) {
-                            e.preventDefault();
-                            compressImageFile(blob)
-                                .then(res => {
-                                    res.name = "Pasted-Screenshot.png";
-                                    setAttachedImage(res);
-                                })
-                                .catch(err => showStatus(statusEl, "error", err.message));
-                            break;
-                        }
+                        if (blob) imageFiles.push(blob);
                     }
+                }
+                if (imageFiles.length > 0) {
+                    e.preventDefault();
+                    await addImagesFromFiles(imageFiles, true);
                 }
             });
         }
@@ -2472,14 +2563,12 @@
                 panel.classList.remove("gm-ai-drop-active");
             }
         });
-        panel.addEventListener("drop", (e) => {
+        panel.addEventListener("drop", async (e) => {
             e.preventDefault();
             panel.classList.remove("gm-ai-drop-active");
             const files = e.dataTransfer?.files;
-            if (files && files.length > 0 && files[0].type.startsWith("image/")) {
-                compressImageFile(files[0])
-                    .then(setAttachedImage)
-                    .catch(err => showStatus(statusEl, "error", err.message));
+            if (files && files.length > 0) {
+                await addImagesFromFiles(files);
             }
         });
 
@@ -2552,14 +2641,14 @@
         const AI_PROVIDER_CONFIG = {
             groq: {
                 name: "Groq Cloud",
-                badge: "Groq 70B",
+                badge: "Groq 120B",
                 badgeBg: "#fef3c7",
                 badgeColor: "#d97706",
                 info: "Dijalankan 100% di Cloud LPU Groq. Super cepat (~300 t/s) & 0% beban laptop. Dapatkan API Key gratis di <a href='https://console.groq.com/keys' target='_blank' style='color:#0078ff;text-decoration:underline;'>console.groq.com/keys</a> (tanpa kartu kredit).",
                 needsKey: true,
                 keyPlaceholder: "gsk_...",
                 models: [
-                    { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B (Rekomendasi Cerdas)" },
+                    { id: "openai/gpt-oss-120b", name: "GPT OSS 120B (Super Kuat & Cepat)" },
                     { id: "deepseek-r1-distill-llama-70b", name: "DeepSeek-R1 Distill 70B" },
                     { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B (Ultra Cepat)" }
                 ]
@@ -2620,7 +2709,7 @@
         };
 
         let currentActiveProvider = "groq";
-        let currentActiveModel = "llama-3.3-70b-versatile";
+        let currentActiveModel = "openai/gpt-oss-120b";
         let providerKeys = { groq: "", openrouter: "", gemini: "" };
         let providerMasked = { groq: "", openrouter: "", gemini: "" };
 
@@ -2933,8 +3022,12 @@
             const compName = document.getElementById("gm-ai-comp-name").value.trim() || "AI Component";
             const saveToLibrary = document.getElementById("gm-ai-save-library").checked;
 
-            if (!prompt && attachedReferenceImage) {
-                prompt = "Buat tampilan antarmuka (UI) website modern yang meniru tata letak (layout), hierarki visual, dan komponen dari foto referensi ini menggunakan komponen .gm-object Greymist.";
+            if (!prompt && typeof attachedReferenceImages !== "undefined" && Array.isArray(attachedReferenceImages) && attachedReferenceImages.length > 0) {
+                if (attachedReferenceImages.length === 1) {
+                    prompt = "Buat tampilan antarmuka (UI) website modern yang meniru tata letak (layout), hierarki visual, dan komponen dari foto referensi ini menggunakan komponen .gm-object Greymist.";
+                } else {
+                    prompt = `Bangun tampilan antarmuka (UI) website modern yang mengombinasikan tata letak, hierarki komponen, dan elemen visual dari ${attachedReferenceImages.length} foto referensi terlampir menggunakan komponen .gm-object Greymist secara utuh dan harmonis.`;
+                }
             }
 
             if (!prompt) {
@@ -3018,9 +3111,14 @@
                     selected_object_html: selectedObjectHtml,
                     selected_object_attrs: selectedAttrs,
                     frames_snapshot: framesSnapshot,
-                    reference_image: attachedReferenceImage ? {
-                        data: attachedReferenceImage.data,
-                        mime_type: attachedReferenceImage.mime_type
+                    reference_images: (typeof attachedReferenceImages !== "undefined" && Array.isArray(attachedReferenceImages)) ? attachedReferenceImages.map(img => ({
+                        data: img.data,
+                        mime_type: img.mime_type,
+                        name: img.name
+                    })) : [],
+                    reference_image: (typeof attachedReferenceImages !== "undefined" && Array.isArray(attachedReferenceImages) && attachedReferenceImages.length > 0) ? {
+                        data: attachedReferenceImages[0].data,
+                        mime_type: attachedReferenceImages[0].mime_type
                     } : null
                 })
             })
@@ -3176,7 +3274,11 @@
                         injectHtmlIntoCanvasProgressive(res.html || "", targetMode, statusEl, inserted => {
                             generateBtn.disabled = false;
                             generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
-                            showStatus(statusEl, "success", `✓ Selesai dibangun (${inserted} komponen utama).`);
+                            if (res.api_warning) {
+    showStatus(statusEl, "warning", `⚠️ ${res.api_warning}`);
+} else {
+    showStatus(statusEl, "success", `✓ Selesai dibangun (${inserted} komponen utama).`);
+}
                             syncProjectAiMemory();
                         });
                     }

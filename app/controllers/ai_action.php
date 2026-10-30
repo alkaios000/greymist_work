@@ -188,7 +188,7 @@ if (!function_exists('cross_link_navbar_in_html')) {
                 foreach ($root->getElementsByTagName('div') as $d) {
                     $cls = strtolower((string)$d->getAttribute('class'));
                     $id  = strtolower((string)$d->getAttribute('id'));
-                    if (str_contains($cls, 'nav') || str_contains($id, 'nav')) {
+                    if ((str_contains($cls, 'nav') || str_contains($id, 'nav')) && !str_contains($cls, 'slide-navigation') && !str_contains($cls, 'slide-nav') && !str_contains($id, 'slide-nav')) {
                         $nav = $d;
                         break;
                     }
@@ -1579,16 +1579,24 @@ if (!function_exists('get_greymist_system_instruction')) {
                 . "3. WAJIB IKON FONT AWESOME: gunakan <i class=\"fa-solid fa-...\"></i> atau <i class=\"fas fa-...\"></i>. DILARANG KERAS MENGGUNAKAN KARAKTER EMOJI/EMOTIKON APAPUN!\n"
                 . "4. SPACING PROPORSIONAL: section padding 36px 20px - 48px 32px, card 16px 20px - 24px 28px, button 8px 18px - 12px 24px, gap 12px - 24px. DILARANG padding/margin raksasa (100px+).\n"
                 . "5. RESPONSIVE: flex-wrap, max-width 100%, box-sizing: border-box.\n"
-                . "6. TARGET MULTI-CARD SIBLINGS & ANTI-ROOT ANIMASI:\n"
+                . "6. ATURAN SEMANTIK TABEL VS DIV (WAJIB AKURAT & TEPAT):\n"
+                . "   - KAPAN WAJIB <TABLE>: Jika prompt, teks referensi yang dipaste, atau FOTO/GAMBAR yang diunggah memuat DATA TABULAR, JADWAL (SCHEDULE), MATRIKS PERBANDINGAN FITUR/HARGA, INVOICE, LOG TRANSAKSI, atau LAPORAN BERKOLOM-BARIS:\n"
+                . "     * DILARANG KERAS mensimulasikan data tabel menggunakan tumpukan <div> flexbox/grid!\n"
+                . "     * WAJIB menggunakan tag semantik tabel murni: <table class=\"gm-object\">, <thead class=\"gm-object\">, <tbody class=\"gm-object\">, <tr class=\"gm-object\">, <th class=\"gm-object\">, <td class=\"gm-object\">.\n"
+                . "     * WAJIB bungkus <table> di dalam container responsif: <div class=\"gm-object\" style=\"width:100%;overflow-x:auto;box-sizing:border-box;\"> agar tabel dapat di-scroll horizontal secara mulus di mobile tanpa merusak kanvas!\n"
+                . "     * Styling tabel: width:100%;border-collapse:collapse;text-align:left; th berbackground lembut padding 12px 16px, td berborder-bottom tipis 1px solid #e2e8f0 padding 12px 16px.\n"
+                . "   - KAPAN MENGGUNAKAN <DIV>: Gunakan <div> HANYA untuk layout container, flex/grid wrapper kartu, dan visual styling box. DILARANG menggunakan <table> untuk tata letak halaman (layouting)!\n"
+                . "   - TAG SEMANTIK TERBAIK: Navigasi=<nav>, bagian bab=<section>, tombol=<button>, link/goto=<a>, formulir=<form>/<label>/<input>/<select>, teks hierarki=<h1>-<h6>/<p>/<span>.\n"
+                . "7. TARGET MULTI-CARD SIBLINGS & ANTI-ROOT ANIMASI:\n"
                 . "   - Saat pengguna meminta animasi pada card/kartu secara umum ('animasikan card', 'semua card kasih slide-up'), WAJIB menganimasikan SELURUH kartu daun saudara (siblings) dalam kontainer dengan staggered delay (0s, 0.15s, 0.3s, dst.)!\n"
                 . "   - DILARANG hanya menganimasikan first-child!\n"
                 . "   - DILARANG menganimasikan root <section> atau #object-core!\n"
                 . "   - 7 Class animasi resmi Greymist: gm-anim-fade-in, gm-anim-slide-up, gm-anim-slide-down, gm-anim-slide-left, gm-anim-slide-right, gm-anim-zoom-in, gm-anim-bounce-in.\n"
-                . "7. EDIT ATRIBUT / GAYA IN-PLACE (JANGAN BUAT DARI NOL):\n"
+                . "8. EDIT ATRIBUT / GAYA IN-PLACE (JANGAN BUAT DARI NOL):\n"
                 . "   Jika pengguna meminta mengubah/menambah/menghapus atribut (warna, font, ukuran, border, animasi, text) pada komponen yang sudah ada, kembalikan HANYA format JSON:\n"
                 . "   <!--GM_OP:PATCH_ATTRIBUTES-->\n"
                 . "   {\"target\":\"self\",\"target_all\":true,\"stagger\":0.15,\"classes_to_add\":[\"gm-anim-base\",\"gm-anim-slide-up\"],\"classes_to_remove\":[\"gm-anim-fade-in\"],\"attributes\":{\"data-gm-anim\":\"gm-anim-slide-up\",\"data-gm-anim-dur\":\"0.8\",\"data-gm-anim-del\":\"0\",\"data-gm-anim-loop\":\"1\"},\"styles\":{\"--gm-anim-duration\":\"0.8s\",\"--gm-anim-delay\":\"0s\"},\"summary\":\"Ringkasan perubahan.\"}\n"
-                . "8. FORMAT OPERASI LAINNYA:\n"
+                . "9. FORMAT OPERASI LAINNYA:\n"
                 . "   - Komponen baru: <!--GM_OP:APPEND--> <kode html>\n"
                 . "   - Ubah objek terpilih: <!--GM_OP:REPLACE_SELECTED--> <kode html>\n"
                 . "   - Ganti nama project: <!--GM_OP:RENAME_PROJECT:Nama Baru-->\n"
@@ -1705,10 +1713,49 @@ if (!function_exists('get_greymist_system_instruction')) {
             . "   Jika pengguna meminta mengganti, mengubah, atau me-rename nama/judul proyek (misal: 'ganti nama project jadi My Studio'):\n"
             . "   Gunakan format: <!--GM_OP:RENAME_PROJECT:Nama Proyek Baru--> diikuti penjelasan singkat.\n\n"
             . "12. MULTIMODAL VISION & REFERENSI VISUAL GAMBAR:\n"
-            . "   Jika gambar / screenshot referensi disertakan:\n"
-            . "   - Analisis tata letak (wireframe/layout), hierarki visual, jenis komponen (hero, navbar, cards, pricing, testimonial, form, footer), warna, dan tipografi dari gambar referensi tersebut.\n"
+            . "   Jika gambar / screenshot referensi disertakan atau dipaste:\n"
+            . "   - Analisis tata letak (wireframe/layout), hierarki visual, jenis komponen (hero, navbar, cards, pricing, testimonial, form, footer, tabel data), warna, dan tipografi dari gambar referensi tersebut.\n"
+            . "   - DETEKSI SEMANTIK PRESISI (TABEL VS KARTU/DIV DARI GAMBAR):\n"
+            . "     * Jika pada gambar tampak TABEL DATA, JADWAL, MATRIKS PERBANDINGAN FITUR/HARGA, DAFTAR TRANSAKSI, atau INVOICE: AI WAJIB menghasilkan tag semantik <table class=\"gm-object\"> murni lengkap dengan <thead>, <tbody>, <tr>, <th>, <td> dalam wrapper responsif <div class=\"gm-object\" style=\"overflow-x: auto; width: 100%;\">. DILARANG KERAS mengubah tabel di foto menjadi tumpukan <div>!\n"
+            . "     * Jika pada gambar tampak KARTU (CARDS), HERO SECTION, atau GRID VISUAL: gunakan tag semantik <section> dan <div> flexbox/grid. DILARANG menggunakan <table> untuk tata letak kartu!\n"
             . "   - Konversikan setiap elemen visual dari gambar menjadi kode HTML semantik Greymist dengan class .gm-object yang meniru estetika dan layout referensi tersebut secara presisi.\n"
             . "   - Gunakan ikon Font Awesome yang relevan sesuai konten pada foto. Pastikan responsif dan bebas emoji.\n\n"
+            . "13. ATURAN SEMANTIK HTML5 & KETEPATAN PENGGUNAAN TABEL (TABLE VS DIV):\n"
+            . "   AI WAJIB membedakan secara presisi mana elemen yang harus menggunakan <table> dan mana yang menggunakan <div>:\n"
+            . "   A. KAPAN WAJIB MENGGUNAKAN <TABLE> (DILARANG MENGGUNAKAN DIV):\n"
+            . "      - Konten berupa DATA TABULAR: Jadwal kegiatan (schedule), perbandingan harga/fitur (feature comparison matrix), invoice/faktur, riwayat transaksi/order log, daftar inventaris/pengguna, laporan keuangan, dan data berbaris-kolom.\n"
+            . "      - DILARANG KERAS mensimulasikan data tabel menggunakan rentetan <div> flexbox atau css grid!\n"
+            . "      - WAJIB gunakan struktur tabel semantik murni: <table class=\"gm-object\">, <thead class=\"gm-object\">, <tbody class=\"gm-object\">, <tr class=\"gm-object\">, <th class=\"gm-object\">, <td class=\"gm-object\">.\n"
+            . "      - WAJIB BUNGKUS DALAM CONTAINER RESPONSIF: Selalu bungkus <table> di dalam <div class=\"gm-object\" style=\"width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; box-sizing: border-box;\"> agar tabel dapat di-scroll horizontal secara mulus di layar HP (Mobile) tanpa memperlebar kanvas utama!\n"
+            . "      - Standar Desain Tabel Modern: width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; <th> diberi background lembut (#f8fafc), padding 12px 16px, border-bottom 2px solid #e2e8f0, font-weight 600; <td> diberi padding 12px 16px, border-bottom 1px solid #f1f5f9; setiap baris <tr> rapi.\n"
+            . "   B. KAPAN WAJIB MENGGUNAKAN <DIV> (BUKAN TABLE):\n"
+            . "      - Gunakan <div> untuk layout container umum, flex/grid wrapper kartu (card grid), hero section, visual flexbox rows, box bayangan, dan popup modal.\n"
+            . "      - DILARANG KERAS menggunakan <table> untuk tata letak halaman (layouting)!\n"
+            . "   C. KETEPATAN SEMANTIK TAG HTML5 LAINNYA:\n"
+            . "      - Navigasi: <nav class=\"gm-object\"> (bukan <div>).\n"
+            . "      - Section Bab: <section class=\"gm-object\"> dengan id semantik (id=\"hero\", id=\"pricing\", id=\"schedule\", id=\"contact\").\n"
+            . "      - Tombol Aksi: <button class=\"gm-object\"> (DILARANG <div onclick> atau <span> untuk tombol interaktif).\n"
+            . "      - Tautan / Navigasi: <a class=\"gm-object\" data-action-type=\"...\">.\n"
+            . "      - Formulir: <form class=\"gm-object\">, <label class=\"gm-object\">, <input class=\"gm-object\">, <select class=\"gm-object\">, <textarea class=\"gm-object\">.\n"
+            . "      - Judul: <h1> s/d <h6> untuk hierarki heading (DILARANG <div> dengan font tebal untuk judul utama).\n\n"
+            . "11. ATURAN KHUSUS WEB PRESENTATION / PPT SLIDES (MULTI-FRAME 100vw x 100vh FULL-SCREEN SLIDES):\n"
+            . "   Jika pengguna meminta pembuatan Presentasi / PPT Web / Slides presentasi menjadi beberapa halaman atau frame terpisah (misal: 'bikin PPT', 'slide presentasi', 'masing-masing slide jadi frame/page'):\n"
+            . "   A. WAJIB FULL-SCREEN MEMENUHI KANVAS (100% WIDTH x 100vh HEIGHT):\n"
+            . "      - DILARANG KERAS membatasi slide menjadi kartu kecil mengambang di tengah (DILARANG max-width: 750px/900px atau min-height: 540px pada container slide)!\n"
+            . "      - Kontainer slide terluar WAJIB memenuhi 100% layar kanvas: style=\"display: flex; flex-direction: column; justify-content: space-between; width: 100%; min-width: 100%; height: 100vh; min-height: 100vh; padding: clamp(36px, 4vh, 60px) clamp(48px, 5vw, 96px); box-sizing: border-box; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); margin: 0; position: relative; border-radius: 0; border: none; box-shadow: none;\".\n"
+            . "      - Kontainer isi tengah (.slide-content): style=\"flex: 1; display: flex; flex-direction: column; justify-content: center; width: 100%; max-width: 1280px; margin: 0 auto; box-sizing: border-box;\".\n"
+            . "   B. DILARANG KERAS MENGGUNAKAN `display: none;` PADA SLIDE MANA PUN (BAIK SLIDE 1 MAUPUN SLIDE 2 S/D SLIDE TERAKHIR)!\n"
+            . "      - Di Greymist, setiap slide dibuat menjadi Frame/Page mandiri yang dikelola oleh workspace. Seluruh slide WAJIB berstatus visible.\n"
+            . "   C. NAVIGASI SLIDE WAJIB BISA PINDAH-PINDAH (INTERAKTIF & LEBAR):\n"
+            . "      Di bagian bawah setiap slide, WAJIB sertakan kontainer navigasi terpadu selebar slide:\n"
+            . "      <div class=\"gm-object slide-navigation\" style=\"display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 1280px; margin: 0 auto; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.08); box-sizing: border-box; flex-shrink: 0;\">\n"
+            . "        - Jika bukan slide pertama: <button class=\"gm-object gm-slide-nav-btn\" data-action-type=\"goto\" data-action-target=\"Slide {N-1}\" style=\"padding: 10px 22px; background: #ffffff; color: #334155; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);\"><i class=\"fa-solid fa-arrow-left gm-object\"></i> Sebelumnya</button>\n"
+            . "        - Indikator: <span class=\"gm-object\" style=\"font-size: 14px; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 6px 18px; border-radius: 30px;\">Slide {N} / {Total}</span>\n"
+            . "        - Jika bukan slide terakhir: <button class=\"gm-object gm-slide-nav-btn\" data-action-type=\"goto\" data-action-target=\"Slide {N+1}\" style=\"padding: 10px 24px; background: #0078ff; color: #ffffff; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(0,120,255,0.28);\">Selanjutnya <i class=\"fa-solid fa-arrow-right gm-object\"></i></button>\n"
+            . "      </div>\n"
+            . "   D. KONTEN PRESENTASI BERSIH & BERBOBOT:\n"
+            . "      - Format pembungkus: <!--GM_FRAME:Slide 1--> ... <!--GM_FRAME:Slide 2--> ... dst.\n"
+            . "      - Tipografi besar jelas (H1/H2 32px-48px, body 15px-17px), kartu poin lega (3-4 kolom auto-fit minmax(280px, 1fr)), dan ikon Font Awesome (<i class=\"fa-solid fa-...\"></i>). DILARANG emotikon.\n\n"
             . "PILIHAN FORMAT OPERASI LAINNYA:\n"
             . "1. MEMBACA/MENJELASKAN: <!--GM_OP:EXPLAIN--> diikuti penjelasan dalam Bahasa Indonesia.\n"
             . "2. GANTI NAMA PROYEK: <!--GM_OP:RENAME_PROJECT:Nama Proyek Baru--> diikuti konfirmasi.\n"
@@ -1731,7 +1778,7 @@ if (!function_exists('build_greymist_context_input')) {
         array $selected_object_attrs = [],
         array $reusable_components = [],
         array $all_project_frames = [],
-        ?array $reference_image = null
+        $reference_images = null
     ): string {
         $context_input = "";
         if ($memory_context_text !== '') {
@@ -1768,8 +1815,34 @@ if (!function_exists('build_greymist_context_input')) {
             }
             $context_input .= "\n";
         }
-        if ($reference_image !== null && !empty($reference_image['data'])) {
-            $context_input .= "[FOTO / SCREENSHOT REFERENSI VISUAL DISERTAKAN]: Gambar referensi desain UI terlampir. Analisis tata letak, komponen, dan estetika visualnya, lalu hasilkan kode UI .gm-object yang meniru referensi tersebut.\n\n";
+        $images_list = [];
+        if (!empty($reference_images)) {
+            if (isset($reference_images['data'])) {
+                $images_list = [$reference_images];
+            } elseif (is_array($reference_images)) {
+                $images_list = $reference_images;
+            }
+        }
+
+        if (!empty($images_list)) {
+            $img_count = count($images_list);
+            if ($img_count === 1) {
+                $context_input .= "[1 FOTO / SCREENSHOT REFERENSI VISUAL DISERTAKAN]:\n"
+                    . "Gambar referensi desain UI terlampir. Analisis tata letak, hierarki komponen, tipografi, warna, dan estetika visualnya secara teliti.\n";
+            } else {
+                $context_input .= "[{$img_count} FOTO / SCREENSHOT REFERENSI VISUAL DISERTAKAN]:\n"
+                    . "Terdapat {$img_count} foto referensi desain UI terlampir (Foto 1 s/d Foto {$img_count}).\n"
+                    . "Pelajari seluruh foto referensi ini secara menyeluruh. Jika foto-foto tersebut menunjukkan bagian halaman yang berbeda (misalnya Foto 1 = Header/Hero, Foto 2 = Tabel Data / Grid Fitur, Foto 3 = Footer), kombinasikan seluruhnya secara harmonis menjadi satu kesatuan halaman yang utuh dan menyatu.\n";
+            }
+            $context_input .= "PERHATIAN DETEKSI SEMANTIK TABEL VS DIV DARI FOTO REFERENSI:\n"
+                . "1. JIKA DI GAMBAR TERLIHAT TABEL DATA, JADWAL (SCHEDULE), MATRIKS PERBANDINGAN FITUR/HARGA, INVOICE, ATAU DAFTAR BERKOLOM-BARIS:\n"
+                . "   - WAJIB konversikan menjadi tag semantik murni: <table class=\"gm-object\">, <thead class=\"gm-object\">, <tbody class=\"gm-object\">, <tr class=\"gm-object\">, <th class=\"gm-object\">, <td class=\"gm-object\">.\n"
+                . "   - WAJIB bungkus di dalam container responsif: <div class=\"gm-object\" style=\"width:100%;overflow-x:auto;box-sizing:border-box;\"> agar dapat di-scroll horizontal di mobile.\n"
+                . "   - DILARANG KERAS mengubah tabel di gambar menjadi deretan <div> kartu!\n"
+                . "2. JIKA DI GAMBAR TERLIHAT KARTU (CARDS), GRID FITUR, HERO BANNER, ATAU KONTEN VISUAL:\n"
+                . "   - Gunakan <section class=\"gm-object\"> dan <div class=\"gm-object\"> flexbox/grid yang responsif.\n"
+                . "   - DILARANG menggunakan <table> untuk tata letak kartu/hero!\n"
+                . "Konversikan setiap elemen visual dari gambar menjadi kode UI .gm-object yang meniru referensi tersebut secara presisi dan bersemantik tinggi.\n\n";
         }
         $context_input .= "INSTRUKSI PENGGUNA:\n" . $prompt;
 
@@ -1851,6 +1924,44 @@ if (!function_exists('parse_greymist_ai_output')) {
                 $end_pos   = ($i + 1 < $count_matches) ? $frame_matches[0][$i + 1][1] : strlen($trimmed_out);
                 $f_html    = trim(substr($trimmed_out, $start_pos, $end_pos - $start_pos));
                 $f_html    = str_replace(['<!--GM_OP:APPEND-->', '<!--GM_OP:REPLACE_FRAME-->'], '', $f_html);
+
+                // Proteksi mutlak: frame atau slide DILARANG memiliki display: none pada kontainer utamanya!
+                if (preg_match('/style="[^"]*display:\s*none;?[^"]*"/i', $f_html)) {
+                    $f_html = preg_replace('/style="([^"]*)display:\s*none;?([^"]*)"/i', 'style="$1display: flex; flex-direction: column; justify-content: center; min-height: 540px; padding: 36px 24px; box-sizing: border-box; width: 100%;$2"', $f_html);
+                }
+
+                // Auto-suntik navigasi slide jika merupakan presentasi dan belum memiliki navigasi
+                $is_slide = preg_match('/slide\s*\d*/i', $f_name) || str_contains($f_html, 'slide-container');
+                if ($is_slide && !str_contains($f_html, 'slide-navigation') && !str_contains($f_html, 'data-action-type="goto"')) {
+                    $curr_idx = $i + 1;
+                    $prev_name = ($curr_idx > 1) ? (trim($frame_matches[1][$i - 1][0]) ?: "Slide " . ($curr_idx - 1)) : "";
+                    $next_name = ($curr_idx < $count_matches) ? (trim($frame_matches[1][$i + 1][0]) ?: "Slide " . ($curr_idx + 1)) : "";
+
+                    $prev_btn = $curr_idx > 1
+                        ? '<button class="gm-object gm-slide-nav-btn" data-action-type="goto" data-action-target="' . htmlspecialchars($prev_name) . '" style="padding: 9px 18px; background: #f8fafc; color: #334155; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;"><i class="fa-solid fa-arrow-left gm-object"></i> Sebelumnya</button>'
+                        : '<div class="gm-object" style="width: 110px;"></div>';
+
+                    $next_btn = $curr_idx < $count_matches
+                        ? '<button class="gm-object gm-slide-nav-btn" data-action-type="goto" data-action-target="' . htmlspecialchars($next_name) . '" style="padding: 9px 20px; background: #0078ff; color: #ffffff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(0,120,255,0.25); transition: all 0.2s;">Selanjutnya <i class="fa-solid fa-arrow-right gm-object"></i></button>'
+                        : '<div class="gm-object" style="width: 110px;"></div>';
+
+                    $nav_box = '
+    <div class="gm-object slide-navigation" style="display: flex; align-items: center; justify-content: space-between; margin-top: 36px; padding-top: 18px; border-top: 1px solid #e2e8f0; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; box-sizing: border-box;">
+      ' . $prev_btn . '
+      <div class="gm-object" style="text-align: center;">
+        <span class="gm-object" style="font-size: 13px; font-weight: 600; color: #64748b; background: #f1f5f9; padding: 4px 14px; border-radius: 20px;">Slide ' . $curr_idx . ' / ' . $count_matches . '</span>
+      </div>
+      ' . $next_btn . '
+    </div>';
+
+                    $last_div = strrpos($f_html, '</div>');
+                    if ($last_div !== false) {
+                        $f_html = substr_replace($f_html, $nav_box . "\n</div>", $last_div, 6);
+                    } else {
+                        $f_html .= $nav_box;
+                    }
+                }
+
                 if ($f_html !== '') {
                     $frames_specs[] = [
                         'frame_name' => $f_name,
@@ -1951,11 +2062,20 @@ if (!function_exists('call_openai_compatible_api')) {
         array $selected_object_attrs = [],
         array $reusable_components = [],
         array $all_project_frames = [],
-        ?array $reference_image = null,
+        $reference_images = null,
         bool $read_memory = false
     ): array {
         if (trim($api_key) === '') {
             return ['success' => false, 'error' => "API Key untuk {$provider_name} belum disetel di pengaturan."];
+        }
+
+        $images_list = [];
+        if (!empty($reference_images)) {
+            if (isset($reference_images['data'])) {
+                $images_list = [$reference_images];
+            } elseif (is_array($reference_images)) {
+                $images_list = $reference_images;
+            }
         }
 
         $system_instruction = get_greymist_system_instruction($read_memory);
@@ -1968,23 +2088,31 @@ if (!function_exists('call_openai_compatible_api')) {
             $selected_object_attrs,
             $reusable_components,
             $all_project_frames,
-            $reference_image
+            $images_list
         );
 
         $messages = [
             ['role' => 'system', 'content' => $system_instruction],
         ];
 
-        if ($reference_image !== null && !empty($reference_image['data'])) {
-            $mime = $reference_image['mime_type'] ?? 'image/jpeg';
-            $b64 = $reference_image['data'];
-            $data_uri = "data:{$mime};base64,{$b64}";
+        if (!empty($images_list)) {
+            $user_content = [
+                ['type' => 'text', 'text' => $context_input]
+            ];
+            foreach ($images_list as $img) {
+                if (!empty($img['data'])) {
+                    $mime = $img['mime_type'] ?? 'image/jpeg';
+                    $b64 = $img['data'];
+                    $data_uri = "data:{$mime};base64,{$b64}";
+                    $user_content[] = [
+                        'type' => 'image_url',
+                        'image_url' => ['url' => $data_uri]
+                    ];
+                }
+            }
             $messages[] = [
                 'role' => 'user',
-                'content' => [
-                    ['type' => 'text', 'text' => $context_input],
-                    ['type' => 'image_url', 'image_url' => ['url' => $data_uri]],
-                ]
+                'content' => $user_content
             ];
         } else {
             $messages[] = [
@@ -2057,26 +2185,37 @@ if (!function_exists('call_antigravity_bridge_api')) {
         array $selected_object_attrs = [],
         array $reusable_components = [],
         array $all_project_frames = [],
-        ?array $reference_image = null,
+        $reference_images = null,
         ?array $frames_snapshot = [],
         ?PDO $pdo = null,
-        int $project_id = 0
+        int $project_id = 0,
+        bool $read_memory = false
     ): array {
         $bridge_dir = ROOT_PATH . '/.agents/bridge';
         if (!is_dir($bridge_dir)) {
             @mkdir($bridge_dir, 0777, true);
         }
+        $images_list = [];
+        if (!empty($reference_images)) {
+            if (isset($reference_images['data'])) {
+                $images_list = [$reference_images];
+            } elseif (is_array($reference_images)) {
+                $images_list = $reference_images;
+            }
+        }
+
         $task_payload = [
-            'timestamp'             => date('c'),
-            'prompt'                => $prompt,
-            'target_mode'           => $target_mode,
-            'project_id'            => $project_id,
-            'has_reference_image'   => $reference_image !== null,
-            'current_frame_preview' => mb_substr($current_frame_html, 0, 500),
+            'timestamp'              => date('c'),
+            'prompt'                 => $prompt,
+            'target_mode'            => $target_mode,
+            'project_id'             => $project_id,
+            'has_reference_image'    => !empty($images_list),
+            'reference_images_count' => count($images_list),
+            'current_frame_preview'  => mb_substr($current_frame_html, 0, 500),
         ];
         @file_put_contents($bridge_dir . '/last_request.json', json_encode($task_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
-        // Cek apakah ada local bridge server agent aktif
+        // 1. Cek apakah ada local bridge server agent aktif di port 3307
         $local_bridge_url = 'http://127.0.0.1:3307/v1/agent';
         $ch = curl_init($local_bridge_url);
         curl_setopt_array($ch, [
@@ -2106,16 +2245,91 @@ if (!function_exists('call_antigravity_bridge_api')) {
             }
         }
 
-        // Fallback cerdas bawaan yang diperkaya aturan Antigravity Builder
+        // 2. BACKBONE CLOUD CERDAS ANTIGRAVITY (Tanpa minta API Key pribadi dari user di modal):
+        // Memanfaatkan kredensial cloud sistem (.env) untuk memproses permintaan secara instan & 0% beban laptop
+        $gemini_key = (string)env('GEMINI_API_KEY', '');
+        $groq_key   = (string)env('GROQ_API_KEY', '');
+
+        // 2a. Jika ada gambar / screenshot referensi (Vision / Clone Foto), gunakan Gemini Multimodal Vision:
+        if (!empty($images_list) && $gemini_key !== '') {
+            $res = call_gemini_interactions_api(
+                $gemini_key,
+                $prompt,
+                'gemini-3.5-flash-lite',
+                $current_frame_html,
+                $selected_object_html,
+                $target_mode,
+                $memory_context_text,
+                $selected_object_attrs,
+                $reusable_components,
+                $all_project_frames,
+                $images_list,
+                $read_memory
+            );
+            if (!empty($res['success'])) {
+                $img_count = count($images_list);
+                $res['used_model'] = 'Antigravity Cloud (Gemini Vision ' . ($img_count > 1 ? "{$img_count} Foto" : "1 Foto") . ')';
+                $res['summary']    = !empty($res['summary']) ? $res['summary'] : 'Desain UI berhasil dikloning dari foto melalui Antigravity Cloud.';
+                return $res;
+            }
+        }
+
+        // 2b. Untuk prompt teks, gunakan Groq 120B Cloud (super kilat ~3-5s):
+        if ($groq_key !== '') {
+            $res = call_openai_compatible_api(
+                'https://api.groq.com/openai/v1/chat/completions',
+                $groq_key,
+                'openai/gpt-oss-120b',
+                $prompt,
+                'Antigravity Cloud (Groq LPU)',
+                $current_frame_html,
+                $selected_object_html,
+                $target_mode,
+                $memory_context_text,
+                $selected_object_attrs,
+                $reusable_components,
+                $all_project_frames,
+                $images_list,
+                $read_memory
+            );
+            if (!empty($res['success'])) {
+                $res['used_model'] = 'Antigravity Cloud (Groq 120B)';
+                return $res;
+            }
+        }
+
+        // 2c. Fallback cloud kedua: Gemini Cloud API
+        if ($gemini_key !== '') {
+            $res = call_gemini_interactions_api(
+                $gemini_key,
+                $prompt,
+                'gemini-3.5-flash-lite',
+                $current_frame_html,
+                $selected_object_html,
+                $target_mode,
+                $memory_context_text,
+                $selected_object_attrs,
+                $reusable_components,
+                $all_project_frames,
+                $images_list,
+                $read_memory
+            );
+            if (!empty($res['success'])) {
+                $res['used_model'] = 'Antigravity Cloud (Gemini 3.5)';
+                return $res;
+            }
+        }
+
+        // 3. Fallback jika seluruh koneksi internet offline
         $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot ?? [], $pdo, $project_id);
         if ($local_cmd !== null) {
             return [
                 'success'            => true,
-                'used_model'         => 'Antigravity Cloud Bridge',
+                'used_model'         => 'Antigravity Engine (Offline)',
                 'operation'          => $local_cmd['operation'],
                 'html'               => $local_cmd['html'] ?? '',
                 'patch'              => $local_cmd['patch'] ?? null,
-                'summary'            => $local_cmd['summary'] ?? 'Komponen diproses oleh Antigravity Cloud Bridge.',
+                'summary'            => $local_cmd['summary'] ?? 'Komponen diproses secara offline.',
                 'frames_specs'       => $local_cmd['frames_specs'] ?? [],
                 'frames_updates'     => $local_cmd['frames_updates'] ?? [],
                 'breakpoints_to_add' => $local_cmd['breakpoints_to_add'] ?? [],
@@ -2126,10 +2340,10 @@ if (!function_exists('call_antigravity_bridge_api')) {
         $gen_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
         return [
             'success'            => true,
-            'used_model'         => 'Antigravity Cloud Bridge',
+            'used_model'         => 'Antigravity Engine (Preset Lokal)',
             'operation'          => ($target_mode === 'edit_selected') ? 'replace_selected' : 'append',
             'html'               => $gen_html,
-            'summary'            => 'Komponen berhasil dibuat melalui Antigravity Cloud Bridge.',
+            'summary'            => 'Komponen dibuat menggunakan preset lokal.',
             'breakpoints_to_add' => [],
         ];
     }
@@ -2170,7 +2384,7 @@ if (!function_exists('test_ai_provider_connection')) {
 
         if ($provider === 'groq') {
             $endpoint = 'https://api.groq.com/openai/v1/chat/completions';
-            $m = $model !== '' ? $model : 'llama-3.3-70b-versatile';
+            $m = $model !== '' ? $model : 'openai/gpt-oss-120b';
             $payload = [
                 'model'      => $m,
                 'messages'   => [['role' => 'user', 'content' => 'Test ping. Respond only with OK.']],
@@ -2300,9 +2514,18 @@ if (!function_exists('call_gemini_interactions_api')) {
         array $selected_object_attrs = [],
         array $reusable_components = [],
         array $all_project_frames = [],
-        ?array $reference_image = null,
+        $reference_images = null,
         bool $read_memory = false
     ): array {
+        $images_list = [];
+        if (!empty($reference_images)) {
+            if (isset($reference_images['data'])) {
+                $images_list = [$reference_images];
+            } elseif (is_array($reference_images)) {
+                $images_list = $reference_images;
+            }
+        }
+
         $system_instruction = get_greymist_system_instruction($read_memory);
         $context_input = build_greymist_context_input(
             $prompt,
@@ -2313,7 +2536,7 @@ if (!function_exists('call_gemini_interactions_api')) {
             $selected_object_attrs,
             $reusable_components,
             $all_project_frames,
-            $reference_image
+            $images_list
         );
 
         $free_models = array_values(array_unique([
@@ -2333,18 +2556,22 @@ if (!function_exists('call_gemini_interactions_api')) {
                 ],
             ];
 
-            if ($reference_image !== null && !empty($reference_image['data'])) {
-                $payload['input'] = [
-                    [
-                        'type'      => 'image',
-                        'data'      => $reference_image['data'],
-                        'mime_type' => $reference_image['mime_type'] ?? 'image/jpeg',
-                    ],
-                    [
-                        'type'      => 'text',
-                        'text'      => $context_input,
-                    ]
+            if (!empty($images_list)) {
+                $inputs = [];
+                foreach ($images_list as $img) {
+                    if (!empty($img['data'])) {
+                        $inputs[] = [
+                            'type'      => 'image',
+                            'data'      => $img['data'],
+                            'mime_type' => $img['mime_type'] ?? 'image/jpeg',
+                        ];
+                    }
+                }
+                $inputs[] = [
+                    'type' => 'text',
+                    'text' => $context_input,
                 ];
+                $payload['input'] = $inputs;
             } else {
                 $payload['input'] = $context_input;
             }
@@ -2455,7 +2682,7 @@ switch ($ai_action) {
             'status'               => 'OK',
             'success'              => true,
             'provider'             => $current_provider,
-            'groq_model'           => (string)env('GROQ_MODEL', 'llama-3.3-70b-versatile'),
+            'groq_model'           => (string)env('GROQ_MODEL', 'openai/gpt-oss-120b'),
             'openrouter_model'     => (string)env('OPENROUTER_MODEL', 'meta-llama/llama-3.3-70b-instruct:free'),
             'gemini_model'         => (string)env('GEMINI_MODEL', 'gemini-3.5-flash-lite'),
             'groq_has_key'         => $groq_key !== '',
@@ -2469,7 +2696,7 @@ switch ($ai_action) {
                     'id'            => 'groq',
                     'name'          => 'Groq Cloud (Gratis & Super Cepat 70B)',
                     'desc'          => 'Inference cloud super cepat (~300 t/s), 0% CPU laptop. Gratis di console.groq.com',
-                    'default_model' => 'llama-3.3-70b-versatile',
+                    'default_model' => 'openai/gpt-oss-120b',
                     'needs_key'     => true,
                 ],
                 [
@@ -2596,12 +2823,26 @@ switch ($ai_action) {
         $selected_object_attrs = isset($data['selected_object_attrs']) && is_array($data['selected_object_attrs']) ? $data['selected_object_attrs'] : [];
         $active_frame_id       = (int)($data['active_frame_id'] ?? 0);
 
-        // Ekstrak foto/gambar referensi jika diunggah pengguna (Multimodal Vision)
-        $raw_ref_image   = isset($data['reference_image']) && is_array($data['reference_image']) ? $data['reference_image'] : null;
-        $clean_ref_image = null;
-        if ($raw_ref_image && !empty($raw_ref_image['data'])) {
-            $ref_data = trim((string)$raw_ref_image['data']);
-            $ref_mime = trim((string)($raw_ref_image['mime_type'] ?? 'image/jpeg'));
+        // Ekstrak foto/gambar referensi jika diunggah pengguna (Multimodal Vision / Multi-Foto)
+        $raw_ref_images = [];
+        if (isset($data['reference_images']) && is_array($data['reference_images'])) {
+            $raw_ref_images = $data['reference_images'];
+        } elseif (isset($data['reference_image']) && is_array($data['reference_image'])) {
+            if (isset($data['reference_image']['data'])) {
+                $raw_ref_images = [$data['reference_image']];
+            } else {
+                $raw_ref_images = $data['reference_image'];
+            }
+        }
+
+        $clean_ref_images = [];
+        foreach ($raw_ref_images as $raw_img) {
+            if (!is_array($raw_img) || empty($raw_img['data'])) {
+                continue;
+            }
+            $ref_data = trim((string)$raw_img['data']);
+            $ref_mime = trim((string)($raw_img['mime_type'] ?? 'image/jpeg'));
+            $ref_name = trim((string)($raw_img['name'] ?? 'referensi.png'));
             if (str_contains($ref_data, ',')) {
                 $parts = explode(',', $ref_data, 2);
                 if (preg_match('#data:(image/[^;]+);base64#i', $parts[0], $mime_m)) {
@@ -2610,15 +2851,22 @@ switch ($ai_action) {
                 $ref_data = $parts[1];
             }
             if ($ref_data !== '') {
-                $clean_ref_image = [
+                $clean_ref_images[] = [
                     'data'      => $ref_data,
                     'mime_type' => $ref_mime,
+                    'name'      => $ref_name,
                 ];
             }
         }
+        $clean_ref_image = !empty($clean_ref_images) ? $clean_ref_images[0] : null;
 
-        if ($prompt === '' && $clean_ref_image !== null) {
-            $prompt = "Buat tampilan antarmuka (UI) website modern yang meniru tata letak (layout), hierarki visual, dan komponen dari foto referensi ini menggunakan komponen .gm-object Greymist.";
+        if ($prompt === '' && !empty($clean_ref_images)) {
+            $img_cnt = count($clean_ref_images);
+            if ($img_cnt === 1) {
+                $prompt = "Buat tampilan antarmuka (UI) website modern yang meniru tata letak (layout), hierarki visual, dan komponen dari foto referensi ini menggunakan komponen .gm-object Greymist.";
+            } else {
+                $prompt = "Bangun tampilan antarmuka (UI) website modern yang mengombinasikan tata letak, hierarki komponen, dan elemen visual dari {$img_cnt} foto referensi terlampir menggunakan komponen .gm-object Greymist secara utuh dan harmonis.";
+            }
         }
 
         if ($prompt === '') {
@@ -2667,8 +2915,27 @@ switch ($ai_action) {
 
         if ($active_provider === 'groq') {
             $groq_key   = $inline_api_key !== '' ? $inline_api_key : ((string)($_SESSION['groq_api_key_override'] ?? env('GROQ_API_KEY', '')));
-            $groq_model = $requested_model !== '' ? $requested_model : (string)env('GROQ_MODEL', 'llama-3.3-70b-versatile');
-            if ($groq_key !== '') {
+            $groq_model = $requested_model !== '' ? $requested_model : (string)env('GROQ_MODEL', 'openai/gpt-oss-120b');
+            $gemini_key = (string)($_SESSION['gemini_api_key_override'] ?? env('GEMINI_API_KEY', ''));
+            if (!empty($clean_ref_images) && $gemini_key !== '') {
+                // Groq fokus pada model teks LPU. Untuk referensi foto/gambar, otomatis alihkan ke Gemini Multimodal Vision!
+                $ai_res = call_gemini_interactions_api(
+                    $gemini_key,
+                    $prompt,
+                    'gemini-3.5-flash-lite',
+                    $current_frame_html,
+                    $selected_object_html,
+                    $target_mode,
+                    $memory_context_text,
+                    $selected_object_attrs,
+                    $reusable_comps,
+                    $all_db_frames,
+                    $clean_ref_images,
+                    $read_memory
+                );
+                $img_cnt = count($clean_ref_images);
+                $source_mode = 'Google Gemini Vision (Auto-routed untuk ' . ($img_cnt > 1 ? "{$img_cnt} Foto" : "Foto") . ')';
+            } elseif ($groq_key !== '') {
                 $ai_res = call_openai_compatible_api(
                     'https://api.groq.com/openai/v1/chat/completions',
                     $groq_key,
@@ -2682,7 +2949,7 @@ switch ($ai_action) {
                     $selected_object_attrs,
                     $reusable_comps,
                     $all_db_frames,
-                    $clean_ref_image,
+                    $clean_ref_images,
                     $read_memory
                 );
                 $source_mode = 'Groq Cloud (' . ($ai_res['used_model'] ?? $groq_model) . ')';
@@ -2706,7 +2973,7 @@ switch ($ai_action) {
                     $selected_object_attrs,
                     $reusable_comps,
                     $all_db_frames,
-                    $clean_ref_image,
+                    $clean_ref_images,
                     $read_memory
                 );
                 $source_mode = 'OpenRouter Cloud (' . ($ai_res['used_model'] ?? $or_model) . ')';
@@ -2723,10 +2990,11 @@ switch ($ai_action) {
                 $selected_object_attrs,
                 $reusable_comps,
                 $all_db_frames,
-                $clean_ref_image,
+                $clean_ref_images,
                 $frames_snapshot,
                 $pdo,
-                $project_id
+                $project_id,
+                $read_memory
             );
             $source_mode = 'Antigravity Cloud Bridge';
         } elseif ($active_provider === 'gemini') {
@@ -2744,7 +3012,7 @@ switch ($ai_action) {
                     $selected_object_attrs,
                     $reusable_comps,
                     $all_db_frames,
-                    $clean_ref_image,
+                    $clean_ref_images,
                     $read_memory
                 );
                 $source_mode = 'Google Gemini (' . ($ai_res['used_model'] ?? $gemini_model) . ')';

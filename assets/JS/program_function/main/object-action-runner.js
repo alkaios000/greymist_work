@@ -100,8 +100,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Intercept Alt + Click (atau saat mode interaksi aktif) pada seluruh dokumen
+    // Intercept click: direct click untuk tombol slide nav, atau Alt + Click / mode interaksi untuk objek lain
     document.addEventListener("click", (e) => {
+        // 1. Jika tombol navigasi slide PPT (.gm-slide-nav-btn atau dalam .slide-navigation), aktifkan langsung tanpa perlu Alt
+        const slideNavBtn = e.target.closest(".gm-slide-nav-btn, .slide-navigation [data-action-type='goto']");
+        if (slideNavBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.runObjectAction(slideNavBtn);
+            return;
+        }
+
+        // 2. Untuk objek umum: Alt + Click atau mode interaksi
         const isInteractionMode = document.body.classList.contains('gm-interaction-mode-on');
         if (e.altKey || isInteractionMode) {
             const obj = e.target.closest("[data-action-type]");
@@ -112,4 +122,29 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     }, true); // Capture phase agar menangkap event lebih dulu
+
+    // Navigasi Keyboard Presentasi (Panah Kanan = Next Slide, Panah Kiri = Prev Slide)
+    document.addEventListener("keydown", (e) => {
+        // Jangan aktifkan jika pengguna sedang mengetik teks di input/textarea/editor teks
+        const activeTag = (document.activeElement?.tagName || "").toLowerCase();
+        if (activeTag === "input" || activeTag === "textarea" || document.activeElement?.isContentEditable) {
+            return;
+        }
+
+        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
+            const allThumbs = Array.from(document.querySelectorAll('.gm-frame-thumbnail'));
+            if (allThumbs.length <= 1) return;
+
+            const activeIdx = allThumbs.findIndex(t => t.classList.contains('actived') || t.classList.contains('active'));
+            if (activeIdx !== -1) {
+                if (e.key === "ArrowRight" && activeIdx < allThumbs.length - 1) {
+                    e.preventDefault();
+                    allThumbs[activeIdx + 1].click();
+                } else if (e.key === "ArrowLeft" && activeIdx > 0) {
+                    e.preventDefault();
+                    allThumbs[activeIdx - 1].click();
+                }
+            }
+        }
+    });
 });
