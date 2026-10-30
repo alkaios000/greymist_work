@@ -49,6 +49,13 @@
         return document.querySelector(".gm-object-core");
     }
 
+    function getActiveFrameId() {
+        const activeThumb = document.querySelector(".gm-frame-thumbnail.actived");
+        if (activeThumb && activeThumb.dataset.frame) return activeThumb.dataset.frame;
+        const core = getActiveObjectCore();
+        return core ? (core.dataset.frame || "") : "";
+    }
+
     function getSelectedObject() {
         const selectedObj = document.querySelector(".gm-object.gm-active");
         if (selectedObj && !selectedObj.classList.contains("gm-object-core")) {
@@ -787,6 +794,15 @@
                     thumbs.appendChild(thumb);
                 }
             }
+        } else {
+            // Frame DOM core sudah ada (misal Main Frame awal yang digunakan ulang) -> sinkronkan judulnya
+            if (frameData.frame_name) {
+                const thumb = document.querySelector(`.gm-frame-thumbnail[data-frame="${frameId}"]`);
+                if (thumb) {
+                    const nameEl = thumb.querySelector(".gm-frame-name");
+                    if (nameEl) nameEl.textContent = frameData.frame_name;
+                }
+            }
         }
 
         if (typeof window.activateFrame === "function") {
@@ -799,6 +815,54 @@
     /**
      * Membangun frame baru halaman demi halaman, dan elemen demi elemen secara realtime dengan latensi sangat rendah.
      */
+        /**
+     * Menambahkan Breakpoint Responsif (Tablet / Mobile / Custom) ke Engine Breakpoint Greymist
+     */
+    function applyAiBreakpoints(breakpointsToAdd, statusEl) {
+        if (!Array.isArray(breakpointsToAdd) || breakpointsToAdd.length === 0) return;
+        if (!window.gmBreakpoints) window.gmBreakpoints = [];
+
+        const projParams = new URLSearchParams(location.search);
+        const projId = projParams.get("project_id") || "0";
+        const savedBpKey = `gm_custom_breakpoints_${projId}`;
+
+        let addedCount = 0;
+        let addedNames = [];
+
+        breakpointsToAdd.forEach(bp => {
+            if (!bp || !bp.id) return;
+            const exists = window.gmBreakpoints.some(b => b.id === bp.id);
+            if (!exists) {
+                const wVal = parseInt(bp.widthValue || 768);
+                const type = bp.type || 'max';
+                const rule = bp.rule || (type === 'min' ? `min-width: ${wVal}px` : `max-width: ${wVal}px`);
+                const newBp = {
+                    id: bp.id,
+                    name: bp.name || bp.id,
+                    rule: rule,
+                    widthValue: wVal,
+                    type: type
+                };
+                window.gmBreakpoints.push(newBp);
+                addedNames.push(newBp.name + ` (${wVal}px)`);
+                addedCount++;
+
+                try {
+                    const existingSaved = JSON.parse(localStorage.getItem(savedBpKey) || "[]");
+                    existingSaved.push(newBp);
+                    localStorage.setItem(savedBpKey, JSON.stringify(existingSaved));
+                } catch (_) {}
+            }
+        });
+
+        if (addedCount > 0 && typeof window.renderBreakpointUI === "function") {
+            window.renderBreakpointUI();
+            if (statusEl) {
+                showStatus(statusEl, "info", `📱 Breakpoint baru (${addedNames.join(', ')}) ditambahkan ke toolbar.`);
+            }
+        }
+    }
+
     function buildCreatedFramesSequentially(createdFrames, statusEl, onAllDone) {
         if (!Array.isArray(createdFrames) || createdFrames.length === 0) {
             if (typeof onAllDone === "function") onAllDone(0);
@@ -1219,6 +1283,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     project_id: projectId,
+                    active_frame_id: getActiveFrameId(),
                     prompt: instruction,
                     model: selectedModel,
                     target_mode: "edit_selected",
@@ -1238,6 +1303,16 @@
                         ctxStatus.style.color = "#dc2626";
                         ctxStatus.textContent = res.msg || "Gagal memodifikasi objek.";
                         return;
+                    }
+
+                    if (res.renamed_frame && res.renamed_frame.frame_id) {
+                        const renFid = String(res.renamed_frame.frame_id);
+                        const renName = res.renamed_frame.new_name;
+                        const thumb = document.querySelector(`.gm-frame-thumbnail[data-frame="${renFid}"]`);
+                        if (thumb && renName) {
+                            const nameEl = thumb.querySelector(".gm-frame-name");
+                            if (nameEl) nameEl.textContent = renName;
+                        }
                     }
 
                     if (res.ai_memory) {
@@ -1897,6 +1972,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     project_id: projectId,
+                    active_frame_id: getActiveFrameId(),
                     prompt: prompt,
                     model: selectedModel,
                     target_mode: effectiveTargetMode,
@@ -1925,7 +2001,77 @@
                         updateMemoryBadgeUI(cachedAiMemory);
                     }
 
+                    // 0. Penerapan otomatis breakpoint responsif jika diarahkan oleh AI
+                    if (Array.isArray(res.breakpoints_to_add) && res.breakpoints_to_add.length > 0) {
+                        applyAiBreakpoints(res.breakpoints_to_add, statusEl);
+                    }
+
+                    // 0b. Sinkronisasi resiprokal pada frame yang sudah ada sebelumnya (misal navbar Home diberi link ke About)
+                    if (Array.isArray(res.updated_existing_frames) && res.updated_existing_frames.length > 0) {
+                        res.updated_existing_frames.forEach(uef => {
+                            const core = document.getElementById(`object-core-${uef.frame_id}`) || document.querySelector(`.gm-object-core[data-frame="${uef.frame_id}"]`);
+                            if (core) {
+                                core.innerHTML = (uef.core_content || "").trim();
+                                if (typeof window.initLoadedObjects === "function") window.initLoadedObjects(core);
+                                if (typeof updateThumbnail === "function") updateThumbnail(uef.frame_id);
+                                else if (typeof window.updateThumbnail === "function") window.updateThumbnail(uef.frame_id);
+                            }
+                        });
+                    }
+
+                    // 0c. Update thumbnail label jika ada frame yang di-rename (misal Main Frame -> Home)
+                    if (res.renamed_frame && res.renamed_frame.frame_id) {
+                        const renFid = String(res.renamed_frame.frame_id);
+                        const renName = res.renamed_frame.new_name;
+                        const thumb = document.querySelector(`.gm-frame-thumbnail[data-frame="${renFid}"]`);
+                        if (thumb && renName) {
+                            const nameEl = thumb.querySelector(".gm-frame-name");
+                            if (nameEl) nameEl.textContent = renName;
+                        }
+                    }
+
                     const op = res.operation || "append";
+
+                    // Penanganan operasi penambahan breakpoint saja
+                    if (op === "add_breakpoints") {
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                        showStatus(statusEl, "success", `✓ ${res.summary || res.msg || "Breakpoint responsif berhasil ditambahkan."}`);
+                        syncProjectAiMemory();
+                        return;
+                    }
+
+                    // Penanganan operasi BATCH UPDATE FRAMES (Intervensi gaya pada seluruh halaman proyek)
+                    if (op === "batch_update_frames" && Array.isArray(res.frames_updates) && res.frames_updates.length > 0) {
+                        const activeCore = getActiveObjectCore();
+                        const activeFid = activeCore ? String(activeCore.dataset.frame) : null;
+                        let countUpdated = 0;
+
+                        res.frames_updates.forEach(fu => {
+                            const fid = String(fu.frame_id);
+                            const core = document.getElementById(`object-core-${fid}`) || document.querySelector(`.gm-object-core[data-frame="${fid}"]`);
+                            if (core) {
+                                if (fid === activeFid) {
+                                    replaceFrameHtmlProgressive(fu.html || "", statusEl, () => {
+                                        if (typeof window.initLoadedObjects === "function") window.initLoadedObjects(core);
+                                        refreshWorkspaceAfterChange(fid);
+                                    });
+                                } else {
+                                    core.innerHTML = (fu.html || "").trim();
+                                    if (typeof window.initLoadedObjects === "function") window.initLoadedObjects(core);
+                                    if (typeof updateThumbnail === "function") updateThumbnail(fid);
+                                    else if (typeof window.updateThumbnail === "function") window.updateThumbnail(fid);
+                                }
+                                countUpdated++;
+                            }
+                        });
+
+                        generateBtn.disabled = false;
+                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                        showStatus(statusEl, "success", `✓ ${res.msg || `Gaya diperbarui secara konsisten di ${countUpdated} halaman proyek.`}`);
+                        syncProjectAiMemory();
+                        return;
+                    }
 
                     // 1. Jika operasi adalah patch atribut (font, warna, ukuran, dsb.)
                     if (op === "patch_attributes" && res.patch) {

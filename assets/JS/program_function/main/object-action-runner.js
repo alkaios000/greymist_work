@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         } else if (type === "scroll") {
-            const scrollId = el.dataset.actionScrollTarget;
+            const scrollId = el.dataset.actionScrollTarget || el.dataset.actionTarget;
             if(scrollId) {
                 // Gunakan class atau id dari preview jika dibutuhkan, atau query di document
                 // Tapi ini dijalankan di Main Editor

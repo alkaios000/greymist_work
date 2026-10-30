@@ -58,7 +58,7 @@
                         }
                     }
                 } else if (type === "scroll") {
-                    if(scrollTarget) scrollTarget.value = activeObj.dataset.actionScrollTarget || "";
+                    if(scrollTarget) scrollTarget.value = activeObj.dataset.actionScrollTarget || activeObj.dataset.actionTarget || "";
                 } else if (type === "modal") {
                     if(modalTitle) modalTitle.value = activeObj.dataset.actionModalTitle || "";
                     if(modalContent) modalContent.value = activeObj.dataset.actionModalContent || "";
@@ -89,6 +89,7 @@
                 activeObj.dataset.actionTarget = gotoTarget.value;
             } else if (type === "scroll" && scrollTarget) {
                 activeObj.dataset.actionScrollTarget = scrollTarget.value;
+                activeObj.dataset.actionTarget = scrollTarget.value;
             } else if (type === "modal") {
                 if(modalTitle) activeObj.dataset.actionModalTitle = modalTitle.value;
                 if(modalContent) activeObj.dataset.actionModalContent = modalContent.value;

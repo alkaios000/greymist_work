@@ -72,6 +72,167 @@ if (!function_exists('summarize_frame_structure')) {
 /**
  * Mengambil dan menyinkronkan memori konteks AI proyek dari database gm_projects + gm_frames.
  */
+/**
+ * Mengekstrak komponen reusable (Navbar, Sidebar, Footer) dari frame-frame yang sudah ada
+ * agar dapat digunakan ulang di halaman baru tanpa membuat dari nol (hemat token & 100% konsisten).
+ */
+if (!function_exists('extract_reusable_components')) {
+    function extract_reusable_components(array $frames_snapshot, string $current_frame_html = ''): array
+    {
+        $reusable = [
+            'navbar'  => null,
+            'sidebar' => null,
+            'footer'  => null,
+        ];
+
+        $html_sources = [];
+        if (trim($current_frame_html) !== '') {
+            $html_sources[] = $current_frame_html;
+        }
+        foreach ($frames_snapshot as $f) {
+            $cnt = trim((string)($f['core_content'] ?? ''));
+            if ($cnt !== '') {
+                $html_sources[] = $cnt;
+            }
+        }
+
+        foreach ($html_sources as $html) {
+            $doc = new DOMDocument();
+            @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+            $root = $doc->getElementById('gm-root');
+            if (!$root) continue;
+
+            if ($reusable['navbar'] === null) {
+                $navs = $root->getElementsByTagName('nav');
+                if ($navs->length > 0) {
+                    $reusable['navbar'] = $doc->saveHTML($navs->item(0));
+                } else {
+                    $headers = $root->getElementsByTagName('header');
+                    if ($headers->length > 0) {
+                        $reusable['navbar'] = $doc->saveHTML($headers->item(0));
+                    }
+                }
+            }
+
+            if ($reusable['sidebar'] === null) {
+                $asides = $root->getElementsByTagName('aside');
+                if ($asides->length > 0) {
+                    $reusable['sidebar'] = $doc->saveHTML($asides->item(0));
+                }
+            }
+
+            if ($reusable['footer'] === null) {
+                $footers = $root->getElementsByTagName('footer');
+                if ($footers->length > 0) {
+                    $reusable['footer'] = $doc->saveHTML($footers->item(0));
+                }
+            }
+
+            if ($reusable['navbar'] !== null && $reusable['footer'] !== null && $reusable['sidebar'] !== null) {
+                break;
+            }
+        }
+
+        return $reusable;
+    }
+}
+
+/**
+ * Sinkronisasi silang referensi navbar:
+ * 1. Mengubah seluruh data-action-target="NamaFrame" menjadi ID numerik frame resmi.
+ * 2. Memastikan setiap frame proyek (lama maupun baru) memiliki tautan lengkap ke halaman lain di navbar-nya.
+ * 3. Memberikan status visual link aktif (highlight) pada halaman yang sedang dibuka.
+ */
+if (!function_exists('cross_link_navbar_in_html')) {
+    function cross_link_navbar_in_html(string $html, array $all_frames_map, int $current_frame_id, string $current_frame_name): string
+    {
+        if (trim($html) === '' || empty($all_frames_map)) {
+            return $html;
+        }
+
+        // 1. Ganti semua data-action-target="NamaFrame" dengan ID numerik resminya
+        foreach ($all_frames_map as $name => $fid) {
+            $safeN = preg_quote($name, '/');
+            $html = preg_replace(
+                '/data-action-target=([\'"])' . $safeN . '\1/i',
+                'data-action-target="' . $fid . '"',
+                $html
+            );
+        }
+
+        // 2. Periksa apakah ada tag <nav> yang perlu disinkronkan link-link halamannya
+        $doc = new DOMDocument();
+        @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $root = $doc->getElementById('gm-root');
+        if (!$root) return $html;
+
+        $navs = $root->getElementsByTagName('nav');
+        if ($navs->length === 0) {
+            return $html;
+        }
+
+        $nav = $navs->item(0);
+        // Cari kontainer link di dalam nav (elemen dengan id="nav-links", atau div di dalam nav yang memiliki tag <a>)
+        $links_container = null;
+        $all_divs = $nav->getElementsByTagName('div');
+        foreach ($all_divs as $d) {
+            if ($d->getAttribute('id') === 'nav-links' || $d->getElementsByTagName('a')->length > 0) {
+                $links_container = $d;
+                break;
+            }
+        }
+        if (!$links_container) {
+            $links_container = $nav;
+        }
+
+        // Kumpulkan seluruh data-action-target numerik yang sudah ada di container ini
+        $existing_targets = [];
+        foreach ($links_container->getElementsByTagName('a') as $a) {
+            $t = $a->getAttribute('data-action-target');
+            if ($t !== '') {
+                $existing_targets[] = (string)$t;
+            }
+            // Atur styling active jika target merujuk ke frame ini
+            if ($t === (string)$current_frame_id || strtolower(trim($a->textContent)) === strtolower($current_frame_name)) {
+                $style = (string)$a->getAttribute('style');
+                if (!str_contains($style, '#3b82f6') && !str_contains($style, 'font-weight:700')) {
+                    $a->setAttribute('style', $style . ';color:#3b82f6;font-weight:700;');
+                }
+            }
+        }
+
+        // Tambahkan link halaman yang belum ada ke dalam navbar
+        $added = false;
+        foreach ($all_frames_map as $name => $fid) {
+            if (!in_array((string)$fid, $existing_targets, true)) {
+                $is_current = ($fid === $current_frame_id);
+                $color = $is_current ? '#3b82f6' : '#475569';
+                $fw    = $is_current ? '700' : '500';
+
+                $newLink = $doc->createElement('a', htmlspecialchars($name));
+                $newLink->setAttribute('class', 'gm-object');
+                $newLink->setAttribute('href', '#');
+                $newLink->setAttribute('data-action-type', 'goto');
+                $newLink->setAttribute('data-action-target', (string)$fid);
+                $newLink->setAttribute('style', "font-size:14px;font-weight:{$fw};color:{$color};text-decoration:none;");
+
+                $links_container->appendChild($newLink);
+                $added = true;
+            }
+        }
+
+        if ($added) {
+            $out = '';
+            foreach ($root->childNodes as $child) {
+                $out .= $doc->saveHTML($child);
+            }
+            return trim($out);
+        }
+
+        return $html;
+    }
+}
+
 if (!function_exists('get_project_ai_memory')) {
     function get_project_ai_memory(PDO $pdo, int $project_id, array $client_frames_snapshot = []): array
     {
@@ -258,42 +419,42 @@ if (!function_exists('generate_smart_preset_component')) {
 
         if (str_contains($lower, 'navbar') || str_contains($lower, 'header') || str_contains($lower, 'navigasi')) {
             return <<<'HTML'
-<nav class="gm-object" style="display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background-color:#ffffff;border-bottom:1px solid #e2e8f0;width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;">
-    <div class="gm-object" style="display:flex;align-items:center;gap:10px;">
+<nav id="main-navbar" class="gm-object" style="display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background-color:#ffffff;border-bottom:1px solid #e2e8f0;width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;">
+    <div id="nav-brand" class="gm-object" style="display:flex;align-items:center;gap:10px;">
         <div class="gm-object" style="width:36px;height:36px;border-radius:8px;background-color:#eff6ff;color:#3b82f6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">G</div>
         <span class="gm-object" style="font-size:18px;font-weight:700;color:#0f172a;">Greymist UI</span>
     </div>
-    <div class="gm-object" style="display:flex;align-items:center;gap:28px;">
-        <a class="gm-object" href="#" style="font-size:14px;font-weight:500;color:#0f172a;text-decoration:none;">Beranda</a>
-        <a class="gm-object" href="#" style="font-size:14px;font-weight:500;color:#475569;text-decoration:none;">Fitur</a>
-        <a class="gm-object" href="#" style="font-size:14px;font-weight:500;color:#475569;text-decoration:none;">Harga</a>
-        <a class="gm-object" href="#" style="font-size:14px;font-weight:500;color:#475569;text-decoration:none;">Dokumentasi</a>
+    <div id="nav-links" class="gm-object" style="display:flex;align-items:center;gap:28px;">
+        <a class="gm-object" href="#" data-action-type="goto" data-action-target="Home" style="font-size:14px;font-weight:500;color:#0f172a;text-decoration:none;">Beranda</a>
+        <a class="gm-object" href="#" data-action-type="goto" data-action-target="About" style="font-size:14px;font-weight:500;color:#475569;text-decoration:none;">Tentang</a>
+        <a class="gm-object" href="#" data-action-type="scroll" data-action-target="pricing" style="font-size:14px;font-weight:500;color:#475569;text-decoration:none;">Harga</a>
+        <a class="gm-object" href="#" data-action-type="goto" data-action-target="Contact" style="font-size:14px;font-weight:500;color:#475569;text-decoration:none;">Kontak</a>
     </div>
-    <button class="gm-object" style="padding:10px 20px;background-color:#3b82f6;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Mulai Gratis</button>
+    <button id="nav-cta-btn" class="gm-object gm-anim-base pulse" data-gm-anim="true" data-action-type="goto" data-action-target="Contact" style="padding:10px 20px;background-color:#3b82f6;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;--gm-anim-dur:1.5s;--gm-anim-iter:infinite;">Mulai Gratis</button>
 </nav>
 HTML;
         }
 
         if (str_contains($lower, 'pricing') || str_contains($lower, 'harga') || str_contains($lower, 'paket')) {
             return <<<'HTML'
-<section class="gm-object" style="padding:60px 40px;background-color:#ffffff;width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;">
-    <div class="gm-object" style="text-align:center;max-width:600px;margin:0 auto 40px auto;">
-        <span class="gm-object" style="display:inline-block;padding:4px 12px;background-color:#eff6ff;color:#3b82f6;border-radius:999px;font-size:12px;font-weight:600;margin-bottom:12px;">PILIHAN PAKET</span>
-        <h2 class="gm-object" style="font-size:32px;font-weight:700;color:#0f172a;margin:0 0 10px 0;">Harga Transparan untuk Tim Anda</h2>
+<section id="pricing" class="gm-object" style="padding:60px 40px;background-color:#ffffff;width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;">
+    <div id="pricing-header" class="gm-object" style="text-align:center;max-width:600px;margin:0 auto 40px auto;">
+        <span class="gm-object gm-anim-base fade" data-gm-anim="true" style="display:inline-block;padding:4px 12px;background-color:#eff6ff;color:#3b82f6;border-radius:999px;font-size:12px;font-weight:600;margin-bottom:12px;--gm-anim-dur:0.5s;">PILIHAN PAKET</span>
+        <h2 class="gm-object gm-anim-base slide-up" data-gm-anim="true" style="font-size:32px;font-weight:700;color:#0f172a;margin:0 0 10px 0;--gm-anim-dur:0.6s;">Harga Transparan untuk Tim Anda</h2>
         <p class="gm-object" style="font-size:15px;color:#64748b;margin:0;">Pilih paket yang sesuai dengan skala proyek desain dan kolaborasi Anda.</p>
     </div>
-    <div class="gm-object" style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
-        <div class="gm-object" style="flex:1;min-width:260px;max-width:340px;padding:28px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:16px;">
+    <div id="pricing-cards" class="gm-object" style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;">
+        <div id="card-starter" class="gm-object gm-anim-base slide-up" data-gm-anim="true" style="flex:1;min-width:260px;max-width:340px;padding:28px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:16px;--gm-anim-dur:0.5s;">
             <h3 class="gm-object" style="font-size:18px;font-weight:600;color:#0f172a;margin:0;">Starter</h3>
             <div class="gm-object" style="font-size:32px;font-weight:700;color:#0f172a;">Rp 0 <span class="gm-object" style="font-size:14px;font-weight:400;color:#64748b;">/ bulan</span></div>
             <p class="gm-object" style="font-size:14px;color:#64748b;margin:0;">Cocok untuk desainer individu yang baru memulai.</p>
-            <button class="gm-object" style="padding:11px 18px;background-color:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe;border-radius:8px;font-weight:600;cursor:pointer;">Pilih Starter</button>
+            <button class="gm-object" data-action-type="goto" data-action-target="Register" style="padding:11px 18px;background-color:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe;border-radius:8px;font-weight:600;cursor:pointer;">Pilih Starter</button>
         </div>
-        <div class="gm-object" style="flex:1;min-width:260px;max-width:340px;padding:28px;background-color:#ffffff;border:2px solid #3b82f6;border-radius:12px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 24px rgba(59,130,246,0.12);">
+        <div id="card-pro" class="gm-object gm-anim-base slide-up" data-gm-anim="true" style="flex:1;min-width:260px;max-width:340px;padding:28px;background-color:#ffffff;border:2px solid #3b82f6;border-radius:12px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 24px rgba(59,130,246,0.12);--gm-anim-dur:0.7s;">
             <h3 class="gm-object" style="font-size:18px;font-weight:600;color:#3b82f6;margin:0;">Pro Studio</h3>
             <div class="gm-object" style="font-size:32px;font-weight:700;color:#0f172a;">Rp 149rb <span class="gm-object" style="font-size:14px;font-weight:400;color:#64748b;">/ bulan</span></div>
             <p class="gm-object" style="font-size:14px;color:#64748b;margin:0;">Proyek tanpa batas, AI generator penuh, dan ekspor kode bersih.</p>
-            <button class="gm-object" style="padding:11px 18px;background-color:#3b82f6;color:#ffffff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Mulai Pro Studio</button>
+            <button class="gm-object" data-action-type="goto" data-action-target="Checkout" style="padding:11px 18px;background-color:#3b82f6;color:#ffffff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Mulai Pro Studio</button>
         </div>
     </div>
 </section>
@@ -302,9 +463,9 @@ HTML;
 
         if (str_contains($lower, 'form') || str_contains($lower, 'kontak') || str_contains($lower, 'contact') || str_contains($lower, 'login')) {
             return <<<'HTML'
-<section class="gm-object" style="padding:48px 24px;background-color:#ffffff;display:flex;justify-content:center;width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;">
-    <div class="gm-object" style="width:100%;max-width:460px;padding:32px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:16px;">
-        <h3 class="gm-object" style="font-size:22px;font-weight:700;color:#0f172a;margin:0;">Hubungi Tim Kami</h3>
+<section id="contact-section" class="gm-object" style="padding:48px 24px;background-color:#ffffff;display:flex;justify-content:center;width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;">
+    <div id="contact-card" class="gm-object gm-anim-base zoom-in" data-gm-anim="true" style="width:100%;max-width:460px;padding:32px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;gap:16px;--gm-anim-dur:0.5s;">
+        <h3 id="contact-title" class="gm-object" style="font-size:22px;font-weight:700;color:#0f172a;margin:0;">Hubungi Tim Kami</h3>
         <p class="gm-object" style="font-size:14px;color:#64748b;margin:0;">Kirimkan pesan atau pertanyaan proyek Anda melalui formulir di bawah ini.</p>
         <div class="gm-object" style="display:flex;flex-direction:column;gap:6px;">
             <label class="gm-object" style="font-size:13px;font-weight:600;color:#0f172a;">Nama Lengkap</label>
@@ -318,7 +479,7 @@ HTML;
             <label class="gm-object" style="font-size:13px;font-weight:600;color:#0f172a;">Pesan</label>
             <textarea class="gm-object" rows="4" placeholder="Tuliskan detail kebutuhan Anda..." style="padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;"></textarea>
         </div>
-        <button class="gm-object" style="padding:12px 20px;background-color:#3b82f6;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Kirim Pesan</button>
+        <button id="btn-submit-contact" class="gm-object" data-action-type="modal" data-action-target="success-modal" style="padding:12px 20px;background-color:#3b82f6;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Kirim Pesan</button>
     </div>
 </section>
 HTML;
@@ -326,15 +487,15 @@ HTML;
 
         if (str_contains($lower, 'footer') || str_contains($lower, 'kaki')) {
             return <<<'HTML'
-<footer class="gm-object" style="padding:40px;background-color:#ffffff;border-top:1px solid #e2e8f0;width:100%;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;font-family:'Inter',sans-serif;">
-    <div class="gm-object" style="display:flex;flex-direction:column;gap:6px;">
+<footer id="main-footer" class="gm-object" style="padding:40px;background-color:#ffffff;border-top:1px solid #e2e8f0;width:100%;box-sizing:border-box;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;font-family:'Inter',sans-serif;">
+    <div id="footer-brand" class="gm-object" style="display:flex;flex-direction:column;gap:6px;">
         <strong class="gm-object" style="font-size:16px;color:#0f172a;">Greymist Workspace</strong>
         <span class="gm-object" style="font-size:13px;color:#64748b;">Platform desain visual web modern berbasis komponen.</span>
     </div>
-    <div class="gm-object" style="display:flex;gap:24px;">
-        <a class="gm-object" href="#" style="font-size:13px;color:#475569;text-decoration:none;">Ketentuan Layanan</a>
-        <a class="gm-object" href="#" style="font-size:13px;color:#475569;text-decoration:none;">Kebijakan Privasi</a>
-        <a class="gm-object" href="#" style="font-size:13px;color:#475569;text-decoration:none;">Bantuan</a>
+    <div id="footer-links" class="gm-object" style="display:flex;gap:24px;">
+        <a class="gm-object" href="#" data-action-type="modal" data-action-target="tos-modal" style="font-size:13px;color:#475569;text-decoration:none;">Ketentuan Layanan</a>
+        <a class="gm-object" href="#" data-action-type="modal" data-action-target="privacy-modal" style="font-size:13px;color:#475569;text-decoration:none;">Kebijakan Privasi</a>
+        <a class="gm-object" href="#" data-action-type="goto" data-action-target="FAQ" style="font-size:13px;color:#475569;text-decoration:none;">Bantuan</a>
     </div>
 </footer>
 HTML;
@@ -343,13 +504,13 @@ HTML;
         // Default: Hero Section Modern sesuai prompt pengguna
         $clean_title = htmlspecialchars(mb_substr(trim($prompt), 0, 70), ENT_QUOTES, 'UTF-8');
         return <<<HTML
-<section class="gm-object" style="padding:72px 48px;background-color:#ffffff;border-bottom:1px solid #f1f5f9;width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px;font-family:'Inter',sans-serif;">
-    <span class="gm-object" style="padding:6px 14px;background-color:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe;border-radius:999px;font-size:12px;font-weight:600;">GREYMIST AI GENERATED</span>
-    <h1 class="gm-object" style="font-size:40px;font-weight:800;color:#0f172a;max-width:760px;line-height:1.2;margin:0;">{$clean_title}</h1>
-    <p class="gm-object" style="font-size:16px;color:#475569;max-width:600px;line-height:1.6;margin:0;">Komponen ini dibuat secara otomatis dan setiap elemen di dalamnya memiliki class gm-object sehingga dapat langsung Anda ubah melalui panel properti di sebelah kanan.</p>
-    <div class="gm-object" style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;justify-content:center;">
-        <button class="gm-object" style="padding:12px 24px;background-color:#3b82f6;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Mulai Sekarang</button>
-        <button class="gm-object" style="padding:12px 24px;background-color:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Pelajari Lebih Lanjut</button>
+<section id="hero-section" class="gm-object" style="padding:72px 48px;background-color:#ffffff;border-bottom:1px solid #f1f5f9;width:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;gap:20px;font-family:'Inter',sans-serif;">
+    <span class="gm-object gm-anim-base fade" data-gm-anim="true" style="padding:6px 14px;background-color:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe;border-radius:999px;font-size:12px;font-weight:600;--gm-anim-dur:0.5s;">GREYMIST AI GENERATED</span>
+    <h1 id="hero-title" class="gm-object gm-anim-base slide-up" data-gm-anim="true" style="font-size:40px;font-weight:800;color:#0f172a;max-width:760px;line-height:1.2;margin:0;--gm-anim-dur:0.6s;">{$clean_title}</h1>
+    <p id="hero-desc" class="gm-object gm-anim-base slide-up" data-gm-anim="true" style="font-size:16px;color:#475569;max-width:600px;line-height:1.6;margin:0;--gm-anim-dur:0.8s;">Komponen ini dibuat secara otomatis dan setiap elemen di dalamnya memiliki class gm-object sehingga dapat langsung Anda ubah melalui panel properti di sebelah kanan.</p>
+    <div id="hero-actions" class="gm-object" style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;justify-content:center;">
+        <button id="hero-btn-primary" class="gm-object" data-action-type="goto" data-action-target="Contact" style="padding:12px 24px;background-color:#3b82f6;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Mulai Sekarang</button>
+        <button id="hero-btn-secondary" class="gm-object" data-action-type="scroll" data-action-target="pricing" style="padding:12px 24px;background-color:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Pelajari Lebih Lanjut</button>
     </div>
 </section>
 HTML;
@@ -364,15 +525,59 @@ if (!function_exists('process_local_frame_command')) {
         string $prompt,
         string $current_frame_html,
         string $selected_object_html = '',
-        string $target_mode = 'core'
+        string $target_mode = 'core',
+        array $frames_snapshot = [],
+        ?PDO $pdo = null,
+        int $project_id = 0
     ): ?array {
         $lower = strtolower(trim($prompt));
 
+        // Ekstrak komponen reusable (Navbar / Footer / Sidebar) dari frame yang ada
+        $reusable = extract_reusable_components($frames_snapshot, $current_frame_html);
+
+        // 0. Jika meminta penambahan Breakpoint Responsif (Tablet / Mobile)
+        if (preg_match('/\b(breakpoint|breaking\s*point|responsif|responsive)\b/i', $lower)) {
+            $bp_to_add = [];
+            if (str_contains($lower, 'tablet') || str_contains($lower, '768')) {
+                $bp_to_add[] = [
+                    'id'         => 'tablet',
+                    'name'       => 'Tablet',
+                    'rule'       => 'max-width: 768px',
+                    'widthValue' => 768,
+                    'type'       => 'max',
+                ];
+            }
+            if (str_contains($lower, 'mobile') || str_contains($lower, 'hp') || str_contains($lower, 'ponsel') || str_contains($lower, '480') || str_contains($lower, '375')) {
+                $bp_to_add[] = [
+                    'id'         => 'mobile',
+                    'name'       => 'Mobile',
+                    'rule'       => 'max-width: 480px',
+                    'widthValue' => 480,
+                    'type'       => 'max',
+                ];
+            }
+            if (empty($bp_to_add)) {
+                $bp_to_add = [
+                    ['id' => 'tablet', 'name' => 'Tablet', 'rule' => 'max-width: 768px', 'widthValue' => 768, 'type' => 'max'],
+                    ['id' => 'mobile', 'name' => 'Mobile', 'rule' => 'max-width: 480px', 'widthValue' => 480, 'type' => 'max'],
+                ];
+            }
+
+            return [
+                'operation'          => 'add_breakpoints',
+                'html'               => $current_frame_html,
+                'breakpoints_to_add' => $bp_to_add,
+                'summary'            => 'Breakpoint responsif (Tablet 768px & Mobile 480px) berhasil ditambahkan ke toolbar Greymist.',
+            ];
+        }
+
         // 1. Jika meminta membuat frame / halaman baru (atau multi-page) secara lokal
         if (preg_match('/\b(frame baru|tambah frame|halaman baru|buat halaman|page baru|multi[- ]?page|\d+\s*halaman)\b/i', $lower)) {
+            // Gunakan navbar & footer yang sudah ada jika tersedia, jika tidak baru gunakan preset
+            $nav    = $reusable['navbar'] ?? generate_smart_preset_component('navbar');
+            $footer = $reusable['footer'] ?? generate_smart_preset_component('footer');
+
             if (preg_match('/\b(multi[- ]?page|3\s*halaman|beberapa halaman|website lengkap)\b/i', $lower)) {
-                $nav = generate_smart_preset_component('navbar');
-                $footer = generate_smart_preset_component('footer');
                 return [
                     'operation'    => 'create_frames',
                     'html'         => '',
@@ -401,9 +606,7 @@ if (!function_exists('process_local_frame_command')) {
                     $page_title = ucwords($candidate);
                 }
             }
-            $nav    = generate_smart_preset_component('navbar');
-            $body   = generate_smart_preset_component($prompt);
-            $footer = generate_smart_preset_component('footer');
+            $body = generate_smart_preset_component($prompt);
 
             return [
                 'operation'    => 'create_frames',
@@ -463,7 +666,7 @@ if (!function_exists('process_local_frame_command')) {
             ];
         }
 
-        // 4. Jika meminta menghapus komponen tertentu (misal: hapus navbar, hapus footer, hapus hero, hapus pricing, hapus form)
+        // 4. Jika meminta menghapus komponen tertentu
         if (preg_match('/\b(hapus|hilangkan|buang|delete|remove)\b/i', $lower) && trim($current_frame_html) !== '') {
             $doc = new DOMDocument();
             @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $current_frame_html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
@@ -503,7 +706,6 @@ if (!function_exists('process_local_frame_command')) {
                     }
                 }
 
-                // Jika belum ada yang cocok tetapi ada kata kunci teks spesifik
                 if (empty($to_remove) && !empty($children)) {
                     $keywords = preg_replace('/\b(hapus|hilangkan|buang|delete|remove|komponen|bagian|section|elemen|di|dalam|frame)\b/i', '', $lower);
                     $keywords = trim($keywords);
@@ -533,12 +735,14 @@ if (!function_exists('process_local_frame_command')) {
             }
         }
 
-        // 5. Jika meminta mengubah atribut / style (font, warna, ukuran, background, border-radius) pada elemen yang sudah ada tanpa membuat ulang dari 0
-        if (preg_match('/\b(ubah|ganti|rubah|jadikan|set|font|warna|color|background|latar|ukuran|perbesar|perkecil|bold|tebal|miring|italic|radius|rounded)\b/i', $lower)) {
+        // 5. Jika meminta mengubah atribut / style (font, warna, ukuran, background, border-radius)
+        if (preg_match('/\b(ubah|ganti|rubah|jadikan|set|font|warna|color|background|latar|ukuran|perbesar|perkecil|bold|tebal|miring|italic|radius|rounded|shadow|card|tombol|button)\b/i', $lower)) {
+            $is_project_wide = ($target_mode === 'core' && preg_match('/\b(semua\s+(?:halaman|pages?|frame)|seluruh\s+(?:halaman|pages?|frame)|all\s+pages?|konsisten(?:kan)?|tiap\s+halaman)\b/i', $lower));
+
             $is_editing_selected = ($target_mode === 'edit_selected' || trim($selected_object_html) !== '') && trim($selected_object_html) !== '';
             $target_html         = $is_editing_selected ? $selected_object_html : $current_frame_html;
 
-            if (trim($target_html) !== '') {
+            if (trim($target_html) !== '' || ($is_project_wide && $pdo !== null && $project_id > 0)) {
                 $css_patches = [];
 
                 // Deteksi perubahan Font Family
@@ -575,16 +779,16 @@ if (!function_exists('process_local_frame_command')) {
                     }
                 }
 
-                // Deteksi perubahan Warna (Color / Background Color)
+                // Deteksi perubahan Warna
                 $color_map = [
                     'merah'   => '#ef4444',
                     'red'     => '#ef4444',
-                    'biru'    => '#2563eb',
-                    'blue'    => '#2563eb',
+                    'biru'    => '#3b82f6',
+                    'blue'    => '#3b82f6',
                     'hijau'   => '#10b981',
                     'green'   => '#10b981',
-                    'kuning'  => '#eab308',
-                    'yellow'  => '#eab308',
+                    'kuning'  => '#f59e0b',
+                    'yellow'  => '#f59e0b',
                     'ungu'    => '#8b5cf6',
                     'purple'  => '#8b5cf6',
                     'oranye'  => '#f97316',
@@ -620,7 +824,7 @@ if (!function_exists('process_local_frame_command')) {
                     }
                 }
 
-                // Deteksi ukuran font (font-size)
+                // Deteksi ukuran font (font-size) / border-radius / shadow
                 if (preg_match('/(\d{1,3})\s*px\b/i', $lower, $px_m)) {
                     if (str_contains($lower, 'radius') || str_contains($lower, 'rounded')) {
                         $css_patches['border-radius'] = $px_m[1] . 'px';
@@ -628,44 +832,108 @@ if (!function_exists('process_local_frame_command')) {
                         $css_patches['font-size'] = $px_m[1] . 'px';
                     }
                 }
+                if (str_contains($lower, 'shadow') || str_contains($lower, 'bayangan')) {
+                    $css_patches['box-shadow'] = '0 8px 24px rgba(15, 23, 42, 0.08)';
+                }
+                if (str_contains($lower, 'border')) {
+                    $css_patches['border'] = '1px solid #e2e8f0';
+                }
 
+                $apply_style_to_node = function (DOMElement $el, array $patches) {
+                    $existing_style = (string)$el->getAttribute('style');
+                    $style_map      = [];
+                    foreach (explode(';', $existing_style) as $decl) {
+                        $parts = explode(':', $decl, 2);
+                        if (count($parts) === 2) {
+                            $k = strtolower(trim($parts[0]));
+                            $v = trim($parts[1]);
+                            if ($k !== '' && $v !== '') {
+                                $style_map[$k] = $v;
+                            }
+                        }
+                    }
+                    $tag = strtolower($el->nodeName);
+                    foreach ($patches as $prop => $val) {
+                        if ($prop === '__auto_color__') {
+                            if ($tag === 'button' || isset($style_map['background-color']) || isset($style_map['background'])) {
+                                $style_map['background-color'] = $val;
+                            } else {
+                                $style_map['color'] = $val;
+                            }
+                        } else {
+                            $style_map[$prop] = $val;
+                        }
+                    }
+                    $rebuilt = [];
+                    foreach ($style_map as $k => $v) {
+                        $rebuilt[] = $k . ':' . $v;
+                    }
+                    $el->setAttribute('style', implode(';', $rebuilt) . ';');
+                };
+
+                // Jika aksi menargetkan SEMUA HALAMAN (Batch update frames)
+                if ($is_project_wide && $pdo !== null && $project_id > 0) {
+                    $db_frames = get_project_frames($pdo, $project_id);
+                    $frames_updates = [];
+                    foreach ($db_frames as $df) {
+                        $f_html = (string)($df['core_content'] ?? '');
+                        if (trim($f_html) === '') continue;
+
+                        $doc = new DOMDocument();
+                        @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $f_html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+                        $root = $doc->getElementById('gm-root');
+                        if (!$root) continue;
+
+                        $all_elements = $root->getElementsByTagName('*');
+                        foreach ($all_elements as $el) {
+                            if (!($el instanceof DOMElement)) continue;
+                            $tag = strtolower($el->nodeName);
+                            // Sesuaikan target (misal jika meminta ubah card, tombol, atau font)
+                            if (str_contains($lower, 'card') || str_contains($lower, 'kartu')) {
+                                if (str_contains((string)$el->getAttribute('class'), 'card') || str_contains((string)$el->getAttribute('id'), 'card') || ($tag === 'div' && str_contains((string)$el->getAttribute('style'), 'border'))) {
+                                    $apply_style_to_node($el, $css_patches);
+                                }
+                            } elseif (str_contains($lower, 'tombol') || str_contains($lower, 'button')) {
+                                if ($tag === 'button') {
+                                    $apply_style_to_node($el, $css_patches);
+                                }
+                            } else {
+                                $apply_style_to_node($el, $css_patches);
+                            }
+                        }
+
+                        $new_frame_html = '';
+                        foreach ($root->childNodes as $child) {
+                            $new_frame_html .= $doc->saveHTML($child);
+                        }
+                        $clean_new = trim($new_frame_html);
+                        if ($clean_new !== '') {
+                            $stmtUp = $pdo->prepare("UPDATE gm_frames SET core_content = ? WHERE frame_id = ?");
+                            $stmtUp->execute([$clean_new, $df['frame_id']]);
+                            $frames_updates[] = [
+                                'frame_id'   => (int)$df['frame_id'],
+                                'frame_name' => (string)$df['frame_name'],
+                                'html'       => $clean_new,
+                            ];
+                        }
+                    }
+
+                    if (!empty($frames_updates)) {
+                        return [
+                            'operation'      => 'batch_update_frames',
+                            'frames_updates' => $frames_updates,
+                            'html'           => '',
+                            'summary'        => 'Gaya berhasil diperbarui di ' . count($frames_updates) . ' halaman proyek secara konsisten.',
+                        ];
+                    }
+                }
+
+                // Pengeditan lokal pada frame aktif tunggal
                 if (!empty($css_patches)) {
                     $doc = new DOMDocument();
                     @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $target_html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
                     $root = $doc->getElementById('gm-root');
                     if ($root) {
-                        $apply_style_to_node = function (DOMElement $el, array $patches) {
-                            $existing_style = (string)$el->getAttribute('style');
-                            $style_map      = [];
-                            foreach (explode(';', $existing_style) as $decl) {
-                                $parts = explode(':', $decl, 2);
-                                if (count($parts) === 2) {
-                                    $k = strtolower(trim($parts[0]));
-                                    $v = trim($parts[1]);
-                                    if ($k !== '' && $v !== '') {
-                                        $style_map[$k] = $v;
-                                    }
-                                }
-                            }
-                            $tag = strtolower($el->nodeName);
-                            foreach ($patches as $prop => $val) {
-                                if ($prop === '__auto_color__') {
-                                    if ($tag === 'button' || isset($style_map['background-color']) || isset($style_map['background'])) {
-                                        $style_map['background-color'] = $val;
-                                    } else {
-                                        $style_map['color'] = $val;
-                                    }
-                                } else {
-                                    $style_map[$prop] = $val;
-                                }
-                            }
-                            $rebuilt = [];
-                            foreach ($style_map as $k => $v) {
-                                $rebuilt[] = $k . ':' . $v;
-                            }
-                            $el->setAttribute('style', implode(';', $rebuilt) . ';');
-                        };
-
                         if ($is_editing_selected) {
                             foreach ($root->childNodes as $child) {
                                 if ($child instanceof DOMElement) {
@@ -680,37 +948,26 @@ if (!function_exists('process_local_frame_command')) {
                                 }
                             }
                         } else {
-                            // Cari elemen spesifik yang dimaksud di dalam frame (misal tombol, judul/h1, navbar, footer)
                             $matched_nodes = [];
                             $all_elements  = $root->getElementsByTagName('*');
                             foreach ($all_elements as $el) {
-                                if (!($el instanceof DOMElement)) {
-                                    continue;
-                                }
+                                if (!($el instanceof DOMElement)) continue;
                                 $tag = strtolower($el->nodeName);
                                 if (str_contains($lower, 'tombol') || str_contains($lower, 'button')) {
-                                    if ($tag === 'button') {
-                                        $matched_nodes[] = $el;
-                                    }
+                                    if ($tag === 'button') $matched_nodes[] = $el;
                                 } elseif (str_contains($lower, 'judul') || str_contains($lower, 'heading') || str_contains($lower, 'title')) {
-                                    if (in_array($tag, ['h1', 'h2', 'h3'], true)) {
-                                        $matched_nodes[] = $el;
-                                    }
+                                    if (in_array($tag, ['h1', 'h2', 'h3'], true)) $matched_nodes[] = $el;
                                 } elseif (str_contains($lower, 'navbar') || str_contains($lower, 'header')) {
-                                    if ($tag === 'nav' || $tag === 'header') {
-                                        $matched_nodes[] = $el;
-                                    }
+                                    if ($tag === 'nav' || $tag === 'header') $matched_nodes[] = $el;
                                 } elseif (str_contains($lower, 'footer')) {
-                                    if ($tag === 'footer') {
-                                        $matched_nodes[] = $el;
-                                    }
+                                    if ($tag === 'footer') $matched_nodes[] = $el;
+                                } elseif (str_contains($lower, 'card') || str_contains($lower, 'kartu')) {
+                                    if (str_contains((string)$el->getAttribute('class'), 'card') || str_contains((string)$el->getAttribute('id'), 'card')) $matched_nodes[] = $el;
                                 }
                             }
                             if (empty($matched_nodes)) {
                                 foreach ($root->childNodes as $child) {
-                                    if ($child instanceof DOMElement) {
-                                        $matched_nodes[] = $child;
-                                    }
+                                    if ($child instanceof DOMElement) $matched_nodes[] = $child;
                                 }
                             }
                             foreach ($matched_nodes as $m_node) {
@@ -766,17 +1023,51 @@ if (!function_exists('call_gemini_interactions_api')) {
         string $selected_object_html = '',
         string $target_mode = 'core',
         string $memory_context_text = '',
-        array $selected_object_attrs = []
+        array $selected_object_attrs = [],
+        array $reusable_components = [],
+        array $all_project_frames = []
     ): array {
         $system_instruction = "Anda adalah AI Visual Workspace Architect untuk editor web Greymist.\n"
             . "Anda memiliki CACHE MEMORI PROYEK yang mencatat seluruh halaman (frames), susunan komponen di setiap halaman, dan riwayat perubahan yang telah Anda buat sebelumnya.\n"
             . "Gunakan memori tersebut agar setiap perubahan, penambahan, atau penghapusan selalu konsisten dengan sistem desain dan susunan halaman yang sudah ada.\n\n"
+            . "========================================================================\n"
+            . "5 PILAR UTAMA ARSITEKTUR & SINKRONISASI SISTEM GREYMIST\n"
+            . "========================================================================\n\n"
+            . "0. ATURAN FRAME AWAL (PENGISIAN & PENGGUNAAN ULANG MAIN FRAME):
+   - Jika proyek saat ini baru dibuat dan memiliki satu frame kosong (seperti 'Main Frame'), halaman pertama yang Anda hasilkan WAJIB menjadi halaman utama (Home / Beranda) untuk mengisi frame awal tersebut, BUKAN membiarkannya kosong lalu membuat halaman baru terpisah!
+
+1. ATURAN REUSE KOMPONEN (PENGGUNAAN ULANG NAV / SIDEBAR / FOOTER):\n"
+            . "   - Jika terdapat [EXISTING_NAVBAR], [EXISTING_FOOTER], atau [EXISTING_SIDEBAR] di dalam konteks:\n"
+            . "     DILARANG KERAS membuat Navbar, Sidebar, atau Footer baru dari nol dengan struktur/warna/font berbeda!\n"
+            . "     Gunakan kembali kode HTML komponen yang sudah ada tersebut: salin strukturnya, pertahankan logo/brand/warna, sesuaikan menu link-nya, dan pindahkan status visual 'active' ke halaman yang sedang dibuat.\n\n"
+            . "2. NAVIGASI RESIPROKAL ANTAR HALAMAN (MULTI-PAGE CROSS-LINKING):\n"
+            . "   - Saat membuat halaman baru atau multi-page, SEMUA link navbar/footer WAJIB memiliki data-action-type=\"goto\" dan data-action-target=\"NamaHalaman\" (contoh: data-action-target=\"Home\", data-action-target=\"About\", data-action-target=\"Contact\").\n"
+            . "   - Sistem backend Greymist akan otomatis memetakan nama halaman ini ke ID numerik frame yang tersimpan di database.\n"
+            . "   - Link untuk halaman yang sedang aktif WAJIB diberi styling aktif (misal: color: #3b82f6; font-weight: 700;).\n\n"
+            . "3. INTEGRASI ENGINE BREAKPOINTS & RESPONSIVE DESIGN:\n"
+            . "   - Greymist memiliki sistem breakpoint: Desktop (1920 base), Tablet (max-width: 768px), Mobile (max-width: 480px).\n"
+            . "   - Seluruh komponen HTML yang Anda buat WAJIB menggunakan tata letak responsif modern: flex-wrap: wrap, gap, max-width: 100%, box-sizing: border-box, dan grid auto-fit minmax(260px, 1fr) untuk card.\n"
+            . "   - Jika pengguna meminta responsif atau menambah breakpoint, Anda DAPAT menyertakan blok penanda breakpoint:\n"
+            . "     <!--GM_BREAKPOINTS-->\n"
+            . "     [{\"id\":\"tablet\",\"name\":\"Tablet\",\"rule\":\"max-width: 768px\",\"widthValue\":768,\"type\":\"max\"},{\"id\":\"mobile\",\"name\":\"Mobile\",\"rule\":\"max-width: 480px\",\"widthValue\":480,\"type\":\"max\"}]\n\n"
+            . "4. INTERVENSI SELURUH HALAMAN (BATCH PROJECT-WIDE STYLING):\n"
+            . "   - Jika tidak ada komponen aktif dan pengguna meminta perubahan pada SEMUA halaman (misal: 'konsistenkan semua card', 'ubah warna tema di semua pages', 'ganti font semua halaman', 'samakan navbar'):\n"
+            . "     Gunakan operasi: <!--GM_OP:BATCH_UPDATE_FRAMES-->\n"
+            . "     Lalu kembalikan kode HTML baru untuk setiap halaman yang diperbarui:\n"
+            . "     <!--GM_FRAME_UPDATE:NamaHalamanAtauID-->\n"
+            . "     <kode html lengkap frame ini>\n"
+            . "     <!--GM_FRAME_UPDATE:NamaHalamanAtauID-->\n"
+            . "     <kode html lengkap frame ini>\n\n"
+            . "5. INTEGRASI MENU ACTION, ANIMASI, & ATRIBUT (PANEL BAWAH):\n"
+            . "   - Action: data-action-type=\"goto\" (pindah frame), data-action-type=\"scroll\" (smooth scroll ke id section), data-action-type=\"modal\" (buka modal popup), data-action-type=\"link\" (url).\n"
+            . "   - Animasi: data-gm-anim=\"true\", class=\"gm-object gm-anim-base <nama_animasi>\" (pilihan: fade, slide-up, slide-down, slide-left, slide-right, zoom-in, zoom-out, bounce, pulse, flip, rotate) dengan --gm-anim-dur: 0.6s.\n"
+            . "   - Atribut: Berikan id semantik (id=\"hero-section\", id=\"pricing\", id=\"contact\") dan class=\"gm-object\" pada SETIAP elemen.\n\n"
             . "ATURAN UTAMA: BACA KOMPONEN DULU & UBAH ATRIBUTNYA (JANGAN MEMBUAT BARU DARI NOL):\n"
-            . "Jika pengguna meminta MENGUBAH atau MENAMBAHKAN atribut/gaya (seperti warna, font, background, ukuran font, border, radius, padding, margin, shadow, atau teks) pada suatu komponen yang sudah ada:\n"
+            . "Jika pengguna meminta MENGUBAH atau MENAMBAHKAN atribut/gaya (seperti warna, font, background, ukuran font, border, radius, animasi, action, padding, margin, shadow, atau teks) pada komponen yang sudah ada:\n"
             . "1. DILARANG KERAS MEMBUAT ELEMEN/KOMPONEN BARU DARI NOL!\n"
             . "2. DILARANG MENGHASILKAN KODE HTML BARU LENGKAP ATAU MENUMPANGKAN ELEMEN BARU DI ATAS ELEMEN LAMA!\n"
             . "3. BACA atribut dan style yang sudah ada pada komponen (SELECTED_OBJECT_HTML atau elemen di CURRENT_FRAME_HTML).\n"
-            . "4. Tentukan HANYA properti CSS (style) atau teks apa yang perlu DIUBAH atau DITAMBAHKAN sesuai instruksi pengguna.\n"
+            . "4. Tentukan HANYA properti CSS (style), atribut (action/animasi), atau teks apa yang perlu DIUBAH atau DITAMBAHKAN sesuai instruksi pengguna.\n"
             . "5. Kembalikan HANYA penanda <!--GM_OP:PATCH_ATTRIBUTES--> diikuti satu objek JSON valid persis format berikut:\n"
             . "   <!--GM_OP:PATCH_ATTRIBUTES-->\n"
             . "   {\n"
@@ -785,20 +1076,19 @@ if (!function_exists('call_gemini_interactions_api')) {
             . "       \"background-color\": \"#38bdf8\",\n"
             . "       \"color\": \"#ffffff\"\n"
             . "     },\n"
-            . "     \"attributes\": {},\n"
+            . "     \"attributes\": {\n"
+            . "       \"data-action-type\": \"goto\",\n"
+            . "       \"data-action-target\": \"About\"\n"
+            . "     },\n"
+            . "     \"classes_to_add\": [\"gm-anim-base\", \"slide-up\"],\n"
             . "     \"text\": null,\n"
-            . "     \"summary\": \"Warna latar belakang diubah menjadi biru muda\"\n"
+            . "     \"summary\": \"Warna diubah dan action navigasi ke About disematkan\"\n"
             . "   }\n\n"
-            . "PILIHAN FORMAT OPERASI LAINNYA (Hanya jika BUKAN sekadar ubah atribut/style):\n"
-            . "1. Jika pengguna meminta MEMBACA / MENJELASKAN apa yang ada di dalam frame atau proyek (tanpa mengubah kode):\n"
-            . "   Awali dengan: <!--GM_OP:EXPLAIN--> diikuti penjelasan ringkas isi frame & struktur halaman dalam Bahasa Indonesia.\n"
-            . "2. Jika pengguna meminta MENGHAPUS komponen tertentu lewat prompt (misal 'hapus navbar', 'hapus bagian harga', 'hapus tombol', 'kosongkan frame'):\n"
-            . "   Awali dengan: <!--GM_OP:REPLACE_FRAME--> diikuti SELURUH kode HTML frame setelah komponen dihapus.\n"
-            . "3. Jika pengguna meminta MEMBUAT HALAMAN BARU / MENAMBAH FRAME BARU, atau meminta BEBERAPA HALAMAN (Multi-Page):\n"
-            . "   Gunakan blok penanda frame: <!--GM_FRAME:Nama Halaman--> diikuti kode HTML lengkap .gm-object untuk halaman tersebut.\n"
-            . "4. Jika pengguna meminta MEMBUAT / MENAMBAHKAN komponen BARU dari nol (misal 'buat hero section', 'tambah form kontak', 'buat kartu harga'):\n"
-            . "   Awali dengan: <!--GM_OP:APPEND--> diikuti HANYA kode HTML komponen baru tersebut.\n"
-            . "   Setiap tag WAJIB memiliki class=\"gm-object\" dan style=\"...\". Jangan gunakan markdown code fences.";
+            . "PILIHAN FORMAT OPERASI LAINNYA:\n"
+            . "1. MEMBACA/MENJELASKAN: <!--GM_OP:EXPLAIN--> diikuti penjelasan dalam Bahasa Indonesia.\n"
+            . "2. HAPUS KOMPONEN DI FRAME: <!--GM_OP:REPLACE_FRAME--> diikuti seluruh kode HTML frame setelah dihapus.\n"
+            . "3. HALAMAN BARU / MULTI-PAGE: Gunakan blok <!--GM_FRAME:Nama Halaman--> diikuti kode HTML .gm-object untuk tiap halaman.\n"
+            . "4. KOMPONEN BARU DI FRAME AKTIF: <!--GM_OP:APPEND--> diikuti kode HTML komponen baru.";
 
         $context_input = "";
         if ($memory_context_text !== '') {
@@ -806,6 +1096,28 @@ if (!function_exists('call_gemini_interactions_api')) {
         }
         $context_input .= "TARGET_MODE: " . $target_mode . "\n";
         $context_input .= "CURRENT_FRAME_HTML (Frame yang sedang dibuka pengguna):\n" . ($current_frame_html !== '' ? $current_frame_html : "(Frame masih kosong)") . "\n\n";
+
+        if (!empty($reusable_components['navbar'])) {
+            $context_input .= "KOMPONEN YANG SUDAH ADA UNTUK DIGUNAKAN ULANG (REUSE):\n";
+            $context_input .= "[EXISTING_NAVBAR]:\n" . $reusable_components['navbar'] . "\n\n";
+        }
+        if (!empty($reusable_components['footer'])) {
+            $context_input .= "[EXISTING_FOOTER]:\n" . $reusable_components['footer'] . "\n\n";
+        }
+        if (!empty($reusable_components['sidebar'])) {
+            $context_input .= "[EXISTING_SIDEBAR]:\n" . $reusable_components['sidebar'] . "\n\n";
+        }
+
+        if (!empty($all_project_frames) && count($all_project_frames) > 1) {
+            $context_input .= "DAFTAR HALAMAN (FRAMES) DALAM PROYEK:\n";
+            foreach ($all_project_frames as $pf) {
+                $pf_id = $pf['frame_id'] ?? 0;
+                $pf_name = $pf['frame_name'] ?? 'Frame';
+                $pf_content = mb_substr((string)($pf['core_content'] ?? ''), 0, 1500);
+                $context_input .= "<!--FRAME_{$pf_id}:{$pf_name}-->\n" . $pf_content . "\n\n";
+            }
+        }
+
         if ($selected_object_html !== '') {
             $context_input .= "SELECTED_OBJECT_HTML (Komponen yang sedang aktif dipilih):\n" . $selected_object_html . "\n";
             if (!empty($selected_object_attrs)) {
@@ -888,6 +1200,47 @@ if (!function_exists('call_gemini_interactions_api')) {
                 $trimmed_out = preg_replace('/^```(?:html)?\s*/i', '', $trimmed_out);
                 $trimmed_out = preg_replace('/\s*```$/', '', $trimmed_out);
 
+                // Cek apakah ada arahan penambahan breakpoint responsif: <!--GM_BREAKPOINTS--> [...]
+                $breakpoints_to_add = [];
+                if (preg_match('/<!--\s*GM_BREAKPOINTS\s*-->\s*(\[.*?\])/is', $trimmed_out, $bp_match)) {
+                    $parsed_bp = json_decode($bp_match[1], true);
+                    if (is_array($parsed_bp)) {
+                        $breakpoints_to_add = $parsed_bp;
+                    }
+                    $trimmed_out = str_replace($bp_match[0], '', $trimmed_out);
+                }
+
+                // Cek apakah AI meminta pembaruan serentak pada SELURUH HALAMAN: <!--GM_OP:BATCH_UPDATE_FRAMES--> atau <!--GM_FRAME_UPDATE:...-->
+                if (str_contains($trimmed_out, '<!--GM_OP:BATCH_UPDATE_FRAMES-->') || str_contains($trimmed_out, '<!--GM_FRAME_UPDATE:')) {
+                    $frames_updates = [];
+                    if (preg_match_all('/<!--\s*GM_FRAME_UPDATE\s*:\s*(.*?)\s*-->/is', $trimmed_out, $fu_matches, PREG_OFFSET_CAPTURE)) {
+                        $count_fu = count($fu_matches[0]);
+                        for ($i = 0; $i < $count_fu; $i++) {
+                            $f_ident   = trim($fu_matches[1][$i][0]);
+                            $start_pos = $fu_matches[0][$i][1] + strlen($fu_matches[0][$i][0]);
+                            $end_pos   = ($i + 1 < $count_fu) ? $fu_matches[0][$i + 1][1] : strlen($trimmed_out);
+                            $fu_html   = trim(substr($trimmed_out, $start_pos, $end_pos - $start_pos));
+                            if ($fu_html !== '') {
+                                $frames_updates[] = [
+                                    'frame_identifier' => $f_ident,
+                                    'html'             => ensure_gm_object_class($fu_html),
+                                ];
+                            }
+                        }
+                    }
+
+                    if (!empty($frames_updates)) {
+                        return [
+                            'success'            => true,
+                            'used_model'         => $candidate_model,
+                            'operation'          => 'batch_update_frames',
+                            'frames_updates'     => $frames_updates,
+                            'breakpoints_to_add' => $breakpoints_to_add,
+                            'html'               => '',
+                        ];
+                    }
+                }
+
                 // Cek apakah AI mengembalikan 1 atau beberapa blok halaman/frame baru: <!--GM_FRAME:Nama Halaman-->
                 if (preg_match_all('/<!--\s*GM_FRAME\s*:\s*(.*?)\s*-->/is', $trimmed_out, $frame_matches, PREG_OFFSET_CAPTURE)) {
                     $frames_specs = [];
@@ -911,11 +1264,12 @@ if (!function_exists('call_gemini_interactions_api')) {
 
                     if (!empty($frames_specs)) {
                         return [
-                            'success'      => true,
-                            'used_model'   => $candidate_model,
-                            'operation'    => 'create_frames',
-                            'frames_specs' => $frames_specs,
-                            'html'         => '',
+                            'success'            => true,
+                            'used_model'         => $candidate_model,
+                            'operation'          => 'create_frames',
+                            'frames_specs'       => $frames_specs,
+                            'breakpoints_to_add' => $breakpoints_to_add,
+                            'html'               => '',
                         ];
                     }
                 }
@@ -928,23 +1282,25 @@ if (!function_exists('call_gemini_interactions_api')) {
                     $patch_data = json_decode($json_str, true);
                     if (is_array($patch_data) && (!empty($patch_data['styles']) || !empty($patch_data['attributes']) || !empty($patch_data['text']))) {
                         return [
-                            'success'    => true,
-                            'used_model' => $candidate_model,
-                            'operation'  => 'patch_attributes',
-                            'patch'      => $patch_data,
-                            'summary'    => $patch_data['summary'] ?? 'Atribut elemen berhasil diperbarui.',
-                            'html'       => '',
+                            'success'            => true,
+                            'used_model'         => $candidate_model,
+                            'operation'          => 'patch_attributes',
+                            'patch'              => $patch_data,
+                            'summary'            => $patch_data['summary'] ?? 'Atribut elemen berhasil diperbarui.',
+                            'breakpoints_to_add' => $breakpoints_to_add,
+                            'html'               => '',
                         ];
                     }
                 } elseif (str_contains($trimmed_out, '<!--GM_OP:EXPLAIN-->')) {
                     $operation   = 'explain';
                     $trimmed_out = trim(str_replace('<!--GM_OP:EXPLAIN-->', '', $trimmed_out));
                     return [
-                        'success'    => true,
-                        'used_model' => $candidate_model,
-                        'operation'  => 'explain',
-                        'summary'    => $trimmed_out,
-                        'html'       => $current_frame_html,
+                        'success'            => true,
+                        'used_model'         => $candidate_model,
+                        'operation'          => 'explain',
+                        'summary'            => $trimmed_out,
+                        'breakpoints_to_add' => $breakpoints_to_add,
+                        'html'               => $current_frame_html,
                     ];
                 } elseif (str_contains($trimmed_out, '<!--GM_OP:REPLACE_SELECTED-->')) {
                     $operation   = 'replace_selected';
@@ -958,10 +1314,11 @@ if (!function_exists('call_gemini_interactions_api')) {
                 }
 
                 return [
-                    'success'    => true,
-                    'used_model' => $candidate_model,
-                    'operation'  => $operation,
-                    'html'       => $trimmed_out !== '' ? ensure_gm_object_class($trimmed_out) : '',
+                    'success'            => true,
+                    'used_model'         => $candidate_model,
+                    'operation'          => $operation,
+                    'breakpoints_to_add' => $breakpoints_to_add,
+                    'html'               => $trimmed_out !== '' ? ensure_gm_object_class($trimmed_out) : '',
                 ];
             }
 
@@ -1025,17 +1382,18 @@ switch ($ai_action) {
 
     case 'ai_generate_component':
     default:
-        $prompt               = trim((string)($data['prompt'] ?? ''));
-        $save_to_library      = !empty($data['save_to_library']);
-        $component_name       = trim((string)($data['component_name'] ?? ''));
-        $inline_api_key       = trim((string)($data['api_key'] ?? ''));
-        $requested_model      = trim((string)($data['model'] ?? ''));
-        $current_frame_html   = (string)($data['current_frame_html'] ?? '');
-        $selected_object_html = (string)($data['selected_object_html'] ?? '');
+        $prompt                = trim((string)($data['prompt'] ?? ''));
+        $save_to_library       = !empty($data['save_to_library']);
+        $component_name        = trim((string)($data['component_name'] ?? ''));
+        $inline_api_key        = trim((string)($data['api_key'] ?? ''));
+        $requested_model       = trim((string)($data['model'] ?? ''));
+        $current_frame_html    = (string)($data['current_frame_html'] ?? '');
+        $selected_object_html  = (string)($data['selected_object_html'] ?? '');
         $target_mode           = trim((string)($data['target_mode'] ?? 'core'));
         $project_id            = (int)($data['project_id'] ?? $_GET['project_id'] ?? 0);
         $frames_snapshot       = isset($data['frames_snapshot']) && is_array($data['frames_snapshot']) ? $data['frames_snapshot'] : [];
         $selected_object_attrs = isset($data['selected_object_attrs']) && is_array($data['selected_object_attrs']) ? $data['selected_object_attrs'] : [];
+        $active_frame_id       = (int)($data['active_frame_id'] ?? 0);
 
         if ($prompt === '') {
             json_response(['status' => 'ERROR', 'success' => false, 'msg' => 'Prompt atau instruksi AI wajib diisi.']);
@@ -1045,6 +1403,10 @@ switch ($ai_action) {
         $ai_memory           = get_project_ai_memory($pdo, $project_id, $frames_snapshot);
         $memory_context_text = format_ai_memory_for_prompt($ai_memory);
 
+        // Ekstrak komponen reusable (Navbar, Footer, Sidebar) dari seluruh frame yang sudah ada di proyek
+        $reusable_comps = extract_reusable_components($frames_snapshot, $current_frame_html);
+        $all_db_frames  = ($project_id > 0) ? get_project_frames($pdo, $project_id) : [];
+
         $api_key = $inline_api_key !== ''
             ? $inline_api_key
             : ((string)($_SESSION['gemini_api_key_override'] ?? env('GEMINI_API_KEY', '')));
@@ -1052,12 +1414,14 @@ switch ($ai_action) {
             ? $requested_model
             : (string)env('GEMINI_MODEL', 'gemini-3.5-flash-lite');
 
-        $source_mode  = 'smart_preset (Gratis Lokal)';
-        $api_warning  = '';
-        $operation    = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
-        $summary_msg  = '';
-        $frames_specs = [];
-        $patch_data   = null;
+        $source_mode        = 'smart_preset (Gratis Lokal)';
+        $api_warning        = '';
+        $operation          = ($target_mode === 'edit_selected') ? 'replace_selected' : 'append';
+        $summary_msg        = '';
+        $frames_specs       = [];
+        $frames_updates     = [];
+        $patch_data         = null;
+        $breakpoints_to_add = [];
 
         if ($model !== 'local-free' && $api_key !== '') {
             $gemini_res = call_gemini_interactions_api(
@@ -1068,37 +1432,45 @@ switch ($ai_action) {
                 $selected_object_html,
                 $target_mode,
                 $memory_context_text,
-                $selected_object_attrs
+                $selected_object_attrs,
+                $reusable_comps,
+                $all_db_frames
             );
             if ($gemini_res['success']) {
-                $generated_html = $gemini_res['html'] ?? '';
-                $operation      = $gemini_res['operation'] ?? $operation;
-                $summary_msg    = $gemini_res['summary'] ?? '';
-                $frames_specs   = $gemini_res['frames_specs'] ?? [];
-                $patch_data     = $gemini_res['patch'] ?? null;
-                $used_model     = $gemini_res['used_model'] ?? $model;
-                $source_mode    = 'Gemini Free Tier (' . $used_model . ')';
+                $generated_html     = $gemini_res['html'] ?? '';
+                $operation          = $gemini_res['operation'] ?? $operation;
+                $summary_msg        = $gemini_res['summary'] ?? '';
+                $frames_specs       = $gemini_res['frames_specs'] ?? [];
+                $frames_updates     = $gemini_res['frames_updates'] ?? [];
+                $patch_data         = $gemini_res['patch'] ?? null;
+                $breakpoints_to_add = $gemini_res['breakpoints_to_add'] ?? [];
+                $used_model         = $gemini_res['used_model'] ?? $model;
+                $source_mode        = 'Gemini Free Tier (' . $used_model . ')';
             } else {
                 $api_warning = $gemini_res['error'];
-                $local_cmd   = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode);
+                $local_cmd   = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot, $pdo, $project_id);
                 if ($local_cmd !== null) {
-                    $operation      = $local_cmd['operation'];
-                    $generated_html = $local_cmd['html'] ?? '';
-                    $summary_msg    = $local_cmd['summary'] ?? '';
-                    $frames_specs   = $local_cmd['frames_specs'] ?? [];
-                    $patch_data     = $local_cmd['patch'] ?? null;
+                    $operation          = $local_cmd['operation'];
+                    $generated_html     = $local_cmd['html'] ?? '';
+                    $summary_msg        = $local_cmd['summary'] ?? '';
+                    $frames_specs       = $local_cmd['frames_specs'] ?? [];
+                    $frames_updates     = $local_cmd['frames_updates'] ?? [];
+                    $patch_data         = $local_cmd['patch'] ?? null;
+                    $breakpoints_to_add = $local_cmd['breakpoints_to_add'] ?? [];
                 } else {
                     $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
                 }
             }
         } else {
-            $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode);
+            $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot, $pdo, $project_id);
             if ($local_cmd !== null) {
-                $operation      = $local_cmd['operation'];
-                $generated_html = $local_cmd['html'] ?? '';
-                $summary_msg    = $local_cmd['summary'] ?? '';
-                $frames_specs   = $local_cmd['frames_specs'] ?? [];
-                $patch_data     = $local_cmd['patch'] ?? null;
+                $operation          = $local_cmd['operation'];
+                $generated_html     = $local_cmd['html'] ?? '';
+                $summary_msg        = $local_cmd['summary'] ?? '';
+                $frames_specs       = $local_cmd['frames_specs'] ?? [];
+                $frames_updates     = $local_cmd['frames_updates'] ?? [];
+                $patch_data         = $local_cmd['patch'] ?? null;
+                $breakpoints_to_add = $local_cmd['breakpoints_to_add'] ?? [];
             } else {
                 $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
             }
@@ -1117,25 +1489,174 @@ switch ($ai_action) {
             ];
         }
 
-        // Simpan frame baru ke database gm_frames jika operation === 'create_frames'
-        $created_frames = [];
+        // Penanganan Operasi 1: Simpan frame baru dan lakukan SINKRONISASI RESIPROKAL ke seluruh halaman
+        $created_frames          = [];
+        $updated_existing_frames = [];
+        $renamed_frame           = null;
+
         if ($operation === 'create_frames' && !empty($frames_specs)) {
+            // Tahap 1: Cek apakah ada frame kosong di proyek saat ini (termasuk Main Frame awal yang masih kosong)
+            $available_empty_frames = [];
+            if ($project_id > 0) {
+                $current_db_frames = get_project_frames($pdo, $project_id);
+                $active_empty = null;
+                $other_empty  = [];
+                foreach ($current_db_frames as $cdf) {
+                    $c_html = trim((string)($cdf['core_content'] ?? ''));
+                    if ($c_html === '' || trim(strip_tags($c_html)) === '' || !str_contains($c_html, 'gm-object')) {
+                        if ($active_frame_id > 0 && (int)$cdf['frame_id'] === $active_frame_id) {
+                            $active_empty = $cdf;
+                        } else {
+                            $other_empty[] = $cdf;
+                        }
+                    }
+                }
+                if ($active_empty !== null) {
+                    $available_empty_frames[] = $active_empty;
+                }
+                foreach ($other_empty as $oe) {
+                    $available_empty_frames[] = $oe;
+                }
+            }
+
+            // Tahap 2: Simpan seluruh frame untuk mendapatkan ID numerik resminya
+            $frame_name_to_id = [];
+            $new_ids          = [];
             foreach ($frames_specs as $idx => $spec) {
                 $f_name = trim((string)($spec['frame_name'] ?? ('Page ' . ($idx + 1))));
                 $f_html = (string)($spec['html'] ?? '');
+
                 if ($project_id > 0) {
-                    $db_frame = add_project_frame($pdo, $project_id, $f_name, $f_html);
-                    $created_frames[] = [
-                        'frame_id'     => $db_frame['frame_id'],
-                        'frame_name'   => $db_frame['frame_name'],
-                        'core_content' => $f_html,
-                    ];
+                    // Gunakan frame kosong yang sudah ada jika tersedia (misal Main Frame awal diubah menjadi Home / Beranda)
+                    if (!empty($available_empty_frames)) {
+                        $reused_empty = array_shift($available_empty_frames);
+                        $fid = (int)$reused_empty['frame_id'];
+                        $stmtUpEmpty = $pdo->prepare("UPDATE gm_frames SET frame_name = ?, core_content = ? WHERE frame_id = ?");
+                        $stmtUpEmpty->execute([$f_name, $f_html, $fid]);
+                    } else {
+                        $db_frame = add_project_frame($pdo, $project_id, $f_name, $f_html);
+                        $fid = (int)$db_frame['frame_id'];
+                    }
                 } else {
-                    $created_frames[] = [
-                        'frame_id'     => time() + $idx,
-                        'frame_name'   => $f_name,
-                        'core_content' => $f_html,
+                    $fid = time() + $idx;
+                }
+
+                $frame_name_to_id[$f_name] = $fid;
+                $new_ids[] = $fid;
+                $created_frames[] = [
+                    'frame_id'     => $fid,
+                    'frame_name'   => $f_name,
+                    'core_content' => $f_html,
+                ];
+            }
+
+            // Tahap 2: Buat peta seluruh frame proyek (existing + baru)
+            $all_frames_map = [];
+            if ($project_id > 0) {
+                $fresh_frames = get_project_frames($pdo, $project_id);
+                foreach ($fresh_frames as $ff) {
+                    $all_frames_map[$ff['frame_name']] = (int)$ff['frame_id'];
+                }
+            } else {
+                foreach ($frame_name_to_id as $name => $fid) {
+                    $all_frames_map[$name] = $fid;
+                }
+            }
+
+            // Tahap 3: Sinkronisasi silang pada seluruh frame baru yang baru dibuat
+            if (!empty($all_frames_map) && $project_id > 0) {
+                foreach ($created_frames as &$cf) {
+                    $synced_html = cross_link_navbar_in_html($cf['core_content'], $all_frames_map, $cf['frame_id'], $cf['frame_name']);
+                    if ($synced_html !== $cf['core_content']) {
+                        $cf['core_content'] = $synced_html;
+                        $stmtUp = $pdo->prepare('UPDATE gm_frames SET core_content = ? WHERE frame_id = ?');
+                        $stmtUp->execute([$synced_html, $cf['frame_id']]);
+                    }
+                }
+                unset($cf);
+
+                // Tahap 4: SINKRONISASI RESIPROKAL ke frame-frame lama (misal Home / Beranda)
+                // agar navbar pada halaman lama juga otomatis memuat tautan menuju halaman-halaman baru ini!
+                $existing_frames_in_db = get_project_frames($pdo, $project_id);
+                foreach ($existing_frames_in_db as $ef) {
+                    $efid = (int)$ef['frame_id'];
+                    if (in_array($efid, $new_ids, true)) {
+                        continue; // Lewati yang baru dibuat karena sudah disinkronkan di atas
+                    }
+
+                    $old_html = (string)($ef['core_content'] ?? '');
+                    $synced_old = cross_link_navbar_in_html($old_html, $all_frames_map, $efid, (string)$ef['frame_name']);
+                    if ($synced_old !== $old_html) {
+                        $stmtUp = $pdo->prepare('UPDATE gm_frames SET core_content = ? WHERE frame_id = ?');
+                        $stmtUp->execute([$synced_old, $efid]);
+                        $updated_existing_frames[] = [
+                            'frame_id'     => $efid,
+                            'frame_name'   => (string)$ef['frame_name'],
+                            'core_content' => $synced_old,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Penanganan Operasi 2: BATCH UPDATE FRAMES (Intervensi gaya pada seluruh halaman proyek)
+        $saved_batch_updates = [];
+        if ($operation === 'batch_update_frames' && !empty($frames_updates) && $project_id > 0) {
+            $fresh_frames = get_project_frames($pdo, $project_id);
+            foreach ($frames_updates as $fu) {
+                $target_ident = trim((string)($fu['frame_identifier'] ?? ''));
+                $new_f_html   = (string)($fu['html'] ?? '');
+                $matched_fid  = 0;
+                $matched_name = '';
+
+                foreach ($fresh_frames as $ff) {
+                    if ((string)$ff['frame_id'] === $target_ident || strtolower((string)$ff['frame_name']) === strtolower($target_ident)) {
+                        $matched_fid  = (int)$ff['frame_id'];
+                        $matched_name = (string)$ff['frame_name'];
+                        break;
+                    }
+                }
+
+                if ($matched_fid > 0 && $new_f_html !== '') {
+                    $stmtUp = $pdo->prepare('UPDATE gm_frames SET core_content = ? WHERE frame_id = ?');
+                    $stmtUp->execute([$new_f_html, $matched_fid]);
+                    $saved_batch_updates[] = [
+                        'frame_id'   => $matched_fid,
+                        'frame_name' => $matched_name,
+                        'html'       => $new_f_html,
                     ];
+                }
+            }
+        }
+
+                // Jika operasi adalah append pada frame yang masih kosong dan bernama 'Main Frame' / 'Untitled Frame',
+        // otomatis rename frame tersebut agar namanya representatif (misal Home / nama komponen).
+        if ($operation === 'append' && trim($current_frame_html) === '' && $project_id > 0) {
+            $cur_active_id = $active_frame_id;
+            if ($cur_active_id <= 0 && !empty($all_db_frames)) {
+                $cur_active_id = (int)$all_db_frames[0]['frame_id'];
+            }
+            if ($cur_active_id > 0) {
+                foreach ($all_db_frames as $adf) {
+                    if ((int)$adf['frame_id'] === $cur_active_id) {
+                        $cur_name = trim((string)$adf['frame_name']);
+                        if (in_array(strtolower($cur_name), ['main frame', 'untitled frame', 'frame 1', 'page 1'], true)) {
+                            $new_name = 'Home';
+                            if ($component_name !== '' && $component_name !== 'AI Component') {
+                                $new_name = $component_name;
+                            } elseif (preg_match('/(?:halaman|page|frame|buat|landing\s*page)\s+([a-zA-Z0-9\s\-]{3,25})/i', $prompt, $pm)) {
+                                $cand = ucwords(trim($pm[1]));
+                                if ($cand !== '') $new_name = $cand;
+                            }
+                            $stmtRen = $pdo->prepare("UPDATE gm_frames SET frame_name = ? WHERE frame_id = ?");
+                            $stmtRen->execute([$new_name, $cur_active_id]);
+                            $renamed_frame = [
+                                'frame_id' => $cur_active_id,
+                                'new_name' => $new_name,
+                            ];
+                        }
+                        break;
+                    }
                 }
             }
         }
@@ -1154,12 +1675,14 @@ switch ($ai_action) {
         }
 
         $default_msg = match ($operation) {
-            'explain'          => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil dianalisis.',
-            'patch_attributes' => $summary_msg !== '' ? $summary_msg : ('Atribut elemen berhasil diperbarui (' . $source_mode . ').'),
-            'replace_selected' => 'Objek aktif berhasil diperbarui (' . $source_mode . ').',
-            'replace_frame'    => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil diperbarui (' . $source_mode . ').',
-            'create_frames'    => count($created_frames) . ' Frame Halaman baru berhasil ditambahkan (' . $source_mode . ').',
-            default            => 'Komponen berhasil ditambahkan (' . $source_mode . ').',
+            'explain'             => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil dianalisis.',
+            'patch_attributes'    => $summary_msg !== '' ? $summary_msg : ('Atribut elemen berhasil diperbarui (' . $source_mode . ').'),
+            'replace_selected'    => 'Objek aktif berhasil diperbarui (' . $source_mode . ').',
+            'replace_frame'       => $summary_msg !== '' ? $summary_msg : 'Isi frame berhasil diperbarui (' . $source_mode . ').',
+            'create_frames'       => count($created_frames) . ' Frame Halaman baru berhasil dibuat & saling terhubung (' . $source_mode . ').',
+            'batch_update_frames' => count($saved_batch_updates) . ' Halaman proyek berhasil diperbarui serentak secara konsisten (' . $source_mode . ').',
+            'add_breakpoints'     => 'Breakpoint responsif berhasil ditambahkan ke toolbar.',
+            default               => 'Komponen berhasil ditambahkan (' . $source_mode . ').',
         };
 
         // Perbarui & simpan cache memori AI proyek ke database gm_projects
@@ -1174,6 +1697,8 @@ switch ($ai_action) {
             if ($operation === 'create_frames' && !empty($created_frames)) {
                 $page_names = array_map(fn($cf) => $cf['frame_name'], $created_frames);
                 $updated_memory['system_summary'] = 'Sistem memiliki halaman: ' . implode(', ', $page_names) . ' (instruksi: ' . mb_substr($prompt, 0, 100) . ')';
+            } elseif ($operation === 'batch_update_frames') {
+                $updated_memory['system_summary'] = 'Gaya seluruh halaman diselaraskan: ' . mb_substr($prompt, 0, 100);
             } elseif (empty($updated_memory['system_summary'])) {
                 $updated_memory['system_summary'] = 'Proyek dibangun dengan instruksi: ' . mb_substr($prompt, 0, 100);
             }
@@ -1182,18 +1707,22 @@ switch ($ai_action) {
         }
 
         json_response([
-            'status'         => 'OK',
-            'success'        => true,
-            'operation'      => $operation,
-            'patch'          => $patch_data,
-            'summary'        => $summary_msg,
-            'msg'            => $default_msg,
-            'source_mode'    => $source_mode,
-            'api_warning'    => $api_warning,
-            'html'           => $generated_html,
-            'created_frames' => $created_frames,
-            'component'      => $saved_component,
-            'ai_memory'      => $ai_memory,
+            'status'                  => 'OK',
+            'success'                 => true,
+            'operation'               => $operation,
+            'patch'                   => $patch_data,
+            'summary'                 => $summary_msg,
+            'msg'                     => $default_msg,
+            'source_mode'             => $source_mode,
+            'api_warning'             => $api_warning,
+            'html'                    => $generated_html,
+            'created_frames'          => $created_frames,
+            'updated_existing_frames' => $updated_existing_frames,
+            'renamed_frame'           => $renamed_frame,
+            'frames_updates'          => $saved_batch_updates,
+            'breakpoints_to_add'      => $breakpoints_to_add,
+            'component'               => $saved_component,
+            'ai_memory'               => $ai_memory,
         ]);
         break;
 }
