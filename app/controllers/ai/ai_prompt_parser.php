@@ -57,9 +57,28 @@ if (!function_exists('get_greymist_system_instruction')) {
                 . "     * PRIORITASKAN MEMILIH & MENGGUNAKAN GAMBAR DARI DAFTAR ASSET TERSEBUT daripada membuat URL dummy fiktif!\n"
                 . "     * Cocokkan nama aset dengan elemen: aset logo/brand -> logo Navbar/Header, aset banner/hero -> hero section / background, aset produk/item -> card produk, aset avatar/orang/profil -> foto tim / testimoni.\n"
                 . "     * WAJIB class 'gm-object', atribut src persis path asset (contoh: uploads/assets/nama_file.png), dan atribut alt deskriptif.\n"
-                . "11. FORMAT OPERASI LAINNYA:\n"
-                . "   - Komponen baru: <!--GM_OP:APPEND--> <kode html>\n"
-                . "   - Ubah objek terpilih: <!--GM_OP:REPLACE_SELECTED--> <kode html>\n"
+                . "11. ATURAN PEMBUATAN CHART / GRAFIK INTERAKTIF (MENU ASSETS & CDN):\n"
+                . "   - Jika pengguna meminta grafik/chart (batang/bar, garis/line, donat/doughnut, pie, area, radar, statistik penjualan, dll):\n"
+                . "     * Hasilkan komponen chart Greymist berbasis Chart.js atau ApexCharts:\n"
+                . "       <div class=\"gm-object gm-chart-card\" data-chart-type=\"bar\" data-chart-lib=\"chartjs\" style=\"width: 100%; max-width: 620px; padding: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); box-sizing: border-box; margin: 16px auto; font-family: 'Inter', sans-serif;\">\n"
+                . "         <div class=\"gm-object\" style=\"display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;\">\n"
+                . "           <h4 class=\"gm-object\" style=\"margin: 0; font-size: 16px; font-weight: 700; color: #0f172a;\"><i class=\"fa-solid fa-chart-column gm-object\" style=\"color: #3b82f6; margin-right: 8px;\"></i>Judul Grafik</h4>\n"
+                . "           <span class=\"gm-object\" style=\"font-size: 12px; font-weight: 600; color: #10b981; background: #ecfdf5; padding: 4px 10px; border-radius: 20px;\">2026</span>\n"
+                . "         </div>\n"
+                . "         <div class=\"gm-object gm-chart-canvas-wrap\" style=\"position: relative; width: 100%; height: 290px;\">\n"
+                . "           <canvas class=\"gm-object gm-chart-canvas\"></canvas>\n"
+                . "         </div>\n"
+                . "         <script data-gm-chart-config=\"true\">{\"library\":\"chartjs\",\"cdn\":\"https://cdn.jsdelivr.net/npm/chart.js\",\"type\":\"bar\",\"data\":{\"labels\":[\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"Mei\",\"Jun\"],\"datasets\":[{\"label\":\"Nilai\",\"data\":[45,59,72,85,90,110],\"backgroundColor\":\"#3b82f6\",\"borderRadius\":6}]},\"options\":{\"responsive\":true,\"maintainAspectRatio\":false}}</script>\n"
+                . "       </div>\n"
+                . "   - Jika terdapat '=== DAFTAR CHART TERSEDIA DARI MENU ASSETS PENGGUNA ===' dan pengguna meminta chart dari aset, sisipkan kode chart tersebut.\n"
+                . "12. FORMAT OPERASI LAINNYA & PROTOKOL ANTI-REBUILD (KONTEN TIDAK BOLEH RUSAK/HILANG):\n"
+                . "   - JIKA PENGGUNA MEMINTA MENGUBAH, MENGGANTI, ATAU MENGHAPUS ELEMEN DARI HALAMAN YANG ADA (misal: 'hilangkan icon', 'hapus tombol X', 'ubah judul', 'buang gambar'):\n"
+                . "     * DILARANG KERAS MEMBUAT ULANG DARI NOL ATAU MENIMPA HALAMAN DENGAN KOMPONEN HERO BARU!\n"
+                . "     * PERTAHANKAN 100% susunan HTML, teks, kartu, angka, tabel, dan chart yang sudah ada.\n"
+                . "     * Untuk Frame Aktif: <!--GM_OP:REPLACE_FRAME--> <kode html frame utuh setelah dimodifikasi>\n"
+                . "     * Untuk Seluruh Halaman / All Pages: <!--GM_OP:BATCH_UPDATE_FRAMES--> diikuti <!--GM_FRAME_UPDATE:NamaFrame--> untuk setiap frame yang diperbarui.\n"
+                . "   - Komponen baru: <!--GM_OP:APPEND--> <kode html baru>\n"
+                . "   - Ubah objek terpilih: <!--GM_OP:REPLACE_SELECTED--> <kode html baru objek>\n"
                 . "   - Ganti nama project: <!--GM_OP:RENAME_PROJECT:Nama Baru-->\n"
                 . "   - Frame baru: <!--GM_FRAME:Nama Page--> <kode html>";
         }
@@ -70,8 +89,15 @@ if (!function_exists('get_greymist_system_instruction')) {
             . "Anda memiliki CACHE MEMORI PROYEK yang mencatat seluruh halaman (frames), susunan komponen di setiap halaman, dan riwayat perubahan yang telah Anda buat sebelumnya.\n"
             . "Gunakan memori tersebut agar setiap perubahan, penambahan, atau penghapusan selalu konsisten dengan sistem desain dan susunan halaman yang sudah ada.\n\n"
             . "========================================================================\n"
-            . "ATURAN EMAS DESAIN, SINKRONISASI & PRODUKSI GREYMIST\n"
+            . "ATURAN EMAS DESAIN, SINKRONISASI & PROTOKOL ANTI-REBUILD GREYMIST\n"
             . "========================================================================\n\n"
+            . "0. PROTOKOL MUTLAK ANTI-REBUILD & CONTENT PRESERVATION:\n"
+            . "   - Jika pengguna meminta MENGUBAH, MENAMBAHKAN, atau MENGHAPUS sebagian elemen/fitur dari halaman yang sudah ada (seperti: 'hilangkan icon di seluruh pages', 'ganti judul', 'hapus tombol', 'ubah warna latar'):\n"
+            . "     * DILARANG KERAS MEMBUAT ULANG HALAMAN DARI AWAL ATAU MENGGANTINYA DENGAN HERO/KOMPONEN GENERIK!\n"
+            . "     * PERTAHANKAN 100% tata letak visual, teks, angka dashboard, kartu statistik, diagram chart, sidebar, dan navbar yang sudah ada.\n"
+            . "     * HANYA modifikasi atau buang elemen spesifik yang diminta pengguna.\n"
+            . "     * Jika permintaan mencakup seluruh halaman ('seluruh pages', 'semua halaman', 'all pages'):\n"
+            . "       Gunakan operasi <!--GM_OP:BATCH_UPDATE_FRAMES--> dan sertakan <!--GM_FRAME_UPDATE:NamaFrame--> untuk setiap halaman dengan kode HTML lengkap yang diperbarui.\n\n"
             . "1. EKSEKUSI TUNTAS & PRODUKSI PENUH (DILARANG KERAS SETENGAH-SETENGAH):\n"
             . "   - Hasilkan konten UI yang UTUH, LENGKAP, dan SIAP PAKAI secara penuh.\n"
             . "   - DILARANG KERAS memotong kode, menggunakan komentar placeholder (seperti '<!-- isi konten disini -->', '...', 'TODO'), atau teks contoh seadanya.\n"
@@ -250,6 +276,22 @@ if (!function_exists('get_greymist_system_instruction')) {
             . "        - Aset 'avatar', 'user', 'orang', 'tim', 'profil', 'foto' -> pasang pada kartu testimoni atau profil tim: <img src=\"uploads/assets/...\" class=\"gm-object\" alt=\"Foto Profil\" style=\"width: 48px; height: 48px; border-radius: 50%; object-fit: cover;\">.\n"
             . "      * Setiap tag <img> WAJIB memiliki class=\"gm-object\", atribut src yang valid mengarah ke path aset, atribut alt deskriptif, dan gaya dimensi yang proporsional.\n"
             . "      * DILARANG KERAS memodifikasi atau salah mengeja nama file aset asli!\n\n"
+            . "14. ATURAN INTEGRASI CHART & DIAGRAM DARI MENU ASSETS (CHART.JS & APEXCHARTS):\n"
+            . "    - Greymist memiliki integrasi penuh dengan modul Chart pada Menu Assets (Chart.js, ApexCharts, ECharts).\n"
+            . "    - Jika pengguna meminta membuat grafik data atau analitik (batang, garis, donat, pie, area, radar, statistik dashboard):\n"
+            . "      * AI WAJIB menghasilkan komponen chart interaktif Greymist dengan format container:\n"
+            . "        <div class=\"gm-object gm-chart-card\" data-chart-type=\"bar\" data-chart-lib=\"chartjs\" style=\"width: 100%; max-width: 620px; padding: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); box-sizing: border-box; margin: 16px auto; font-family: 'Inter', sans-serif;\">\n"
+            . "          <div class=\"gm-object\" style=\"display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;\">\n"
+            . "            <h4 class=\"gm-object\" style=\"margin: 0; font-size: 16px; font-weight: 700; color: #0f172a;\"><i class=\"fa-solid fa-chart-column gm-object\" style=\"color: #3b82f6; margin-right: 8px;\"></i>Judul Grafik</h4>\n"
+            . "            <span class=\"gm-object\" style=\"font-size: 12px; font-weight: 600; color: #10b981; background: #ecfdf5; padding: 4px 12px; border-radius: 20px;\">Live Data</span>\n"
+            . "          </div>\n"
+            . "          <div class=\"gm-object gm-chart-canvas-wrap\" style=\"position: relative; width: 100%; height: 290px;\">\n"
+            . "            <canvas class=\"gm-object gm-chart-canvas\"></canvas>\n"
+            . "          </div>\n"
+            . "          <script data-gm-chart-config=\"true\">{\"library\":\"chartjs\",\"cdn\":\"https://cdn.jsdelivr.net/npm/chart.js\",\"type\":\"bar\",\"data\":{\"labels\":[\"Jan\",\"Feb\",\"Mar\",\"Apr\",\"Mei\",\"Jun\"],\"datasets\":[{\"label\":\"Nilai\",\"data\":[45,59,72,85,90,110],\"backgroundColor\":\"#3b82f6\",\"borderRadius\":6}]},\"options\":{\"responsive\":true,\"maintainAspectRatio\":false}}</script>\n"
+            . "        </div>\n"
+            . "    - Jika pada konteks terdapat '=== DAFTAR CHART TERSEDIA DARI MENU ASSETS PENGGUNA ===' dan pengguna meminta menyisipkan chart dari aset (misal: 'masukkan chart penjualan saya'):\n"
+            . "      AI WAJIB MENYISIPKAN KODE DARI CHART TERSEBUT secara utuh dan presisi!\n\n"
             . "PILIHAN FORMAT OPERASI LAINNYA:\n"
             . "1. MEMBACA/MENJELASKAN: <!--GM_OP:EXPLAIN--> diikuti penjelasan dalam Bahasa Indonesia.\n"
             . "2. GANTI NAMA PROYEK: <!--GM_OP:RENAME_PROJECT:Nama Proyek Baru--> diikuti konfirmasi.\n"
@@ -273,7 +315,8 @@ if (!function_exists('build_greymist_context_input')) {
         array $reusable_components = [],
         array $all_project_frames = [],
         $reference_images = null,
-        array $user_assets = []
+        array $user_assets = [],
+        array $user_charts = []
     ): string {
         $context_input = "";
         if ($memory_context_text !== '') {
@@ -299,6 +342,25 @@ if (!function_exists('build_greymist_context_input')) {
                 . "- Sematkan tag semantik <img src=\"URL_DI_ATAS\" class=\"gm-object\" alt=\"Deskripsi\">\n"
                 . "- Atau inline style: background-image: url('URL_DI_ATAS'); background-size: cover; background-position: center;\n"
                 . "- Sesuaikan nama aset dengan posisi komponen (misal 'logo' untuk navbar, 'banner' untuk hero, 'avatar' untuk testimoni).\n"
+                . "=================================================================\n\n";
+        }
+
+        // Blok Daftar Chart Kustom dari Menu Assets Pengguna
+        if (!empty($user_charts) && is_array($user_charts)) {
+            $context_input .= "=== DAFTAR CHART TERSEDIA DARI MENU ASSETS PENGGUNA ===\n"
+                . "Pengguna memiliki " . count($user_charts) . " chart tersimpan di Menu Assets:\n";
+            foreach ($user_charts as $c_idx => $c_item) {
+                $c_name = $c_item['chart_name'] ?? $c_item['name'] ?? ('Chart ' . ($c_idx + 1));
+                $c_type = $c_item['chart_type'] ?? $c_item['type'] ?? 'bar';
+                $c_lib  = $c_item['library_cdn'] ?? $c_item['library'] ?? 'chartjs';
+                $c_code = !empty($c_item['chart_code']) ? $c_item['chart_code'] : ($c_item['code'] ?? '');
+                $context_input .= ($c_idx + 1) . ". Nama: \"{$c_name}\" | Tipe: {$c_type} | Library: {$c_lib}\n";
+                if ($c_code !== '') {
+                    $context_input .= "   KODE CHART ASLI:\n" . $c_code . "\n";
+                }
+            }
+            $context_input .= "PETUNJUK PENGGUNAAN CHART:\n"
+                . "- Jika pengguna meminta menyisipkan atau menampilkan chart yang sudah disimpan di aset, gunakan kode chart di atas secara utuh.\n"
                 . "=================================================================\n\n";
         }
 

@@ -15,12 +15,12 @@
         { label: "Navbar", prompt: "Buat Navbar navigasi horizontal dengan logo brand di kiri, menu link di tengah, dan tombol CTA di kanan" },
         { label: "Pricing", prompt: "Buat bagian kartu harga (Pricing Table) 3 kolom: Starter, Pro (Populer), dan Enterprise" },
         { label: "Kontak", prompt: "Buat kartu Formulir Kontak minimalis dengan input Nama, Email, Pesan, dan tombol Kirim" },
-        { label: "📊 Web PPT", prompt: "Buat 5 slide presentasi web (Web PPT) interaktif dengan topik [Tulis Topik Di Sini], masing-masing slide menjadi frame terpisah (Slide 1 s/d Slide 5), visible (tanpa display: none), lengkap dengan tombol navigasi Sebelumnya & Selanjutnya yang bisa diklik untuk berpindah slide." },
-        { label: "+Page Baru", prompt: "Buat frame halaman baru untuk halaman Login lengkap dengan Navbar dan Form Login" },
+        { label: "Web PPT", prompt: "Buat 5 slide presentasi web (Web PPT) interaktif dengan topik [Tulis Topik Di Sini], masing-masing slide menjadi frame terpisah (Slide 1 s/d Slide 5), visible (tanpa display: none), lengkap dengan tombol navigasi Sebelumnya & Selanjutnya yang bisa diklik untuk berpindah slide." },
+        { label: "Page Baru", prompt: "Buat frame halaman baru untuk halaman Login lengkap dengan Navbar dan Form Login" },
         { label: "Multi-Page", prompt: "Buat 3 frame halaman website terpisah: Beranda, Layanan & Harga, dan Hubungi Kami" },
         { label: "Baca Proyek", prompt: "Baca dan jelaskan susunan proyek, halaman-halaman, serta komponen di dalamnya" },
-        { label: "📸 Clone Foto", prompt: "Buat antarmuka (UI) website modern yang meniru tata letak dan estetika foto referensi yang diunggah" },
-        { label: "🏷️ Ganti Nama", prompt: "Ganti nama project jadi " }
+        { label: "Clone Foto", prompt: "Buat antarmuka (UI) website modern yang meniru tata letak dan estetika foto referensi yang diunggah" },
+        { label: "Ganti Nama", prompt: "Ganti nama project jadi " }
     ];
 
     function getCurrentProjectId() {
@@ -188,6 +188,9 @@
         }
         if (typeof window.saveProject === "function") {
             window.saveProject();
+        }
+        if (typeof window.initGmCharts === "function") {
+            setTimeout(window.initGmCharts, 40);
         }
         renderFrameComponentsList();
     }

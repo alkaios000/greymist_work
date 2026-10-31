@@ -878,7 +878,11 @@
         });
 
         // Pasang juga fitur AI Edit Object pada menu klik kanan (.gm-object-menu)
-        setupRightClickAiObjectEditor();
+        if (typeof setupRightClickAiObjectEditor === "function") {
+            setupRightClickAiObjectEditor();
+        } else if (typeof window.setupRightClickAiObjectEditor === "function") {
+            window.setupRightClickAiObjectEditor();
+        }
 
         // Setup listener Koleksi Asset dari Menu Assets
         let loadedUserAssets = [];
@@ -914,6 +918,10 @@
             try {
                 const pId = getCurrentProjectId();
                 const resp = await fetch("index.php?action=ai_get_user_assets&project_id=" + encodeURIComponent(pId));
+                if (!resp.ok) {
+                    console.warn("[Greymist AI] Endpoint aset pengguna mengembalikan HTTP status " + resp.status);
+                    return;
+                }
                 const res = await resp.json();
                 if (res && res.success && Array.isArray(res.assets)) {
                     loadedUserAssets = res.assets;
@@ -1103,7 +1111,15 @@
                 }
             }
 
-            if (selectedObj && (isAttributeEditPrompt || effectiveTargetMode === "selected" || effectiveTargetMode === "edit_selected")) {
+            const isProjectWide = /\b(seluruh\s+(?:pages?|halaman|frame|proyek|project)|semua\s+(?:pages?|halaman|frame|proyek|project)|tiap\s+(?:pages?|halaman|frame)|setiap\s+(?:pages?|halaman|frame)|all\s+pages?|project[- ]wide|lintas\s+(?:halaman|frame))\b/i.test(prompt);
+            const isSectionLevelPrompt = /\b(buat|tambah|bikin|halaman|frame|section|footer|navbar|pricing|hero|kontak|rename|ganti nama project|hapus semua|kosongkan)\b/i.test(prompt);
+
+            if (isProjectWide) {
+                effectiveTargetMode = "core";
+                selectedObj = null;
+            } else if (isSectionLevelPrompt && !isAttributeEditPrompt) {
+                effectiveTargetMode = "core";
+            } else if (selectedObj && (isAttributeEditPrompt || effectiveTargetMode === "selected" || effectiveTargetMode === "edit_selected")) {
                 effectiveTargetMode = "edit_selected";
             }
 
@@ -1127,17 +1143,24 @@
             }
 
             const readMemoryEl = document.getElementById("gm-ai-read-memory");
-            const readMemory = readMemoryEl ? readMemoryEl.checked : false;
+            const readMemory = (readMemoryEl ? readMemoryEl.checked : false) || isProjectWide;
             const projectId = getCurrentProjectId();
-            const framesSnapshot = readMemory ? collectAllFramesSnapshot() : [];
+            const framesSnapshot = (readMemory || isProjectWide) ? collectAllFramesSnapshot() : [];
 
             generateBtn.disabled = true;
             generateBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Proses...</span>`;
-            if (readMemory) {
+            if (isProjectWide) {
+                showStatus(statusEl, "info", "🌐 AI mendeteksi perubahan selektif di seluruh halaman (mempertahankan konten yang ada)...");
+            } else if (readMemory) {
                 showStatus(statusEl, "info", "🧠 AI membaca memori proyek & memproses konteks...");
             } else {
-                showStatus(statusEl, "info", "⚡ AI memproses instruksi (Mode Kilat)...");
+                showStatus(statusEl, "info", "⚡ AI memproses instruksi...");
             }
+
+            const currentActiveProvider = (typeof window.getActiveAiProvider === "function" ? window.getActiveAiProvider() : null) ||
+                (document.getElementById("gm-ai-provider-select") ? document.getElementById("gm-ai-provider-select").value : "") ||
+                window.currentActiveProvider ||
+                "groq";
 
             fetch("api/ai_generate.php", {
                 method: "POST",
@@ -1169,7 +1192,8 @@
                         selectedUserAssetIds.size > 0
                             ? loadedUserAssets.filter(a => selectedUserAssetIds.has(a.id))
                             : loadedUserAssets
-                    ) : []
+                    ) : [],
+                    user_charts: (typeof window !== "undefined" && Array.isArray(window.gmUserCharts)) ? window.gmUserCharts : []
                 })
             })
                 .then(r => r.json())
@@ -1272,8 +1296,12 @@
                                         refreshWorkspaceAfterChange(fid);
                                     });
                                 } else {
+                                    if (window.GM_UNDO && typeof window.GM_UNDO.saveState === "function") {
+                                        window.GM_UNDO.saveState(core);
+                                    }
                                     core.innerHTML = (fu.html || "").trim();
                                     if (typeof window.initLoadedObjects === "function") window.initLoadedObjects(core);
+                                    if (typeof window.initGmCharts === "function") window.initGmCharts(core);
                                     if (typeof updateThumbnail === "function") updateThumbnail(fid);
                                     else if (typeof window.updateThumbnail === "function") window.updateThumbnail(fid);
                                 }

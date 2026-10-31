@@ -192,6 +192,13 @@
   /* ===============================
      PUBLIC
   ================================ */
-  window.GM_UNDO = { undo, redo };
+  window.GM_UNDO = { 
+    undo, 
+    redo,
+    saveState: function(core) {
+      const targetCore = core || getActiveCore();
+      if (targetCore) saveState(targetCore);
+    }
+  };
 
 })();

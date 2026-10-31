@@ -245,7 +245,8 @@
   .gm-asset-icon,
   .gm-asset-image,
   .gm-asset-video,
-  .gm-asset-audio {
+  .gm-asset-audio,
+  .gm-asset-chart {
       width: 80px;
       height: 80px;
       box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.18);
@@ -262,7 +263,8 @@
   .gm-asset-icon:hover,
   .gm-asset-image:hover,
   .gm-asset-video:hover,
-  .gm-asset-audio:hover {
+  .gm-asset-audio:hover,
+  .gm-asset-chart:hover {
       border: 1px solid #9ad0ff;
       box-shadow: 0px 2px 4px 0px rgba(185, 214, 246, 0.408);
       color: #9ad0ff;

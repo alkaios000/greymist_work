@@ -548,6 +548,30 @@
         return selectedObj;
     }
 
+    const ALL_GM_ANIMS = [
+        "gm-anim-fade-in",
+        "gm-anim-slide-up",
+        "gm-anim-slide-down",
+        "gm-anim-slide-left",
+        "gm-anim-slide-right",
+        "gm-anim-zoom-in",
+        "gm-anim-bounce-in"
+    ];
+
+    function normalizeGreymistAnimName(name) {
+        if (!name) return "";
+        const n = String(name).toLowerCase().trim();
+        if (n === "none" || n === "false" || n === "null" || n === "") return "";
+        if (n.includes("bounce")) return "gm-anim-bounce-in";
+        if (n.includes("zoom")) return "gm-anim-zoom-in";
+        if (n.includes("slide") && n.includes("down")) return "gm-anim-slide-down";
+        if (n.includes("slide") && n.includes("left")) return "gm-anim-slide-left";
+        if (n.includes("slide") && n.includes("right")) return "gm-anim-slide-right";
+        if (n.includes("slide") || n.includes("up")) return "gm-anim-slide-up";
+        if (n.includes("fade")) return "gm-anim-fade-in";
+        return n.startsWith("gm-anim-") ? n : "gm-anim-" + n;
+    }
+
     function applyAttributePatchInPlace(targetEl, patch, statusEl, onDone) {
         if (!targetEl) {
             targetEl = getSelectedObject() || getActiveObjectCore();
@@ -558,6 +582,9 @@
         }
 
         const activeCore = getActiveObjectCore();
+        if (window.GM_UNDO && typeof window.GM_UNDO.saveState === "function") {
+            window.GM_UNDO.saveState(activeCore || targetEl.closest(".gm-object-core"));
+        }
         let targetElements = [];
 
         // 1. Selector Presisi Array: Jika patch menyediakan array 'targets' (misal ['#card-1', '#card-2', '#card-3'])
@@ -604,30 +631,6 @@
             } else {
                 targetElements = [destEl];
             }
-        }
-
-        const ALL_GM_ANIMS = [
-            "gm-anim-fade-in",
-            "gm-anim-slide-up",
-            "gm-anim-slide-down",
-            "gm-anim-slide-left",
-            "gm-anim-slide-right",
-            "gm-anim-zoom-in",
-            "gm-anim-bounce-in"
-        ];
-
-        function normalizeGreymistAnimName(name) {
-            if (!name) return "";
-            const n = String(name).toLowerCase().trim();
-            if (n === "none" || n === "false" || n === "null" || n === "") return "";
-            if (n.includes("bounce")) return "gm-anim-bounce-in";
-            if (n.includes("zoom")) return "gm-anim-zoom-in";
-            if (n.includes("slide") && n.includes("down")) return "gm-anim-slide-down";
-            if (n.includes("slide") && n.includes("left")) return "gm-anim-slide-left";
-            if (n.includes("slide") && n.includes("right")) return "gm-anim-slide-right";
-            if (n.includes("slide") || n.includes("up")) return "gm-anim-slide-up";
-            if (n.includes("fade")) return "gm-anim-fade-in";
-            return n.startsWith("gm-anim-") ? n : "gm-anim-" + n;
         }
 
         const isRemovingAnim = (patch && Array.isArray(patch.classes_to_remove) && patch.classes_to_remove.includes("gm-anim-base")) ||
@@ -822,6 +825,9 @@
         }
 
         const parent = targetObj.parentElement;
+        if (window.GM_UNDO && typeof window.GM_UNDO.saveState === "function") {
+            window.GM_UNDO.saveState(targetObj.closest(".gm-object-core"));
+        }
         const temp = document.createElement("div");
         temp.innerHTML = cleanEmojis((htmlString || "").trim());
         const sourceRoots = Array.from(temp.children).filter(el => { const t = el.tagName.toLowerCase(); return t !== "style" && t !== "script"; });
@@ -1069,6 +1075,10 @@
             return;
         }
 
+        if (window.GM_UNDO && typeof window.GM_UNDO.saveState === "function") {
+            window.GM_UNDO.saveState(container.closest(".gm-object-core") || container);
+        }
+
         const trimmed = cleanEmojis((htmlString || "").trim());
         if (trimmed === "") {
             if (callback) callback(0);
@@ -1106,6 +1116,10 @@
         if (!core) {
             if (callback) callback(false);
             return;
+        }
+
+        if (window.GM_UNDO && typeof window.GM_UNDO.saveState === "function") {
+            window.GM_UNDO.saveState(core);
         }
 
         const trimmed = cleanEmojis((htmlString || "").trim());
@@ -1174,5 +1188,6 @@
 
     window.GreymistAI.DOMEngine = DOMEngine;
     Object.assign(window, DOMEngine);
+    window.normalizeGreymistAnimName = normalizeGreymistAnimName;
 
 })(window);

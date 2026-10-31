@@ -547,3 +547,117 @@ Greymist AI terhubung secara otomatis dengan koleksi gambar/media yang telah diu
    - Tag: Selalu gunakan `<img class="gm-object" src="uploads/assets/..." alt="...">`.
    - DILARANG menggunakan URL dummy placeholder fiktif jika aset gambar yang cocok sudah tersedia di Menu Assets.
    - Pertahankan path dan nama file aset persis seperti yang terdaftar.
+
+---
+
+## 21. Standar Bagan & Diagram Interaktif (Chart.js & ApexCharts) Serta Integrasi Menu Assets Charts
+
+Greymist Workspace dilengkapi menu **Bagan & Diagram (Charts)** di dalam Menu Assets kiri (`gm_user_charts`), yang memungkinkan pengguna maupun AI membuat, menyimpan, dan menyisipkan visualisasi data interaktif ke kanvas `#object-core`.
+
+### 1. Struktur Komponen Chart Resmi Greymist
+Setiap chart yang dibuat WAJIB dibungkus kartu semantik dengan class `.gm-chart-card` dan setiap elemen memiliki class `.gm-object`:
+
+#### A. Format Chart.js (Rekomendasi untuk Bar, Line, Doughnut, Area, Radar)
+```html
+<div id="chart-card-uniqueid" class="gm-object gm-chart-card" style="padding: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.04); max-width: 720px; margin: 20px auto; font-family: 'Inter', sans-serif; box-sizing: border-box;">
+  <div class="gm-object" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+    <div class="gm-object">
+      <span class="gm-object" style="display: inline-block; padding: 4px 10px; background: #eff6ff; color: #2563eb; border-radius: 999px; font-size: 11px; font-weight: 700; margin-bottom: 4px;">ANALITIK BISNIS</span>
+      <h3 class="gm-object" style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">Laporan Pertumbuhan Pendapatan</h3>
+    </div>
+    <span class="gm-object" style="font-size: 12px; font-weight: 600; padding: 5px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; color: #475569;">2026</span>
+  </div>
+  
+  <div class="gm-object gm-chart-container" style="position: relative; width: 100%; height: 320px;">
+    <canvas id="gm-chart-canvas-uniqueid" class="gm-object gm-chart-canvas" style="display: block; width: 100%; height: 100%;"></canvas>
+  </div>
+  
+  <script type="application/json" data-gm-chart-config="true" data-target="gm-chart-canvas-uniqueid" data-library="chartjs">
+  {
+    "type": "bar",
+    "data": {
+      "labels": ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun"],
+      "datasets": [{
+        "label": "Pendapatan (Juta Rp)",
+        "data": [45, 59, 80, 81, 76, 95],
+        "backgroundColor": "rgba(37, 99, 235, 0.85)",
+        "borderRadius": 6
+      }]
+    },
+    "options": {
+      "responsive": true,
+      "maintainAspectRatio": false,
+      "plugins": {
+        "legend": { "position": "top" }
+      }
+    }
+  }
+  </script>
+</div>
+```
+
+#### B. Format ApexCharts (Rekomendasi untuk Spline Area & Radial Gauge)
+```html
+<div id="chart-card-apex-uniqueid" class="gm-object gm-chart-card" style="padding: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,0.04); max-width: 720px; margin: 20px auto; font-family: 'Inter', sans-serif; box-sizing: border-box;">
+  <h3 class="gm-object" style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">Tren Pengunjung & Konversi</h3>
+  
+  <div id="gm-apex-uniqueid" class="gm-object gm-apex-chart-container" style="min-height: 320px;"></div>
+  
+  <script type="application/json" data-gm-chart-config="true" data-target="gm-apex-uniqueid" data-library="apexcharts">
+  {
+    "chart": { "type": "area", "height": 320, "toolbar": { "show": false } },
+    "series": [
+      { "name": "Pengunjung", "data": [31, 40, 28, 51, 42, 109, 100] },
+      { "name": "Konversi", "data": [11, 32, 45, 32, 34, 52, 41] }
+    ],
+    "xaxis": { "categories": ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"] },
+    "colors": ["#2563eb", "#10b981"],
+    "stroke": { "curve": "smooth", "width": 2 }
+  }
+  </script>
+</div>
+```
+
+### 2. Universal Chart Runner (`window.initGmCharts`)
+- `window.initGmCharts(rootContainer)` otomatis membaca tag `<script type="application/json" data-gm-chart-config="true">`.
+- Runner mengecek ketersediaan pustaka global (`window.Chart` atau `window.ApexCharts`). Jika belum ada di halaman, script CDN akan dimuat secara dinamis dan asinkron, lalu menginisialisasi chart secara instan.
+- Didukung oleh `MutationObserver` pada kanvas `#object-core`, sehingga chart baru langsung ter-render interaktif saat di-drag, disisipkan dari template, atau digenerate oleh AI.
+
+### 3. Akses AI ke Koleksi Chart Pengguna (Terikat ke User Lintas Proyek)
+- Seluruh chart kustom pengguna tersimpan di tabel `gm_user_charts` dengan filter `user_id`, sehingga dapat diakses di proyek mana pun oleh pengguna yang sama.
+- Konteks prompt AI otomatis memuat daftar chart tersimpan dalam format:
+  `=== DAFTAR CHART TERSEDIA DARI MENU ASSETS PENGGUNA ===`
+  `[Chart ID: X] Nama: "...", Tipe: "...", Library: "...", CDN: "..."`
+  `Kode HTML Chart: ...`
+- Ketika prompt meminta grafik, chart, diagram, atau laporan analitik, AI wajib memprioritaskan pemanfaatan chart tersimpan pengguna yang cocok, atau menghasilkan diagram interaktif baru yang selaras dengan format baku di atas.
+
+---
+
+## 22. Protokol Anti-Rebuild, Manipulasi DOM Bedah (Surgical DOM Manipulation) & Content Preservation Guard
+
+### 1. Prinsip Mutlak: Konten Pengguna adalah Aset Berharga (Dilarang Rebuild dari Nol)
+- Ketika pengguna telah mendesain antarmuka yang bagus (dashboard, landing page, toko online, form, presentasi), permintaan pengguna untuk **mengubah, mengganti, atau menghapus sebagian elemen** (seperti: *"hilangkan icon di seluruh pages"*, *"ganti warna tombol jadi biru"*, *"buang banner hero"*, *"ubah judul"*) **DILARANG KERAS** dijawab dengan membuat ulang halaman dari nol!
+- DILARANG menimpa konten yang sudah dibuat dengan Hero section baru atau komponen preset generik.
+- Seluruh struktur visual yang sudah ada (tata letak, grid, card statistik, diagram chart, data transaksi, sidebar, dan navbar) WAJIB dipertahankan 100% utuh.
+
+### 2. Surgical DOM Manipulation Engine (Manipulasi Bedah Presisi)
+- **Penghapusan Node Presisi:** Jika diminta menghapus elemen (misalnya ikon Font Awesome `<i>` atau `<svg>`), sistem melakukan eliminasi bedah menggunakan XPath (`.//i | .//svg | .//*[contains(@class, 'fa-')]`) langsung pada node target tanpa menghapus elemen induknya (seperti tombol, label, link, atau card).
+- **In-Place Attribute & Style Patch:** Jika hanya mengubah warna, font, background, ukuran, atau animasi, gunakan format `<!--GM_OP:PATCH_ATTRIBUTES-->` dengan JSON patch, atau manipulasi style inline node secara langsung tanpa merombak HTML.
+
+### 3. Deteksi Otomatis Lingkup Proyek (Project-Wide Batch Operations)
+- Jika prompt mengandung frasa seperti *"di seluruh pages"*, *"semua halaman"*, *"tiap frame"*, *"all pages"*:
+  1. Batalkan mode penargetan lokal `edit_selected` yang mungkin tidak sengaja aktif akibat seleksi elemen sebelumnya.
+  2. Muat seluruh frame dalam proyek (`$all_db_frames` atau `framesSnapshot`).
+  3. Terapkan transformasi bedah ke setiap frame satu per satu.
+  4. Perbarui database `gm_frames` secara otomatis dan kirimkan `operation: 'batch_update_frames'`.
+  5. Workspace Greymist memperbarui kanvas dan DOM setiap frame secara instan tanpa perlu reload halaman.
+
+### 4. Protective Content Guard (Fallback Anti-Hancur)
+- Jika suatu instruksi perubahan/penghapusan tidak menemukan kecocokan pada elemen yang ada, AI atau backend **DILARANG KERAS** jatuh ke boilerplate preset generator (`generate_smart_preset_component('hero')`).
+- Sistem mengembalikan operasi `explain` dengan pesan informatif:
+  *"Greymist AI Content Guard: Tidak ditemukan elemen yang cocok untuk diubah/dihapus sesuai instruksi. Seluruh konten dan desain Anda tetap dipertahankan 100% utuh tanpa ditimpa."*
+
+### 5. Jaminan Undo Seketika (`window.GM_UNDO.saveState`)
+- Sebelum setiap aksi manipulasi DOM oleh AI dieksekusi (baik *progressive injection*, *replace frame*, *patch attributes*, maupun *batch update frames*), riwayat editor disimpan ke tumpukan Undo melalui `window.GM_UNDO.saveState(core)`.
+- Pengguna dapat membatalkan aksi AI kapan saja hanya dengan menekan `Ctrl+Z`.
+

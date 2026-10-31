@@ -11,6 +11,7 @@ require_once ROOT_PATH . '/models/project_model.php';
 require_once ROOT_PATH . '/models/frame_model.php';
 require_once ROOT_PATH . '/models/component_model.php';
 require_once ROOT_PATH . '/models/asset_model.php';
+require_once ROOT_PATH . '/models/chart_model.php';
 
 // 1. Penanganan Routing Aksi Controller (?action=...)
 $requested_action = $_GET['action'] ?? $_POST['action'] ?? '';
@@ -62,6 +63,8 @@ $action_whitelist = [
     'ai_get_provider_settings'   => 'ai_action.php',
     'ai_save_provider_settings'  => 'ai_action.php',
     'ai_test_provider_connection'=> 'ai_action.php',
+    'ai_get_user_assets'         => 'ai_action.php',
+    'ai_transcribe_audio'        => 'ai_action.php',
 
     // Asset Actions
     'get_images'             => 'asset_action.php',
@@ -69,6 +72,12 @@ $action_whitelist = [
     'upload_background_image'=> 'asset_action.php',
     'update_image_name'      => 'asset_action.php',
     'delete_image'           => 'asset_action.php',
+
+    // Chart Actions (Menu Assets -> Charts)
+    'get_user_charts'        => 'chart_action.php',
+    'save_user_chart'        => 'chart_action.php',
+    'delete_user_chart'      => 'chart_action.php',
+    'get_chart_templates'    => 'chart_action.php',
 
     // Profile Actions
     'update_profile'         => 'profile_action.php',

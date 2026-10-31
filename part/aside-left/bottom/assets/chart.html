@@ -1,0 +1,1035 @@
+<!-- File: part/aside-left/bottom/assets/chart.html -->
+<!-- Modul: Assets -> Charts & Diagrams Interaktif dengan Dukungan Multi-CDN & Database Pengguna -->
+
+<style>
+.gm-display-chart {
+    display: none;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    padding: 10px 12px 16px 12px;
+    box-sizing: border-box;
+    background: #ffffff;
+    overflow: hidden;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.gm-chart-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+.gm-chart-top-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.gm-chart-top-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+.gm-chart-create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #0078ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 120, 255, 0.25);
+}
+.gm-chart-create-btn:hover {
+    background: #0062d1;
+    transform: translateY(-1px);
+}
+.gm-chart-search-wrap {
+    position: relative;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+.gm-chart-search-wrap i.fa-magnifying-glass {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: #94a3b8;
+    pointer-events: none;
+}
+.gm-chart-search-input {
+    width: 100%;
+    height: 30px;
+    padding: 4px 24px 4px 28px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    font-size: 11px;
+    color: #1e293b;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+.gm-chart-search-input:focus {
+    background: #ffffff;
+    border-color: #0078ff;
+    box-shadow: 0 0 0 2px rgba(0, 120, 255, 0.15);
+}
+.gm-chart-tabs {
+    display: flex;
+    gap: 4px;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    flex-shrink: 0;
+}
+.gm-chart-tab-btn {
+    flex: 1;
+    text-align: center;
+    padding: 5px 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: #64748b;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+.gm-chart-tab-btn.active {
+    background: #ffffff;
+    color: #0078ff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.gm-chart-filter-pills {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 6px;
+    flex-shrink: 0;
+}
+.gm-chart-filter-pill {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+.gm-chart-filter-pill:hover,
+.gm-chart-filter-pill.active {
+    background: #e0f2fe;
+    color: #0284c7;
+    border-color: #38bdf8;
+}
+.gm-chart-list-container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 2px;
+    box-sizing: border-box;
+}
+.gm-chart-list-container::-webkit-scrollbar {
+    width: 4px;
+}
+.gm-chart-list-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.gm-chart-card-item {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+}
+.gm-chart-card-item:hover {
+    border-color: #93c5fd;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+}
+.gm-chart-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 6px;
+}
+.gm-chart-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.3;
+}
+.gm-chart-card-meta {
+    font-size: 10px;
+    color: #64748b;
+    margin-top: 2px;
+}
+.gm-chart-card-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+.gm-badge-chartjs { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.gm-badge-apexcharts { background: #faf5ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+.gm-badge-echarts { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+.gm-badge-custom { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.gm-chart-card-preview {
+    width: 100%;
+    height: 110px;
+    background: #f8fafc;
+    border-radius: 6px;
+    border: 1px dashed #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+.gm-chart-card-preview canvas {
+    max-width: 95% !important;
+    max-height: 95% !important;
+}
+.gm-chart-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+    padding-top: 4px;
+    border-top: 1px solid #f1f5f9;
+}
+.gm-chart-action-btn {
+    padding: 4px 8px;
+    font-size: 10.5px;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #334155;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+}
+.gm-chart-action-btn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+.gm-chart-insert-btn {
+    background: #0078ff;
+    color: #ffffff;
+    border-color: #0078ff;
+}
+.gm-chart-insert-btn:hover {
+    background: #0062d1;
+    border-color: #0062d1;
+}
+
+/* Modal Pop-up Tambah / Edit Chart */
+.gm-chart-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 999999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+.gm-chart-modal-box {
+    width: 100%;
+    max-width: 680px;
+    max-height: 90vh;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.22);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: gmModalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes gmModalIn {
+    from { opacity: 0; transform: scale(0.96) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.gm-chart-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+.gm-chart-modal-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.gm-chart-modal-close {
+    background: transparent;
+    border: none;
+    color: #64748b;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+}
+.gm-chart-modal-close:hover {
+    color: #ef4444;
+    background: #fee2e2;
+}
+.gm-chart-modal-body {
+    padding: 16px 18px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.gm-chart-form-row {
+    display: flex;
+    gap: 12px;
+}
+.gm-chart-form-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.gm-chart-form-col label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #334155;
+}
+.gm-chart-form-input,
+.gm-chart-form-select {
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    font-size: 12px;
+    outline: none;
+    box-sizing: border-box;
+    width: 100%;
+    color: #0f172a;
+    font-family: inherit;
+}
+.gm-chart-form-input:focus,
+.gm-chart-form-select:focus {
+    border-color: #0078ff;
+    box-shadow: 0 0 0 2px rgba(0,120,255,0.15);
+}
+.gm-chart-code-editor {
+    width: 100%;
+    height: 180px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.45;
+    background: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    padding: 10px;
+    box-sizing: border-box;
+    resize: vertical;
+    outline: none;
+}
+.gm-chart-preview-area {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+    min-height: 160px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+}
+.gm-chart-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+</style>
+
+<div class="gm-display gm-display-chart" id="gm-display-chart">
+    <!-- Header Atas -->
+    <div class="gm-chart-top-bar">
+        <div class="gm-chart-top-left">
+            <i class="gm-back-to-assets fas fa-angle-left" style="cursor: pointer; font-size: 16px; width: 20px; color: #64748b;" title="Kembali ke Menu Assets"></i>
+            <h3 class="gm-chart-top-title"><i class="fa-solid fa-chart-pie" style="color: #0078ff;"></i> Charts & Diagrams</h3>
+        </div>
+        <button type="button" class="gm-chart-create-btn" id="gm-chart-add-new-btn">
+            <i class="fa-solid fa-plus"></i> Buat Chart
+        </button>
+    </div>
+
+    <!-- Pencarian -->
+    <div class="gm-chart-search-wrap">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="gm-chart-search-input" class="gm-chart-search-input" placeholder="Cari chart, batang, garis, donat...">
+    </div>
+
+    <!-- Tab Utama -->
+    <div class="gm-chart-tabs">
+        <button type="button" class="gm-chart-tab-btn active" data-tab="all">Semua (<span id="gm-chart-cnt-all">0</span>)</button>
+        <button type="button" class="gm-chart-tab-btn" data-tab="template">Template (<span id="gm-chart-cnt-tmpl">0</span>)</button>
+        <button type="button" class="gm-chart-tab-btn" data-tab="user">Chart Saya (<span id="gm-chart-cnt-user">0</span>)</button>
+    </div>
+
+    <!-- Filter Library Pills -->
+    <div class="gm-chart-filter-pills">
+        <span class="gm-chart-filter-pill active" data-lib="all">Semua Library</span>
+        <span class="gm-chart-filter-pill" data-lib="chartjs">Chart.js</span>
+        <span class="gm-chart-filter-pill" data-lib="apexcharts">ApexCharts</span>
+        <span class="gm-chart-filter-pill" data-lib="echarts">ECharts</span>
+    </div>
+
+    <!-- Daftar Item Chart -->
+    <div class="gm-chart-list-container" id="gm-charts-list-wrapper">
+        <div style="text-align: center; padding: 24px 0; color: #94a3b8; font-size: 12px;">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 18px; margin-bottom: 6px;"></i><br>Memuat pustaka chart...
+        </div>
+    </div>
+</div>
+
+<!-- Modal Pop-up Tambah / Edit Chart -->
+<div class="gm-chart-modal-overlay" id="gm-chart-creator-modal">
+    <div class="gm-chart-modal-box">
+        <div class="gm-chart-modal-header">
+            <div class="gm-chart-modal-title">
+                <i class="fa-solid fa-chart-column" style="color: #0078ff;"></i>
+                <span id="gm-modal-chart-heading">Tambah Chart Kustom Baru</span>
+            </div>
+            <button type="button" class="gm-chart-modal-close" id="gm-chart-modal-close-btn">&times;</button>
+        </div>
+        <div class="gm-chart-modal-body">
+            <input type="hidden" id="gm-modal-chart-id" value="0">
+            <div class="gm-chart-form-row">
+                <div class="gm-chart-form-col" style="flex: 2;">
+                    <label>Nama Chart / Judul Komponen</label>
+                    <input type="text" id="gm-modal-chart-name" class="gm-chart-form-input" placeholder="Contoh: Statistik Penjualan Q1 2026">
+                </div>
+                <div class="gm-chart-form-col">
+                    <label>Tipe Visual</label>
+                    <select id="gm-modal-chart-type" class="gm-chart-form-select">
+                        <option value="bar">Bar (Batang)</option>
+                        <option value="line">Line (Garis Tren)</option>
+                        <option value="doughnut">Doughnut (Donat)</option>
+                        <option value="pie">Pie (Lingkaran)</option>
+                        <option value="area">Area (Gradien)</option>
+                        <option value="radar">Radar (Performa)</option>
+                        <option value="gauge">Radial / Gauge</option>
+                        <option value="custom">Custom / Lainnya</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="gm-chart-form-row">
+                <div class="gm-chart-form-col">
+                    <label>Library Basis CDN</label>
+                    <select id="gm-modal-chart-lib" class="gm-chart-form-select">
+                        <option value="chartjs">Chart.js (CDN Bawaan)</option>
+                        <option value="apexcharts">ApexCharts (CDN Bawaan)</option>
+                        <option value="echarts">ECharts (CDN Bawaan)</option>
+                        <option value="custom">Custom Library CDN</option>
+                    </select>
+                </div>
+                <div class="gm-chart-form-col" style="flex: 2;">
+                    <label>URL CDN Skrip</label>
+                    <input type="text" id="gm-modal-chart-cdn" class="gm-chart-form-input" value="https://cdn.jsdelivr.net/npm/chart.js">
+                </div>
+            </div>
+
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                <label style="font-size: 11px; font-weight: 600; color: #334155;">Kode HTML & Konfigurasi Chart</label>
+                <button type="button" id="gm-modal-load-starter-btn" style="background: transparent; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; font-size: 10px; color: #0078ff; cursor: pointer;">
+                    <i class="fa-solid fa-code"></i> Muat Template Starter
+                </button>
+            </div>
+            <textarea id="gm-modal-chart-code" class="gm-chart-code-editor" spellcheck="false"></textarea>
+
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <label style="font-size: 11px; font-weight: 600; color: #334155;">Live Preview Interaktif</label>
+                <button type="button" id="gm-modal-preview-btn" style="background: #e0f2fe; border: 1px solid #bae6fd; border-radius: 4px; padding: 3px 10px; font-size: 10.5px; color: #0284c7; cursor: pointer; font-weight: 600;">
+                    <i class="fa-solid fa-play"></i> Uji / Refresh Preview
+                </button>
+            </div>
+            <div class="gm-chart-preview-area" id="gm-modal-chart-preview-box">
+                <span style="font-size: 11px; color: #94a3b8;">Klik "Uji / Refresh Preview" untuk melihat hasil chart.</span>
+            </div>
+        </div>
+        <div class="gm-chart-modal-footer">
+            <span id="gm-modal-chart-status" style="font-size: 11px; color: #64748b;"></span>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" id="gm-modal-cancel-btn" class="gm-chart-action-btn" style="padding: 6px 14px;">Batal</button>
+                <button type="button" id="gm-modal-save-btn" class="gm-chart-action-btn gm-chart-insert-btn" style="padding: 6px 16px;">
+                    <i class="fa-solid fa-floppy-disk"></i> Simpan ke Database
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    let builtinTemplates = [];
+    let userCharts = [];
+    let currentTab = 'all';
+    let currentLibFilter = 'all';
+    let searchQuery = '';
+
+    const listWrapper = document.getElementById('gm-charts-list-wrapper');
+    const searchInput = document.getElementById('gm-chart-search-input');
+    const cntAll = document.getElementById('gm-chart-cnt-all');
+    const cntTmpl = document.getElementById('gm-chart-cnt-tmpl');
+    const cntUser = document.getElementById('gm-chart-cnt-user');
+
+    // Modal elements
+    const modal = document.getElementById('gm-chart-creator-modal');
+    const openModalBtn = document.getElementById('gm-chart-add-new-btn');
+    const closeModalBtn = document.getElementById('gm-chart-modal-close-btn');
+    const cancelModalBtn = document.getElementById('gm-modal-cancel-btn');
+    const saveModalBtn = document.getElementById('gm-modal-save-btn');
+    const previewModalBtn = document.getElementById('gm-modal-preview-btn');
+    const loadStarterBtn = document.getElementById('gm-modal-load-starter-btn');
+
+    const modalId = document.getElementById('gm-modal-chart-id');
+    const modalHeading = document.getElementById('gm-modal-chart-heading');
+    const modalName = document.getElementById('gm-modal-chart-name');
+    const modalType = document.getElementById('gm-modal-chart-type');
+    const modalLib = document.getElementById('gm-modal-chart-lib');
+    const modalCdn = document.getElementById('gm-modal-chart-cdn');
+    const modalCode = document.getElementById('gm-modal-chart-code');
+    const modalPreview = document.getElementById('gm-modal-chart-preview-box');
+    const modalStatus = document.getElementById('gm-modal-chart-status');
+
+    // CDN Presets
+    const CDN_PRESETS = {
+        chartjs: 'https://cdn.jsdelivr.net/npm/chart.js',
+        apexcharts: 'https://cdn.jsdelivr.net/npm/apexcharts',
+        echarts: 'https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js',
+        custom: ''
+    };
+
+    /**
+     * Memuat script CDN ke dokumen jika belum ada
+     */
+    window.loadGmCdnScript = function(url) {
+        return new Promise((resolve, reject) => {
+            if (!url) return resolve();
+            const existing = document.querySelector(`script[src="${url}"]`);
+            if (existing) return resolve();
+
+            const s = document.createElement('script');
+            s.src = url;
+            s.onload = () => resolve();
+            s.onerror = (e) => reject(e);
+            document.head.appendChild(s);
+        });
+    };
+
+    /**
+     * Universal Chart Engine untuk merender chart di canvas atau container
+     */
+    if (typeof window.initGmCharts !== 'function') {
+        window.initGmCharts = async function(container) {
+            const root = container || document.getElementById('gm-frame-preview') || document.body;
+            const chartCards = root.querySelectorAll('.gm-chart-card');
+
+            for (const card of chartCards) {
+                const configScript = card.querySelector('script[data-gm-chart-config]');
+                if (!configScript) continue;
+
+                try {
+                    const configText = configScript.textContent.trim();
+                    const config = JSON.parse(configText);
+
+                    if (config.library === 'chartjs') {
+                        await window.loadGmCdnScript(config.cdn || 'https://cdn.jsdelivr.net/npm/chart.js');
+                        const canvas = card.querySelector('.gm-chart-canvas') || card.querySelector('canvas');
+                        if (canvas && window.Chart) {
+                            if (canvas._gmChart) {
+                                try { canvas._gmChart.destroy(); } catch (_) {}
+                            }
+                            canvas._gmChart = new window.Chart(canvas, {
+                                type: config.type || 'bar',
+                                data: config.data || {},
+                                options: config.options || { responsive: true, maintainAspectRatio: false }
+                            });
+                        }
+                    } else if (config.library === 'apexcharts') {
+                        await window.loadGmCdnScript(config.cdn || 'https://cdn.jsdelivr.net/npm/apexcharts');
+                        const apexCont = card.querySelector('.gm-apex-chart-container') || card.querySelector('div[style*="min-height"]');
+                        if (apexCont && window.ApexCharts) {
+                            apexCont.innerHTML = '';
+                            const chart = new window.ApexCharts(apexCont, config.options || {});
+                            chart.render();
+                        }
+                    }
+                } catch (err) {
+                    console.warn('[Greymist Chart Runner] Gagal menginisialisasi chart:', err);
+                }
+            }
+        };
+    }
+
+    /**
+     * Ambil data chart dari backend
+     */
+    async function fetchChartsData() {
+        try {
+            const res = await fetch('index.php?action=get_user_charts');
+            const data = await res.json();
+            if (data && data.success) {
+                userCharts = data.charts || [];
+                builtinTemplates = data.templates || [];
+                window.gmUserCharts = userCharts;
+                window.gmBuiltinChartTemplates = builtinTemplates;
+                renderChartsList();
+            }
+        } catch (err) {
+            listWrapper.innerHTML = `<div style="text-align: center; padding: 20px; color: #ef4444; font-size: 11px;">Gagal memuat chart: ${err.message}</div>`;
+        }
+    }
+
+    /**
+     * Render daftar chart pada sidebar Assets
+     */
+    function renderChartsList() {
+        let items = [];
+        if (currentTab === 'template') {
+            items = builtinTemplates.map(t => ({ ...t, is_template: true }));
+        } else if (currentTab === 'user') {
+            items = userCharts.map(u => ({ ...u, is_template: false }));
+        } else {
+            items = [
+                ...userCharts.map(u => ({ ...u, is_template: false })),
+                ...builtinTemplates.map(t => ({ ...t, is_template: true }))
+            ];
+        }
+
+        // Filter Library
+        if (currentLibFilter !== 'all') {
+            items = items.filter(it => (it.library_cdn || it.library) === currentLibFilter);
+        }
+
+        // Filter Search
+        if (searchQuery) {
+            items = items.filter(it => {
+                const name = (it.chart_name || it.name || '').toLowerCase();
+                const desc = (it.desc || it.category || '').toLowerCase();
+                return name.includes(searchQuery) || desc.includes(searchQuery);
+            });
+        }
+
+        if (cntAll) cntAll.textContent = (userCharts.length + builtinTemplates.length);
+        if (cntTmpl) cntTmpl.textContent = builtinTemplates.length;
+        if (cntUser) cntUser.textContent = userCharts.length;
+
+        if (items.length === 0) {
+            listWrapper.innerHTML = `
+                <div style="text-align: center; padding: 32px 12px; color: #94a3b8; font-size: 11px;">
+                    <i class="fa-solid fa-chart-simple" style="font-size: 26px; margin-bottom: 8px; color: #cbd5e1; display: block;"></i>
+                    <strong style="color: #64748b;">Belum ada chart yang cocok</strong>
+                    <p style="margin: 4px 0 0; font-size: 10px;">Gunakan tombol "+ Buat Chart" untuk membuat chart kustom pertama Anda.</p>
+                </div>
+            `;
+            return;
+        }
+
+        listWrapper.innerHTML = items.map((item, idx) => {
+            const isTmpl = item.is_template;
+            const title = item.chart_name || item.name;
+            const lib = item.library_cdn || item.library || 'chartjs';
+            const badgeClass = `gm-badge-${lib}`;
+            const libLabel = lib === 'chartjs' ? 'Chart.js' : (lib === 'apexcharts' ? 'ApexCharts' : (lib === 'echarts' ? 'ECharts' : 'Custom'));
+            const typeLabel = (item.chart_type || item.type || 'bar').toUpperCase();
+            const code = item.chart_code || item.code || '';
+            const safeCode = encodeURIComponent(code);
+
+            return `
+                <div class="gm-chart-card-item gm-template-dropable" draggable="true" data-type="template" data-html-content="${safeCode}" data-chart-index="${idx}">
+                    <div class="gm-chart-card-head">
+                        <div>
+                            <div class="gm-chart-card-title">${title}</div>
+                            <div class="gm-chart-card-meta">${isTmpl ? 'Template Bawaan' : 'Chart Akun Saya'} &bull; ${typeLabel}</div>
+                        </div>
+                        <span class="gm-chart-card-badge ${badgeClass}">${libLabel}</span>
+                    </div>
+                    
+                    <div class="gm-chart-card-actions">
+                        <button type="button" class="gm-chart-action-btn gm-chart-insert-btn" onclick="insertChartToCore(decodeURIComponent('${safeCode}'))">
+                            <i class="fa-solid fa-plus"></i> Sisipkan
+                        </button>
+                        <button type="button" class="gm-chart-action-btn" onclick="copyChartHtml(decodeURIComponent('${safeCode}'))" title="Salin Kode HTML">
+                            <i class="fa-solid fa-copy"></i> Salin
+                        </button>
+                        ${isTmpl ? `
+                            <button type="button" class="gm-chart-action-btn" onclick="openCloneModal('${item.id}')" title="Kustomisasi & Simpan ke Akun">
+                                <i class="fa-solid fa-pen-to-square"></i> Kloning
+                            </button>
+                        ` : `
+                            <button type="button" class="gm-chart-action-btn" onclick="openEditModal(${item.chart_id})" title="Edit Chart">
+                                <i class="fa-solid fa-pen"></i> Edit
+                            </button>
+                            <button type="button" class="gm-chart-action-btn" style="color: #ef4444; border-color: #fecaca;" onclick="deleteChart(${item.chart_id}, '${title.replace(/'/g, "\\'")}')" title="Hapus dari Akun">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        `}
+                    </div>
+                    <template>${code}</template>
+                </div>
+            `;
+        }).join('');
+    }
+
+    /**
+     * Sisipkan chart langsung ke canvas (#object-core)
+     */
+    window.insertChartToCore = function(htmlCode) {
+        const core = document.getElementById('object-core');
+        if (!core) {
+            alert('Kanvas editor Greymist tidak ditemukan.');
+            return;
+        }
+
+        const temp = document.createElement('div');
+        temp.innerHTML = htmlCode.trim();
+
+        // Berikan ID unik pada canvas/container agar tidak bertabrakan jika dipasang multi-chart
+        const uniqueId = 'gm-chart-' + Math.random().toString(36).substr(2, 9);
+        const canvas = temp.querySelector('canvas');
+        if (canvas) canvas.id = uniqueId;
+        const apexDiv = temp.querySelector('.gm-apex-chart-container');
+        if (apexDiv) apexDiv.id = uniqueId;
+
+        const insertedChildren = [];
+        Array.from(temp.children).forEach(child => {
+            child.classList.add('gm-object');
+            core.appendChild(child);
+            insertedChildren.push(child);
+        });
+
+        // Jalankan runner chart
+        window.initGmCharts(core);
+
+        // Feedback visual
+        if (window.showStatus) {
+            window.showStatus(null, 'success', 'Chart berhasil disisipkan ke halaman!');
+        }
+    };
+
+    /**
+     * Salin kode chart ke clipboard
+     */
+    window.copyChartHtml = function(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            alert('✓ Kode chart berhasil disalin ke clipboard!');
+        }).catch(() => {
+            prompt('Salin kode chart manual di bawah ini:', code);
+        });
+    };
+
+    /**
+     * Buka modal untuk kustomisasi template
+     */
+    window.openCloneModal = function(templateId) {
+        const tmpl = builtinTemplates.find(t => t.id === templateId);
+        if (!tmpl) return;
+
+        modalId.value = '0';
+        modalHeading.textContent = 'Kustomisasi Template Chart';
+        modalName.value = tmpl.name + ' (Kustom)';
+        modalType.value = tmpl.type || 'bar';
+        modalLib.value = tmpl.library || 'chartjs';
+        modalCdn.value = tmpl.cdn_url || CDN_PRESETS[tmpl.library] || '';
+        modalCode.value = tmpl.code || '';
+        modalStatus.textContent = '';
+        modal.style.display = 'flex';
+        renderModalPreview();
+    };
+
+    /**
+     * Buka modal untuk mengedit chart tersimpan milik user
+     */
+    window.openEditModal = function(chartId) {
+        const ch = userCharts.find(c => c.chart_id == chartId);
+        if (!ch) return;
+
+        modalId.value = ch.chart_id;
+        modalHeading.textContent = 'Edit Chart Kustom: ' + ch.chart_name;
+        modalName.value = ch.chart_name;
+        modalType.value = ch.chart_type;
+        modalLib.value = ch.library_cdn;
+        modalCdn.value = ch.cdn_url;
+        modalCode.value = ch.chart_code;
+        modalStatus.textContent = '';
+        modal.style.display = 'flex';
+        renderModalPreview();
+    };
+
+    /**
+     * Hapus chart dari database
+     */
+    window.deleteChart = async function(chartId, title) {
+        if (!confirm(`Yakin ingin menghapus chart "${title}" dari akun Anda?`)) return;
+
+        try {
+            const resp = await fetch('index.php?action=delete_user_chart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chart_id: chartId })
+            });
+            const res = await resp.json();
+            if (res && res.success) {
+                userCharts = userCharts.filter(c => c.chart_id != chartId);
+                window.gmUserCharts = userCharts;
+                renderChartsList();
+            } else {
+                alert(res.msg || 'Gagal menghapus chart.');
+            }
+        } catch (err) {
+            alert('Koneksi gagal: ' + err.message);
+        }
+    };
+
+    /**
+     * Render live preview di dalam modal
+     */
+    async function renderModalPreview() {
+        const code = modalCode.value.trim();
+        if (!code) {
+            modalPreview.innerHTML = '<span style="font-size: 11px; color: #94a3b8;">Kode chart masih kosong.</span>';
+            return;
+        }
+
+        modalPreview.innerHTML = code;
+        await window.initGmCharts(modalPreview);
+    }
+
+    /**
+     * Muat boilerplate starter untuk library CDN yang dipilih
+     */
+    function loadStarterTemplate() {
+        const lib = modalLib.value;
+        const type = modalType.value;
+
+        if (lib === 'apexcharts') {
+            modalCode.value = `<div class="gm-object gm-chart-card" data-chart-type="${type}" data-chart-lib="apexcharts" style="width: 100%; max-width: 600px; padding: 20px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; margin: 16px auto; font-family: 'Inter', sans-serif;">
+    <h4 class="gm-object" style="margin: 0 0 16px 0; font-size: 16px; font-weight: 700; color: #0f172a;">Judul Chart ApexCharts</h4>
+    <div class="gm-object gm-apex-chart-container" style="min-height: 280px; width: 100%;"></div>
+    <script data-gm-chart-config="true">
+    {
+        "library": "apexcharts",
+        "cdn": "https://cdn.jsdelivr.net/npm/apexcharts",
+        "options": {
+            "chart": { "type": "${type === 'radar' || type === 'radialBar' ? type : 'area'}", "height": 280, "toolbar": { "show": false } },
+            "colors": ["#0078ff", "#10b981"],
+            "series": [
+                { "name": "Metrik A", "data": [30, 40, 35, 50, 49, 60, 70, 91, 125] },
+                { "name": "Metrik B", "data": [20, 30, 25, 40, 39, 45, 55, 65, 80] }
+            ],
+            "xaxis": { "categories": ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep"] }
+        }
+    }
+    <\/script>
+</div>`;
+        } else {
+            modalCode.value = `<div class="gm-object gm-chart-card" data-chart-type="${type}" data-chart-lib="chartjs" style="width: 100%; max-width: 600px; padding: 20px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; box-sizing: border-box; margin: 16px auto; font-family: 'Inter', sans-serif;">
+    <h4 class="gm-object" style="margin: 0 0 16px 0; font-size: 16px; font-weight: 700; color: #0f172a;">Judul Chart Kustom</h4>
+    <div class="gm-object gm-chart-canvas-wrap" style="position: relative; width: 100%; height: 280px;">
+        <canvas class="gm-object gm-chart-canvas"></canvas>
+    </div>
+    <script data-gm-chart-config="true">
+    {
+        "library": "chartjs",
+        "cdn": "https://cdn.jsdelivr.net/npm/chart.js",
+        "type": "${type}",
+        "data": {
+            "labels": ["Kategori 1", "Kategori 2", "Kategori 3", "Kategori 4", "Kategori 5"],
+            "datasets": [
+                {
+                    "label": "Nilai Data",
+                    "data": [65, 59, 80, 81, 56],
+                    "backgroundColor": ["#3b82f6", "#10b981", "#f59e0b", "#ec4899", "#8b5cf6"]
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false
+        }
+    }
+    <\/script>
+</div>`;
+        }
+        renderModalPreview();
+    }
+
+    // Event Listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim().toLowerCase();
+            renderChartsList();
+        });
+    }
+
+    document.querySelectorAll('.gm-chart-tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.gm-chart-tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentTab = this.dataset.tab;
+            renderChartsList();
+        });
+    });
+
+    document.querySelectorAll('.gm-chart-filter-pill').forEach(pill => {
+        pill.addEventListener('click', function() {
+            document.querySelectorAll('.gm-chart-filter-pill').forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+            currentLibFilter = this.dataset.lib;
+            renderChartsList();
+        });
+    });
+
+    if (openModalBtn) {
+        openModalBtn.addEventListener('click', () => {
+            modalId.value = '0';
+            modalHeading.textContent = 'Tambah Chart Kustom Baru';
+            modalName.value = '';
+            modalType.value = 'bar';
+            modalLib.value = 'chartjs';
+            modalCdn.value = CDN_PRESETS.chartjs;
+            loadStarterTemplate();
+            modalStatus.textContent = '';
+            modal.style.display = 'flex';
+        });
+    }
+
+    if (closeModalBtn) closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
+    if (cancelModalBtn) cancelModalBtn.addEventListener('click', () => modal.style.display = 'none');
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.style.display = 'none';
+    });
+
+    if (modalLib) {
+        modalLib.addEventListener('change', () => {
+            const lib = modalLib.value;
+            modalCdn.value = CDN_PRESETS[lib] || '';
+            loadStarterTemplate();
+        });
+    }
+
+    if (modalType) {
+        modalType.addEventListener('change', () => {
+            loadStarterTemplate();
+        });
+    }
+
+    if (loadStarterBtn) loadStarterBtn.addEventListener('click', loadStarterTemplate);
+    if (previewModalBtn) previewModalBtn.addEventListener('click', renderModalPreview);
+
+    // Simpan ke Database
+    if (saveModalBtn) {
+        saveModalBtn.addEventListener('click', async () => {
+            const id = parseInt(modalId.value, 10) || 0;
+            const name = modalName.value.trim();
+            const type = modalType.value;
+            const lib = modalLib.value;
+            const cdn = modalCdn.value.trim();
+            const code = modalCode.value.trim();
+
+            if (!name) {
+                alert('Nama chart wajib diisi.');
+                modalName.focus();
+                return;
+            }
+            if (!code) {
+                alert('Kode chart tidak boleh kosong.');
+                modalCode.focus();
+                return;
+            }
+
+            saveModalBtn.disabled = true;
+            saveModalBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+            modalStatus.textContent = 'Menyimpan ke database...';
+
+            try {
+                const resp = await fetch('index.php?action=save_user_chart', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chart_id: id,
+                        chart_name: name,
+                        chart_type: type,
+                        library_cdn: lib,
+                        cdn_url: cdn,
+                        chart_code: code
+                    })
+                });
+                const res = await resp.json();
+                if (res && res.success) {
+                    modalStatus.style.color = '#10b981';
+                    modalStatus.textContent = '✓ ' + res.msg;
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        fetchChartsData();
+                    }, 500);
+                } else {
+                    modalStatus.style.color = '#ef4444';
+                    modalStatus.textContent = res.msg || 'Gagal menyimpan chart.';
+                }
+            } catch (err) {
+                modalStatus.style.color = '#ef4444';
+                modalStatus.textContent = 'Koneksi error: ' + err.message;
+            } finally {
+                saveModalBtn.disabled = false;
+                saveModalBtn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan ke Database';
+            }
+        });
+    }
+
+    // Muat data chart saat dokumen siap
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fetchChartsData);
+    } else {
+        fetchChartsData();
+    }
+})();
+</script>

@@ -8,7 +8,10 @@
             <div class="gm-dropdown">
                 <div class="gm-dropdown-item gm-no-child" onclick="window.location.href='index.php?page=dashboard'">Dashboard</div>
                 <div class="gm-dropdown-item gm-no-child" onclick="window.location.href='index.php?page=projects'">Proyek Saya</div>
-                <div class="gm-dropdown-item gm-no-child" id="gm-menu-open-ai-studio" style="color: #60a5fa; font-weight: 600;">Gemini AI Studio ✨</div>
+                <div class="gm-dropdown-item gm-no-child" id="gm-menu-open-ai-studio" style="color: #60a5fa; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                    <span>Gemini AI Studio</span>
+                    <span id="gm-ai-menu-loading" style="display: none; align-items: center; margin-left: 8px;"><i class="fa-solid fa-circle-notch fa-spin" style="font-size: 11px; color: #60a5fa;"></i></span>
+                </div>
                 <div class="gm-dropdown-item gm-no-child">Save</div>
                 <div class="gm-dropdown-item gm-no-child">Setings</div>
                 <div class="gm-dropdown-item gm-no-child">Tutorial</div>

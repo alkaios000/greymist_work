@@ -9,7 +9,7 @@
  * atau ketika pengguna memilih preset cepat secara offline.
  */
 if (!function_exists('generate_smart_preset_component')) {
-    function generate_smart_preset_component(string $prompt, array $user_assets = []): string
+    function generate_smart_preset_component(string $prompt, array $user_assets = [], array $user_charts = []): string
     {
         $lower = strtolower($prompt);
 
@@ -32,6 +32,113 @@ if (!function_exists('generate_smart_preset_component')) {
                     $hero_img_html = "<div class=\"gm-object\" style=\"width:100%;max-width:820px;margin-top:16px;border-radius:12px;overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,0.08);\"><img src=\"{$a_url}\" class=\"gm-object\" alt=\"Asset Image\" style=\"width:100%;height:auto;max-height:360px;object-fit:cover;display:block;\"></div>";
                 }
             }
+        }
+
+        if (str_contains($lower, 'chart') || str_contains($lower, 'grafik') || str_contains($lower, 'diagram') || str_contains($lower, 'statistik') || str_contains($lower, 'analitik') || str_contains($lower, 'analytics')) {
+            // Cek jika pengguna punya saved chart di assets yang cocok
+            if (!empty($user_charts)) {
+                foreach ($user_charts as $uc) {
+                    $cname = strtolower($uc['chart_name'] ?? '');
+                    $ctype = strtolower($uc['chart_type'] ?? '');
+                    if ($cname !== '' && (str_contains($lower, $cname) || str_contains($lower, $ctype))) {
+                        if (!empty($uc['chart_code'])) {
+                            return $uc['chart_code'];
+                        }
+                    }
+                }
+                // Jika tidak spesifik, ambil chart tersimpan pertama
+                if (!empty($user_charts[0]['chart_code'])) {
+                    return $user_charts[0]['chart_code'];
+                }
+            }
+
+            if (str_contains($lower, 'lingkaran') || str_contains($lower, 'donat') || str_contains($lower, 'doughnut') || str_contains($lower, 'pie') || str_contains($lower, 'kategori') || str_contains($lower, 'layanan')) {
+                $cid = 'chart_' . substr(md5(uniqid((string)mt_rand(), true)), 0, 8);
+                return <<<HTML
+<div id="chart-card-{$cid}" class="gm-object gm-chart-card" data-chart-type="doughnut" data-chart-lib="chartjs" style="padding:28px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.04);max-width:540px;margin:20px auto;font-family:'Inter',sans-serif;box-sizing:border-box;">
+    <div class="gm-object" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div class="gm-object">
+            <span class="gm-object" style="display:inline-block;padding:4px 10px;background-color:#f0fdf4;color:#16a34a;border-radius:999px;font-size:11px;font-weight:700;margin-bottom:6px;">DISTRIBUSI SISTEM</span>
+            <h3 class="gm-object" style="font-size:18px;font-weight:700;color:#0f172a;margin:0;">Kategori Layanan</h3>
+            <p class="gm-object" style="font-size:13px;color:#64748b;margin:4px 0 0 0;">Distribusi penggunaan layanan aktif.</p>
+        </div>
+    </div>
+    <div class="gm-object gm-chart-canvas-wrap" style="position:relative;width:100%;height:270px;">
+        <canvas id="{$cid}" class="gm-object gm-chart-canvas" style="display:block;width:100%;height:100%;"></canvas>
+    </div>
+    <script data-gm-chart-config="true">
+    {
+        "library": "chartjs",
+        "cdn": "https://cdn.jsdelivr.net/npm/chart.js",
+        "type": "doughnut",
+        "data": {
+            "labels": ["Layanan Publik", "Kesehatan", "Pendidikan", "Perizinan"],
+            "datasets": [{
+                "data": [40, 25, 20, 15],
+                "backgroundColor": ["#2563eb", "#10b981", "#f59e0b", "#8b5cf6"]
+            }]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false
+        }
+    }
+    </script>
+</div>
+HTML;
+            }
+
+            // Default preset interactive Chart.js bar & line chart
+            $cid = 'chart_' . substr(md5(uniqid((string)mt_rand(), true)), 0, 8);
+            return <<<HTML
+<div id="chart-card-{$cid}" class="gm-object gm-chart-card" style="padding:28px;background-color:#ffffff;border:1px solid #e2e8f0;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.04);max-width:760px;margin:20px auto;font-family:'Inter',sans-serif;box-sizing:border-box;">
+    <div class="gm-object" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <div class="gm-object">
+            <span class="gm-object" style="display:inline-block;padding:4px 10px;background-color:#eff6ff;color:#2563eb;border-radius:999px;font-size:11px;font-weight:700;margin-bottom:6px;">ANALITIK REAL-TIME</span>
+            <h3 class="gm-object" style="font-size:20px;font-weight:700;color:#0f172a;margin:0;">Laporan Kinerja & Penjualan</h3>
+            <p class="gm-object" style="font-size:13px;color:#64748b;margin:4px 0 0 0;">Visualisasi performa bulanan dengan Chart.js responsif.</p>
+        </div>
+        <div class="gm-object" style="display:flex;gap:8px;">
+            <span class="gm-object" style="font-size:12px;font-weight:600;padding:6px 12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#475569;">2026</span>
+        </div>
+    </div>
+    <div class="gm-object gm-chart-container" style="position:relative;width:100%;height:320px;">
+        <canvas id="{$cid}" class="gm-object gm-chart-canvas" style="display:block;width:100%;height:100%;"></canvas>
+    </div>
+    <script type="application/json" data-gm-chart-config="true" data-target="{$cid}" data-library="chartjs">
+    {
+        "type": "bar",
+        "data": {
+            "labels": ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt"],
+            "datasets": [
+                {
+                    "label": "Pendapatan (Juta Rp)",
+                    "data": [45, 59, 80, 81, 76, 95, 110, 105, 125, 140],
+                    "backgroundColor": "rgba(37, 99, 235, 0.85)",
+                    "borderRadius": 6
+                },
+                {
+                    "label": "Target (Juta Rp)",
+                    "data": [50, 60, 70, 80, 85, 90, 100, 105, 115, 120],
+                    "type": "line",
+                    "borderColor": "#10b981",
+                    "borderWidth": 2,
+                    "pointBackgroundColor": "#10b981",
+                    "fill": false
+                }
+            ]
+        },
+        "options": {
+            "responsive": true,
+            "maintainAspectRatio": false,
+            "plugins": {
+                "legend": { "position": "top" }
+            }
+        }
+    }
+    </script>
+</div>
+HTML;
         }
 
         if (str_contains($lower, 'navbar') || str_contains($lower, 'header') || str_contains($lower, 'navigasi')) {
@@ -248,6 +355,195 @@ if (!function_exists('resolve_target_card_from_list')) {
     }
 }
 
+/**
+ * Melakukan manipulasi bedah (surgical DOM manipulation) pada HTML:
+ * Hanya menghapus atau mengganti elemen spesifik (misal: icon, button, image, badge, dsb.)
+ * tanpa pernah merusak atau menimpa struktur, teks, kartu, maupun layout lainnya.
+ */
+if (!function_exists('surgically_transform_dom_html')) {
+    function surgically_transform_dom_html(string $html, string $prompt, int &$count_affected, string &$action_desc): string
+    {
+        $count_affected = 0;
+        $action_desc = '';
+        if (trim($html) === '') {
+            return $html;
+        }
+
+        $lower = strtolower($prompt);
+        $doc = new DOMDocument();
+        libxml_use_internal_errors(true);
+        @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        libxml_clear_errors();
+
+        $root = $doc->getElementById('gm-root');
+        if (!$root) {
+            return $html;
+        }
+
+        $xpath = new DOMXPath($doc);
+        $nodes_to_remove = [];
+
+        // 1. Icon (FontAwesome <i>, SVG, icon classes fa-, bi-, material-icons)
+        if (preg_match('/\b(icon|ikon|fa-|svg|simbol|logo kecil)\b/i', $lower)) {
+            $query = ".//i | .//svg | .//*[contains(@class, 'fa-') or contains(@class, 'bi-') or contains(@class, 'material-icons') or contains(@class, 'gm-icon')]";
+            $entries = $xpath->query($query, $root);
+            if ($entries) {
+                foreach ($entries as $item) {
+                    $nodes_to_remove[] = $item;
+                }
+            }
+            $action_desc = 'icon';
+        }
+        // 2. Gambar / Image / Foto / Avatar
+        elseif (preg_match('/\b(gambar|foto|image|img|avatar|ilustrasi|picture)\b/i', $lower)) {
+            $query = ".//img | .//*[contains(@class, 'avatar') or contains(@class, 'img-thumbnail')]";
+            $entries = $xpath->query($query, $root);
+            if ($entries) {
+                foreach ($entries as $item) {
+                    $nodes_to_remove[] = $item;
+                }
+            }
+            $action_desc = 'gambar';
+        }
+        // 3. Badge / Label / Tag / Pill / Status
+        elseif (preg_match('/\b(badge|label|tag|pill|status pill)\b/i', $lower)) {
+            $query = ".//*[contains(@class, 'badge') or contains(@class, 'tag') or contains(@class, 'pill')]";
+            $entries = $xpath->query($query, $root);
+            if ($entries) {
+                foreach ($entries as $item) {
+                    $nodes_to_remove[] = $item;
+                }
+            }
+            $action_desc = 'badge/label';
+        }
+        // 4. Tombol / Button / CTA
+        elseif (preg_match('/\b(tombol|button|cta|btn)\b/i', $lower)) {
+            $query = ".//button | .//a[contains(@class, 'btn')]";
+            $entries = $xpath->query($query, $root);
+            if ($entries) {
+                foreach ($entries as $item) {
+                    $nodes_to_remove[] = $item;
+                }
+            }
+            $action_desc = 'tombol';
+        }
+        // 5. Navbar / Header
+        elseif (preg_match('/\b(navbar|navigasi|header|menu atas)\b/i', $lower)) {
+            $query = ".//nav | .//header | .//*[contains(@id, 'navbar') or contains(@id, 'header') or contains(@class, 'navbar') or contains(@class, 'header')]";
+            $entries = $xpath->query($query, $root);
+            if ($entries) {
+                foreach ($entries as $item) {
+                    $nodes_to_remove[] = $item;
+                }
+            }
+            $action_desc = 'navbar/header';
+        }
+        // 6. Footer
+        elseif (preg_match('/\b(footer|menu bawah|bagian bawah)\b/i', $lower)) {
+            $query = ".//footer | .//*[contains(@id, 'footer') or contains(@class, 'footer')]";
+            $entries = $xpath->query($query, $root);
+            if ($entries) {
+                foreach ($entries as $item) {
+                    $nodes_to_remove[] = $item;
+                }
+            }
+            $action_desc = 'footer';
+        }
+        // 7. Sidebar
+        elseif (preg_match('/\b(sidebar|aside|menu samping|menu kiri)\b/i', $lower)) {
+            $query = ".//aside | .//*[contains(@id, 'sidebar') or contains(@class, 'sidebar')]";
+            $entries = $xpath->query($query, $root);
+            if ($entries) {
+                foreach ($entries as $item) {
+                    $nodes_to_remove[] = $item;
+                }
+            }
+            $action_desc = 'sidebar';
+        }
+        // 8. Chart / Grafik / Diagram
+        elseif (preg_match('/\b(chart|grafik|diagram|statistik)\b/i', $lower)) {
+            $query = ".//*[contains(@class, 'gm-chart-card') or contains(@class, 'chart-card') or @data-chart-type or .//canvas]";
+            $entries = $xpath->query($query, $root);
+            if ($entries) {
+                foreach ($entries as $item) {
+                    $nodes_to_remove[] = $item;
+                }
+            }
+            $action_desc = 'chart/grafik';
+        }
+        // 9. Komponen Section atau Child langsung
+        else {
+            $children = [];
+            foreach ($root->childNodes as $node) {
+                if ($node->nodeType === XML_ELEMENT_NODE) {
+                    $children[] = $node;
+                }
+            }
+            foreach ($children as $idx => $node) {
+                $tag  = strtolower($node->nodeName);
+                $text = strtolower($node->textContent);
+                $match = false;
+                if (str_contains($lower, 'hero') && ($tag === 'section' || $tag === 'div') && ($idx === 0 || str_contains($text, 'mulai') || $node->getElementsByTagName('h1')->length > 0)) {
+                    $match = true;
+                    $action_desc = 'section hero';
+                } elseif ((str_contains($lower, 'pricing') || str_contains($lower, 'harga') || str_contains($lower, 'paket')) && (str_contains($text, 'rp') || str_contains($text, 'harga') || str_contains($text, 'starter') || str_contains($text, 'pro'))) {
+                    $match = true;
+                    $action_desc = 'section harga';
+                } elseif ((str_contains($lower, 'form') || str_contains($lower, 'kontak')) && ($node->getElementsByTagName('input')->length > 0 || $node->getElementsByTagName('textarea')->length > 0 || str_contains($text, 'hubungi'))) {
+                    $match = true;
+                    $action_desc = 'section formulir kontak';
+                } elseif ((str_contains($lower, 'terakhir') || str_contains($lower, 'paling bawah')) && $idx === count($children) - 1) {
+                    $match = true;
+                    $action_desc = 'komponen terakhir';
+                } elseif ((str_contains($lower, 'pertama') || str_contains($lower, 'paling atas')) && $idx === 0) {
+                    $match = true;
+                    $action_desc = 'komponen pertama';
+                }
+                if ($match) {
+                    $nodes_to_remove[] = $node;
+                }
+            }
+            if (empty($nodes_to_remove) && !empty($children)) {
+                $keywords = preg_replace('/\b(hapus|hilangkan|buang|delete|remove|tanpa|tiadakan|singkirkan|komponen|bagian|section|elemen|di|dalam|frame|seluruh|semua|pages?|halaman)\b/i', '', $lower);
+                $keywords = trim($keywords);
+                if ($keywords !== '') {
+                    foreach ($children as $node) {
+                        if (str_contains(strtolower($node->textContent), $keywords) || strtolower($node->nodeName) === $keywords) {
+                            $nodes_to_remove[] = $node;
+                            $action_desc = 'komponen ' . $keywords;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Hapus elemen yang terdeteksi
+        $unique_nodes = [];
+        foreach ($nodes_to_remove as $node) {
+            if ($node instanceof DOMNode && $node->parentNode) {
+                $unique_nodes[] = $node;
+            }
+        }
+
+        foreach ($unique_nodes as $node) {
+            if ($node->parentNode) {
+                $node->parentNode->removeChild($node);
+                $count_affected++;
+            }
+        }
+
+        if ($count_affected > 0) {
+            $new_html = '';
+            foreach ($root->childNodes as $child) {
+                $new_html .= $doc->saveHTML($child);
+            }
+            return trim($new_html);
+        }
+
+        return $html;
+    }
+}
+
 if (!function_exists('process_local_frame_command')) {
     function process_local_frame_command(
         string $prompt,
@@ -257,12 +553,13 @@ if (!function_exists('process_local_frame_command')) {
         array $frames_snapshot = [],
         ?PDO $pdo = null,
         int $project_id = 0,
-        array $user_assets = []
+        array $user_assets = [],
+        array $user_charts = []
     ): ?array {
         $lower = strtolower(trim($prompt));
 
         // Ekstrak komponen reusable (Navbar / Footer / Sidebar) dari frame yang ada
-        $reusable = extract_reusable_components($frames_snapshot, $current_frame_html);
+        $reusable = function_exists('extract_reusable_components') ? extract_reusable_components($frames_snapshot, $current_frame_html) : [];
 
         // 00. Deteksi perintah ganti / ubah / rename nama proyek (Database & Header DOM)
         if (preg_match('/\b(?:ganti|ubah|rename|set)\s+(?:(?:nama|judul)\s+)?(?:proyek|project)\s*(?:menjadi|jadi|ke|to|:)?\s*["\']?([^"\'\n\r]+)["\']?/i', $prompt, $rnp_match) ||
@@ -324,8 +621,8 @@ if (!function_exists('process_local_frame_command')) {
         // 1. Jika meminta membuat frame / halaman baru (atau multi-page) secara lokal
         if (preg_match('/\b(frame baru|tambah frame|halaman baru|buat halaman|page baru|multi[- ]?page|\d+\s*halaman)\b/i', $lower)) {
             // Gunakan navbar & footer yang sudah ada jika tersedia, jika tidak baru gunakan preset
-            $nav    = $reusable['navbar'] ?? generate_smart_preset_component('navbar', $user_assets);
-            $footer = $reusable['footer'] ?? generate_smart_preset_component('footer', $user_assets);
+            $nav    = $reusable['navbar'] ?? generate_smart_preset_component('navbar', $user_assets, $user_charts);
+            $footer = $reusable['footer'] ?? generate_smart_preset_component('footer', $user_assets, $user_charts);
 
             if (preg_match('/\b(multi[- ]?page|3\s*halaman|beberapa halaman|website lengkap)\b/i', $lower)) {
                 return [
@@ -335,15 +632,15 @@ if (!function_exists('process_local_frame_command')) {
                     'frames_specs' => [
                         [
                             'frame_name' => 'Beranda',
-                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('hero', $user_assets) . "\n" . $footer),
+                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('hero', $user_assets, $user_charts) . "\n" . $footer),
                         ],
                         [
                             'frame_name' => 'Layanan & Harga',
-                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('pricing', $user_assets) . "\n" . $footer),
+                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('pricing', $user_assets, $user_charts) . "\n" . $footer),
                         ],
                         [
                             'frame_name' => 'Hubungi Kami',
-                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('kontak', $user_assets) . "\n" . $footer),
+                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('kontak', $user_assets, $user_charts) . "\n" . $footer),
                         ],
                     ],
                 ];
@@ -356,7 +653,7 @@ if (!function_exists('process_local_frame_command')) {
                     $page_title = ucwords($candidate);
                 }
             }
-            $body = generate_smart_preset_component($prompt, $user_assets);
+            $body = generate_smart_preset_component($prompt, $user_assets, $user_charts);
 
             return [
                 'operation'    => 'create_frames',
@@ -416,70 +713,80 @@ if (!function_exists('process_local_frame_command')) {
             ];
         }
 
-        // 4. Jika meminta menghapus komponen tertentu
-        if (preg_match('/\b(hapus|hilangkan|buang|delete|remove)\b/i', $lower) && trim($current_frame_html) !== '') {
-            $doc = new DOMDocument();
-            @$doc->loadHTML('<?xml encoding="utf-8" ?><div id="gm-root">' . $current_frame_html . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-            $root = $doc->getElementById('gm-root');
-            if ($root) {
-                $to_remove = [];
-                $children  = [];
-                foreach ($root->childNodes as $node) {
-                    if ($node->nodeType === XML_ELEMENT_NODE) {
-                        $children[] = $node;
-                    }
+        // 4. Jika meminta menghapus/menghilangkan elemen (baik spesifik icon/tombol/gambar/badge maupun section utuh)
+        if (preg_match('/\b(hapus|hilangkan|buang|delete|remove|tanpa|tiadakan|singkirkan)\b/i', $lower)) {
+            $is_project_wide = (bool)preg_match('/\b(semua\s+(?:halaman|pages?|frame)|seluruh\s+(?:halaman|pages?|frame)|tiap\s+(?:halaman|pages?|frame)|all\s+pages?|konsisten(?:kan)?)\b/i', $lower);
+
+            // A. Jika instruksi bersifat project-wide (seluruh halaman / semua frame)
+            if ($is_project_wide) {
+                $db_frames = ($pdo !== null && $project_id > 0) ? get_project_frames($pdo, $project_id) : [];
+                if (empty($db_frames) && !empty($frames_snapshot)) {
+                    $db_frames = $frames_snapshot;
                 }
 
-                foreach ($children as $idx => $node) {
-                    $tag  = strtolower($node->nodeName);
-                    $text = strtolower($node->textContent);
-                    $match = false;
+                $frames_updates = [];
+                $total_items_removed = 0;
+                $affected_desc = 'elemen';
 
-                    if ((str_contains($lower, 'nav') || str_contains($lower, 'header') || str_contains($lower, 'menu')) && ($tag === 'nav' || $tag === 'header')) {
-                        $match = true;
-                    } elseif (str_contains($lower, 'footer') && $tag === 'footer') {
-                        $match = true;
-                    } elseif (str_contains($lower, 'hero') && ($tag === 'section' || $tag === 'div') && ($idx === 0 || str_contains($text, 'mulai') || $node->getElementsByTagName('h1')->length > 0)) {
-                        $match = true;
-                    } elseif ((str_contains($lower, 'pricing') || str_contains($lower, 'harga') || str_contains($lower, 'paket')) && (str_contains($text, 'rp') || str_contains($text, 'harga') || str_contains($text, 'starter') || str_contains($text, 'pro'))) {
-                        $match = true;
-                    } elseif ((str_contains($lower, 'form') || str_contains($lower, 'kontak')) && ($node->getElementsByTagName('input')->length > 0 || $node->getElementsByTagName('textarea')->length > 0 || str_contains($text, 'hubungi'))) {
-                        $match = true;
-                    } elseif ((str_contains($lower, 'terakhir') || str_contains($lower, 'bawah')) && $idx === count($children) - 1) {
-                        $match = true;
-                    } elseif ((str_contains($lower, 'pertama') || str_contains($lower, 'atas')) && $idx === 0) {
-                        $match = true;
+                foreach ($db_frames as $df) {
+                    $f_id   = (int)($df['frame_id'] ?? 0);
+                    $f_name = (string)($df['frame_name'] ?? 'Frame');
+                    $f_html = (string)($df['core_content'] ?? ($df['html'] ?? ''));
+
+                    if ($f_html === '' && trim($current_frame_html) !== '') {
+                        $f_html = $current_frame_html;
                     }
 
-                    if ($match) {
-                        $to_remove[] = $node;
-                    }
-                }
-
-                if (empty($to_remove) && !empty($children)) {
-                    $keywords = preg_replace('/\b(hapus|hilangkan|buang|delete|remove|komponen|bagian|section|elemen|di|dalam|frame)\b/i', '', $lower);
-                    $keywords = trim($keywords);
-                    if ($keywords !== '') {
-                        foreach ($children as $node) {
-                            if (str_contains(strtolower($node->textContent), $keywords) || strtolower($node->nodeName) === $keywords) {
-                                $to_remove[] = $node;
-                            }
+                    $cnt = 0;
+                    $desc = '';
+                    $clean_f_html = surgically_transform_dom_html($f_html, $prompt, $cnt, $desc);
+                    if ($cnt > 0) {
+                        $total_items_removed += $cnt;
+                        $affected_desc = $desc;
+                        if ($pdo && $f_id > 0) {
+                            $stmtUp = $pdo->prepare("UPDATE gm_frames SET core_content = ? WHERE frame_id = ?");
+                            $stmtUp->execute([$clean_f_html, $f_id]);
                         }
+                        $frames_updates[] = [
+                            'frame_id'   => $f_id,
+                            'frame_name' => $f_name,
+                            'html'       => $clean_f_html,
+                        ];
                     }
                 }
 
-                if (!empty($to_remove)) {
-                    foreach ($to_remove as $rem) {
-                        $root->removeChild($rem);
-                    }
-                    $new_html = '';
-                    foreach ($root->childNodes as $child) {
-                        $new_html .= $doc->saveHTML($child);
-                    }
+                if (!empty($frames_updates)) {
+                    return [
+                        'operation'      => 'batch_update_frames',
+                        'frames_updates' => $frames_updates,
+                        'html'           => '',
+                        'summary'        => "Berhasil menghapus {$total_items_removed} {$affected_desc} di seluruh halaman (" . count($frames_updates) . " frame). Seluruh tata letak, teks, kartu, dan chart lainnya tetap terjaga 100% utuh.",
+                    ];
+                } else {
+                    return [
+                        'operation' => 'explain',
+                        'html'      => $current_frame_html,
+                        'summary'   => "Greymist AI Content Guard: Tidak ditemukan {$affected_desc} yang cocok untuk dihapus pada halaman-halaman proyek. Seluruh desain Anda tetap aman dan utuh.",
+                    ];
+                }
+            }
+
+            // B. Jika instruksi penghapusan pada frame aktif saat ini
+            if (trim($current_frame_html) !== '') {
+                $cnt = 0;
+                $desc = '';
+                $clean_html = surgically_transform_dom_html($current_frame_html, $prompt, $cnt, $desc);
+                if ($cnt > 0) {
                     return [
                         'operation' => 'replace_frame',
-                        'html'      => trim($new_html),
-                        'summary'   => count($to_remove) . ' komponen berhasil dihapus dari frame.',
+                        'html'      => $clean_html,
+                        'summary'   => "Berhasil menghapus {$cnt} {$desc} dari frame ini. Seluruh layout, teks, dan komponen lainnya terjaga 100% utuh tanpa ditimpa.",
+                    ];
+                } else {
+                    return [
+                        'operation' => 'explain',
+                        'html'      => $current_frame_html,
+                        'summary'   => "Greymist AI Content Guard: Tidak ditemukan elemen yang cocok untuk dihapus pada frame ini. Konten Anda tetap aman tanpa perubahan.",
                     ];
                 }
             }
@@ -799,9 +1106,9 @@ if (!function_exists('process_local_frame_command')) {
 
         // 5. Jika meminta mengubah atribut / style (font, warna, ukuran, background, border-radius)
         if (preg_match('/\b(ubah|ganti|rubah|jadikan|set|font|warna|color|background|latar|ukuran|perbesar|perkecil|bold|tebal|miring|italic|radius|rounded|shadow|card|tombol|button)\b/i', $lower)) {
-            $is_project_wide = ($target_mode === 'core' && preg_match('/\b(semua\s+(?:halaman|pages?|frame)|seluruh\s+(?:halaman|pages?|frame)|all\s+pages?|konsisten(?:kan)?|tiap\s+halaman)\b/i', $lower));
+            $is_project_wide = (bool)preg_match('/\b(semua\s+(?:halaman|pages?|frame)|seluruh\s+(?:halaman|pages?|frame)|tiap\s+(?:halaman|pages?|frame)|all\s+pages?|konsisten(?:kan)?)\b/i', $lower);
 
-            $is_editing_selected = ($target_mode === 'edit_selected' || trim($selected_object_html) !== '') && trim($selected_object_html) !== '';
+            $is_editing_selected = !$is_project_wide && ($target_mode === 'edit_selected' || trim($selected_object_html) !== '') && trim($selected_object_html) !== '';
             $target_html         = $is_editing_selected ? $selected_object_html : $current_frame_html;
 
             if (trim($target_html) !== '' || ($is_project_wide && $pdo !== null && $project_id > 0)) {

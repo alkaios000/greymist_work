@@ -35,7 +35,7 @@ if (!$user_id) {
     json_response(['status' => 'ERROR', 'success' => false, 'msg' => 'Silakan login terlebih dahulu.'], 401);
 }
 
-$ai_action = $_GET['action'] ?? $_POST['action'] ?? 'ai_generate_component';
+$ai_action = $_GET['action'] ?? $_POST['action'] ?? $_GET['ai_action'] ?? $_POST['ai_action'] ?? 'ai_generate_component';
 $raw_input = file_get_contents('php://input');
 $data      = json_decode((string)$raw_input, true);
 if (!is_array($data)) {
@@ -467,6 +467,45 @@ switch ($ai_action) {
             }
         }
 
+        // Ekstrak & hubungkan Chart Pengguna dari Menu Assets
+        $user_charts = [];
+        $seen_chart_ids = [];
+        if (!empty($data['user_charts']) && is_array($data['user_charts'])) {
+            foreach ($data['user_charts'] as $uc) {
+                if (is_array($uc)) {
+                    $cid = (int)($uc['chart_id'] ?? 0);
+                    if ($cid > 0) $seen_chart_ids[$cid] = true;
+                    $user_charts[] = [
+                        'chart_id'    => $cid,
+                        'chart_name'  => trim((string)($uc['chart_name'] ?? 'Chart')),
+                        'chart_type'  => (string)($uc['chart_type'] ?? 'bar'),
+                        'library_cdn' => (string)($uc['library_cdn'] ?? 'chartjs'),
+                        'cdn_url'     => (string)($uc['cdn_url'] ?? ''),
+                        'chart_code'  => (string)($uc['chart_code'] ?? ''),
+                    ];
+                }
+            }
+        }
+
+        // Muat seluruh chart milik pengguna dari database gm_user_charts
+        if ($pdo) {
+            $db_charts = get_user_charts($pdo, (int)$user_id);
+            foreach ($db_charts as $dbc) {
+                $cid = (int)$dbc['chart_id'];
+                if (!isset($seen_chart_ids[$cid])) {
+                    $seen_chart_ids[$cid] = true;
+                    $user_charts[] = [
+                        'chart_id'    => $cid,
+                        'chart_name'  => trim((string)$dbc['chart_name']),
+                        'chart_type'  => (string)$dbc['chart_type'],
+                        'library_cdn' => (string)$dbc['library_cdn'],
+                        'cdn_url'     => (string)($dbc['cdn_url'] ?? ''),
+                        'chart_code'  => (string)$dbc['chart_code'],
+                    ];
+                }
+            }
+        }
+
         // Ekstrak foto/gambar referensi jika diunggah pengguna (Multimodal Vision / Multi-Foto)
         $raw_ref_images = [];
         if (isset($data['reference_images']) && is_array($data['reference_images'])) {
@@ -517,19 +556,33 @@ switch ($ai_action) {
             json_response(['status' => 'ERROR', 'success' => false, 'msg' => 'Prompt atau instruksi AI wajib diisi.']);
         }
 
-                // Baca status opsi Memori Proyek (Default: FALSE / MODE KILAT)
+        // Cek apakah prompt menargetkan seluruh halaman (project-wide)
+        $is_project_wide = (bool)preg_match('/\b(semua\s+(?:halaman|pages?|frame)|seluruh\s+(?:halaman|pages?|frame)|tiap\s+(?:halaman|pages?|frame)|all\s+pages?|konsisten(?:kan)?)\b/i', $prompt);
+
+        // Jika instruksi bersifat project-wide, batalkan penargetan edit_selected lokal yang tidak sengaja terbawa
+        if ($is_project_wide && $target_mode === 'edit_selected') {
+            $target_mode = 'core';
+            $selected_object_html = '';
+        }
+
+        // Muat daftar frame proyek dari database (ringan & memastikan AI & engine lokal sadar konteks multi-page)
+        $all_db_frames = ($project_id > 0) ? get_project_frames($pdo, $project_id) : [];
+        if (empty($all_db_frames) && !empty($frames_snapshot)) {
+            $all_db_frames = $frames_snapshot;
+        }
+
+        // Komponen yang dapat digunakan ulang (reusable) dari snapshot & frame saat ini
+        $reusable_comps = extract_reusable_components(!empty($frames_snapshot) ? $frames_snapshot : $all_db_frames, $current_frame_html);
+
+        // Baca status opsi Memori Proyek (Default: FALSE / MODE KILAT)
         $read_memory = !empty($data['read_memory']);
 
         if ($read_memory) {
             $ai_memory           = get_project_ai_memory($pdo, $project_id, $frames_snapshot);
             $memory_context_text = format_ai_memory_for_prompt($ai_memory);
-            $reusable_comps      = extract_reusable_components($frames_snapshot, $current_frame_html);
-            $all_db_frames       = ($project_id > 0) ? get_project_frames($pdo, $project_id) : [];
         } else {
             $ai_memory           = [];
             $memory_context_text = '';
-            $reusable_comps      = [];
-            $all_db_frames       = [];
         }
 
         // Resolusi Provider AI Aktif
@@ -576,7 +629,8 @@ switch ($ai_action) {
                     $all_db_frames,
                     $clean_ref_images,
                     $read_memory,
-                    $user_assets
+                    $user_assets,
+                    $user_charts
                 );
                 $img_cnt = count($clean_ref_images);
                 $source_mode = 'Google Gemini Vision (Auto-routed untuk ' . ($img_cnt > 1 ? "{$img_cnt} Foto" : "Foto") . ')';
@@ -596,7 +650,8 @@ switch ($ai_action) {
                     $all_db_frames,
                     $clean_ref_images,
                     $read_memory,
-                    $user_assets
+                    $user_assets,
+                    $user_charts
                 );
                 $source_mode = 'Groq Cloud (' . ($ai_res['used_model'] ?? $groq_model) . ')';
             } else {
@@ -621,7 +676,8 @@ switch ($ai_action) {
                     $all_db_frames,
                     $clean_ref_images,
                     $read_memory,
-                    $user_assets
+                    $user_assets,
+                    $user_charts
                 );
                 $source_mode = 'OpenRouter Cloud (' . ($ai_res['used_model'] ?? $or_model) . ')';
             } else {
@@ -642,7 +698,8 @@ switch ($ai_action) {
                 $pdo,
                 $project_id,
                 $read_memory,
-                $user_assets
+                $user_assets,
+                $user_charts
             );
             $source_mode = 'Antigravity Cloud Bridge';
         } elseif ($active_provider === 'gemini') {
@@ -662,7 +719,8 @@ switch ($ai_action) {
                     $all_db_frames,
                     $clean_ref_images,
                     $read_memory,
-                    $user_assets
+                    $user_assets,
+                    $user_charts
                 );
                 $source_mode = 'Google Gemini (' . ($ai_res['used_model'] ?? $gemini_model) . ')';
             } else {
@@ -682,7 +740,7 @@ switch ($ai_action) {
             if ($ai_res !== null && !empty($ai_res['error'])) {
                 $api_warning = $ai_res['error'];
             }
-            $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot, $pdo, $project_id, $user_assets);
+            $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot, $pdo, $project_id, $user_assets, $user_charts);
             if ($local_cmd !== null) {
                 $operation          = $local_cmd['operation'];
                 $generated_html     = $local_cmd['html'] ?? '';
@@ -692,7 +750,14 @@ switch ($ai_action) {
                 $patch_data         = $local_cmd['patch'] ?? null;
                 $breakpoints_to_add = $local_cmd['breakpoints_to_add'] ?? [];
             } else {
-                $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt, $user_assets));
+                $is_removal_or_tweak = (bool)preg_match('/\b(hapus|hilangkan|buang|delete|remove|tanpa|tiadakan|singkirkan|ganti|ubah|edit|perbaiki|pindah)\b/i', $prompt);
+                if ($is_removal_or_tweak) {
+                    $operation      = 'explain';
+                    $generated_html = $current_frame_html;
+                    $summary_msg    = 'Greymist AI Content Guard: Tidak ditemukan elemen yang cocok untuk diubah/dihapus sesuai instruksi. Seluruh konten dan desain Anda tetap dipertahankan 100% utuh tanpa ditimpa.';
+                } else {
+                    $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt, $user_assets, $user_charts));
+                }
             }
         }
 

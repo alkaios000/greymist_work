@@ -45,6 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (core.dataset.frame === frameId) {
                 core.classList.add('actived');
                 core.style.display = 'block';
+                if (typeof window.initGmCharts === 'function') {
+                    setTimeout(() => window.initGmCharts(core), 40);
+                }
+                document.dispatchEvent(new CustomEvent('gm-frame-switched', { detail: { frameId: frameId } }));
                 updateCoreScale(core);
             } else {
                 core.classList.remove('actived');

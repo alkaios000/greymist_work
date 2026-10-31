@@ -87,6 +87,14 @@
         let providerKeys = { groq: "", openrouter: "", gemini: "" };
         let providerMasked = { groq: "", openrouter: "", gemini: "" };
 
+        window.currentActiveProvider = currentActiveProvider;
+        window.GreymistAI = window.GreymistAI || {};
+        window.GreymistAI.currentActiveProvider = currentActiveProvider;
+        window.getActiveAiProvider = function() {
+            const sel = document.getElementById("gm-ai-provider-select");
+            return (sel && sel.value) ? sel.value : (window.currentActiveProvider || currentActiveProvider || "groq");
+        };
+
         const settingsPanel = document.getElementById("gm-ai-settings-panel");
         const toggleSettingsBtn = document.getElementById("gm-ai-toggle-settings-btn");
         const closeSettingsBtn = document.getElementById("gm-ai-close-settings-btn");
@@ -129,6 +137,8 @@
         function renderProviderUi(providerId) {
             const conf = AI_PROVIDER_CONFIG[providerId] || AI_PROVIDER_CONFIG.groq;
             currentActiveProvider = providerId;
+            window.currentActiveProvider = providerId;
+            if (window.GreymistAI) window.GreymistAI.currentActiveProvider = providerId;
 
             // Update Pill di Header
             if (providerPill) {
@@ -158,24 +168,28 @@
             }
 
             // Update Dropdown Model di Settings & Main Panel
-            function populateModels(selectEl) {
-                if (!selectEl) return;
-                selectEl.innerHTML = "";
-                conf.models.forEach(m => {
-                    const opt = document.createElement("option");
-                    opt.value = m.id;
-                    opt.textContent = m.name;
-                    selectEl.appendChild(opt);
-                });
-            }
-            populateModels(settingsModelSelect);
-            populateModels(mainModelSelect);
+            populateModels(settingsModelSelect, providerId);
+            populateModels(mainModelSelect, providerId);
 
             if (conf.models.length > 0) {
                 currentActiveModel = conf.models[0].id;
                 if (settingsModelSelect) settingsModelSelect.value = currentActiveModel;
                 if (mainModelSelect) mainModelSelect.value = currentActiveModel;
             }
+        }
+
+        // Update Dropdown Model di Settings & Main Panel
+        function populateModels(selectEl, providerId) {
+            if (!selectEl) return;
+            const pid = providerId || currentActiveProvider || "groq";
+            const conf = AI_PROVIDER_CONFIG[pid] || AI_PROVIDER_CONFIG.groq;
+            selectEl.innerHTML = "";
+            (conf.models || []).forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m.id;
+                opt.textContent = m.name;
+                selectEl.appendChild(opt);
+            });
         }
 
         if (providerSelect) {
@@ -205,6 +219,8 @@
                 .then(res => {
                     if (res && res.status === "OK") {
                         currentActiveProvider = res.provider || "groq";
+                        window.currentActiveProvider = currentActiveProvider;
+                        if (window.GreymistAI) window.GreymistAI.currentActiveProvider = currentActiveProvider;
                         if (providerSelect) providerSelect.value = currentActiveProvider;
 
                         providerMasked.groq = res.groq_key_masked || "";
@@ -316,6 +332,8 @@
                         saveSettingsBtn.innerHTML = `<i class="fas fa-floppy-disk"></i> <span>Simpan</span>`;
                         if (res.status === "OK") {
                             currentActiveProvider = prov;
+                            window.currentActiveProvider = prov;
+                            if (window.GreymistAI) window.GreymistAI.currentActiveProvider = prov;
                             if (keyVal && !keyVal.includes("••••")) {
                                 providerKeys[prov] = keyVal;
                             }

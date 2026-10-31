@@ -176,7 +176,7 @@
                     try {
                         const formData = new FormData();
                         formData.append("audio", audioBlob, "voice.webm");
-                        const resp = await fetch("index.php?page=ai_action&ai_action=ai_transcribe_audio", {
+                        const resp = await fetch("index.php?action=ai_transcribe_audio", {
                             method: "POST",
                             body: formData
                         });
