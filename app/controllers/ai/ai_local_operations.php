@@ -9,15 +9,36 @@
  * atau ketika pengguna memilih preset cepat secara offline.
  */
 if (!function_exists('generate_smart_preset_component')) {
-    function generate_smart_preset_component(string $prompt): string
+    function generate_smart_preset_component(string $prompt, array $user_assets = []): string
     {
         $lower = strtolower($prompt);
 
+        // Ekstraksi aset gambar jika tersedia (Logo & Banner)
+        $logo_img_html = '<div class="gm-object" style="width:36px;height:36px;border-radius:8px;background-color:#eff6ff;color:#3b82f6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">G</div>';
+        $hero_img_html = '';
+
+        if (!empty($user_assets)) {
+            foreach ($user_assets as $ast) {
+                $a_name = strtolower($ast['name'] ?? $ast['image_name'] ?? '');
+                $a_url  = $ast['url'] ?? ((!empty($ast['path']) ? rtrim($ast['path'], '/') . '/' : 'uploads/assets/') . ($ast['image'] ?? $ast['file'] ?? ''));
+                $a_url  = ltrim($a_url, '/');
+                if ($a_url === '') continue;
+
+                if (str_contains($a_name, 'logo') || str_contains($a_name, 'brand') || str_contains($a_name, 'icon')) {
+                    $logo_img_html = "<img src=\"{$a_url}\" class=\"gm-object\" alt=\"Logo\" style=\"height:36px;max-width:130px;object-fit:contain;\">";
+                } elseif (str_contains($a_name, 'banner') || str_contains($a_name, 'hero') || str_contains($a_name, 'bg') || str_contains($a_name, 'cover')) {
+                    $hero_img_html = "<div class=\"gm-object\" style=\"width:100%;max-width:820px;margin-top:16px;border-radius:12px;overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,0.08);\"><img src=\"{$a_url}\" class=\"gm-object\" alt=\"Hero Banner\" style=\"width:100%;height:auto;max-height:360px;object-fit:cover;display:block;\"></div>";
+                } elseif ($hero_img_html === '' && !str_contains($a_name, 'logo')) {
+                    $hero_img_html = "<div class=\"gm-object\" style=\"width:100%;max-width:820px;margin-top:16px;border-radius:12px;overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,0.08);\"><img src=\"{$a_url}\" class=\"gm-object\" alt=\"Asset Image\" style=\"width:100%;height:auto;max-height:360px;object-fit:cover;display:block;\"></div>";
+                }
+            }
+        }
+
         if (str_contains($lower, 'navbar') || str_contains($lower, 'header') || str_contains($lower, 'navigasi')) {
-            return <<<'HTML'
+            return <<<HTML
 <nav id="main-navbar" class="gm-object" style="display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background-color:#ffffff;border-bottom:1px solid #e2e8f0;width:100%;box-sizing:border-box;font-family:'Inter',sans-serif;">
     <div id="nav-brand" class="gm-object" style="display:flex;align-items:center;gap:10px;">
-        <div class="gm-object" style="width:36px;height:36px;border-radius:8px;background-color:#eff6ff;color:#3b82f6;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;">G</div>
+        {$logo_img_html}
         <span class="gm-object" style="font-size:18px;font-weight:700;color:#0f172a;">Greymist UI</span>
     </div>
     <div id="nav-links" class="gm-object" style="display:flex;align-items:center;gap:28px;">
@@ -108,6 +129,7 @@ HTML;
         <button id="hero-btn-primary" class="gm-object" data-action-type="goto" data-action-target="Contact" style="padding:12px 24px;background-color:#3b82f6;color:#ffffff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Mulai Sekarang</button>
         <button id="hero-btn-secondary" class="gm-object" data-action-type="scroll" data-action-target="pricing" style="padding:12px 24px;background-color:#eff6ff;color:#3b82f6;border:1px solid #bfdbfe;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">Pelajari Lebih Lanjut</button>
     </div>
+    {$hero_img_html}
 </section>
 HTML;
     }
@@ -234,7 +256,8 @@ if (!function_exists('process_local_frame_command')) {
         string $target_mode = 'core',
         array $frames_snapshot = [],
         ?PDO $pdo = null,
-        int $project_id = 0
+        int $project_id = 0,
+        array $user_assets = []
     ): ?array {
         $lower = strtolower(trim($prompt));
 
@@ -301,8 +324,8 @@ if (!function_exists('process_local_frame_command')) {
         // 1. Jika meminta membuat frame / halaman baru (atau multi-page) secara lokal
         if (preg_match('/\b(frame baru|tambah frame|halaman baru|buat halaman|page baru|multi[- ]?page|\d+\s*halaman)\b/i', $lower)) {
             // Gunakan navbar & footer yang sudah ada jika tersedia, jika tidak baru gunakan preset
-            $nav    = $reusable['navbar'] ?? generate_smart_preset_component('navbar');
-            $footer = $reusable['footer'] ?? generate_smart_preset_component('footer');
+            $nav    = $reusable['navbar'] ?? generate_smart_preset_component('navbar', $user_assets);
+            $footer = $reusable['footer'] ?? generate_smart_preset_component('footer', $user_assets);
 
             if (preg_match('/\b(multi[- ]?page|3\s*halaman|beberapa halaman|website lengkap)\b/i', $lower)) {
                 return [
@@ -312,15 +335,15 @@ if (!function_exists('process_local_frame_command')) {
                     'frames_specs' => [
                         [
                             'frame_name' => 'Beranda',
-                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('hero') . "\n" . $footer),
+                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('hero', $user_assets) . "\n" . $footer),
                         ],
                         [
                             'frame_name' => 'Layanan & Harga',
-                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('pricing') . "\n" . $footer),
+                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('pricing', $user_assets) . "\n" . $footer),
                         ],
                         [
                             'frame_name' => 'Hubungi Kami',
-                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('kontak') . "\n" . $footer),
+                            'html'       => ensure_gm_object_class($nav . "\n" . generate_smart_preset_component('kontak', $user_assets) . "\n" . $footer),
                         ],
                     ],
                 ];
@@ -333,7 +356,7 @@ if (!function_exists('process_local_frame_command')) {
                     $page_title = ucwords($candidate);
                 }
             }
-            $body = generate_smart_preset_component($prompt);
+            $body = generate_smart_preset_component($prompt, $user_assets);
 
             return [
                 'operation'    => 'create_frames',

@@ -14,6 +14,7 @@ require_once ROOT_PATH . '/config/config.php';
 require_once ROOT_PATH . '/models/component_model.php';
 require_once ROOT_PATH . '/models/frame_model.php';
 require_once ROOT_PATH . '/models/project_model.php';
+require_once ROOT_PATH . '/models/asset_model.php';
 
 // Muat seluruh sub-modul AI
 require_once __DIR__ . '/ai/ai_memory.php';
@@ -281,6 +282,86 @@ switch ($ai_action) {
         ]);
         break;
 
+    case 'ai_get_user_assets':
+        $db_assets = get_user_bg_images($pdo, (int)$user_id);
+        $project_id = (int)($data['project_id'] ?? $_GET['project_id'] ?? 0);
+        $formatted = [];
+        $seen = [];
+        foreach ($db_assets as $dba) {
+            $path_dir = rtrim(str_replace('\\', '/', (string)$dba['path']), '/');
+            if (str_ends_with($path_dir, '/' . $dba['image'])) {
+                $full_url = $path_dir;
+            } else {
+                $full_url = $path_dir . '/' . $dba['image'];
+            }
+            $full_url = ltrim($full_url, '/');
+            if (isset($seen[$full_url])) continue;
+            $seen[$full_url] = true;
+            $formatted[] = [
+                'id'         => (int)$dba['image_id'],
+                'name'       => trim((string)($dba['image_name'] ?: pathinfo($dba['image'], PATHINFO_FILENAME))),
+                'url'        => $full_url,
+                'file'       => $dba['image'],
+                'created_at' => $dba['created_at'],
+            ];
+        }
+
+        if ($project_id > 0) {
+            $proj = get_project_by_id($pdo, $project_id);
+            if (!empty($proj['user_id']) && (int)$proj['user_id'] !== (int)$user_id) {
+                $p_assets = get_user_bg_images($pdo, (int)$proj['user_id']);
+                foreach ($p_assets as $pa) {
+                    $path_dir = rtrim(str_replace('\\', '/', (string)$pa['path']), '/');
+                    if (str_ends_with($path_dir, '/' . $pa['image'])) {
+                        $full_url = $path_dir;
+                    } else {
+                        $full_url = $path_dir . '/' . $pa['image'];
+                    }
+                    $full_url = ltrim($full_url, '/');
+                    if (isset($seen[$full_url])) continue;
+                    $seen[$full_url] = true;
+                    $formatted[] = [
+                        'id'         => (int)$pa['image_id'],
+                        'name'       => trim((string)($pa['image_name'] ?: pathinfo($pa['image'], PATHINFO_FILENAME))),
+                        'url'        => $full_url,
+                        'file'       => $pa['image'],
+                        'created_at' => $pa['created_at'],
+                    ];
+                }
+            }
+        }
+
+        // Jika daftar aset pengguna masih kosong, sertakan aset yang tersedia di sistem
+        if (empty($formatted)) {
+            $all_sys = $pdo->query("SELECT image_id, image, image_name, path, created_at FROM gm_bg_images ORDER BY created_at DESC LIMIT 30")->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($all_sys as $sa) {
+                $path_dir = rtrim(str_replace('\\', '/', (string)$sa['path']), '/');
+                if (str_ends_with($path_dir, '/' . $sa['image'])) {
+                    $full_url = $path_dir;
+                } else {
+                    $full_url = $path_dir . '/' . $sa['image'];
+                }
+                $full_url = ltrim($full_url, '/');
+                if (isset($seen[$full_url])) continue;
+                $seen[$full_url] = true;
+                $formatted[] = [
+                    'id'         => (int)$sa['image_id'],
+                    'name'       => trim((string)($sa['image_name'] ?: pathinfo($sa['image'], PATHINFO_FILENAME))),
+                    'url'        => $full_url,
+                    'file'       => $sa['image'],
+                    'created_at' => $sa['created_at'],
+                ];
+            }
+        }
+
+        json_response([
+            'status'  => 'OK',
+            'success' => true,
+            'assets'  => $formatted,
+            'count'   => count($formatted),
+        ]);
+        break;
+
     case 'ai_generate_component':
     default:
         $prompt                = trim((string)($data['prompt'] ?? ''));
@@ -296,6 +377,95 @@ switch ($ai_action) {
         $frames_snapshot       = isset($data['frames_snapshot']) && is_array($data['frames_snapshot']) ? $data['frames_snapshot'] : [];
         $selected_object_attrs = isset($data['selected_object_attrs']) && is_array($data['selected_object_attrs']) ? $data['selected_object_attrs'] : [];
         $active_frame_id       = (int)($data['active_frame_id'] ?? 0);
+
+        // Ekstrak & hubungkan Aset Gambar dari Menu Assets pengguna
+        $user_assets = [];
+        $seen_asset_urls = [];
+        if (!empty($data['user_assets']) && is_array($data['user_assets'])) {
+            foreach ($data['user_assets'] as $ua) {
+                if (is_array($ua) && !empty($ua['url'])) {
+                    $u_url = ltrim((string)$ua['url'], '/');
+                    if (!isset($seen_asset_urls[$u_url])) {
+                        $seen_asset_urls[$u_url] = true;
+                        $user_assets[] = [
+                            'id'   => (int)($ua['id'] ?? 0),
+                            'name' => trim((string)($ua['name'] ?? pathinfo($u_url, PATHINFO_FILENAME))),
+                            'url'  => $u_url,
+                            'file' => (string)($ua['file'] ?? basename($u_url)),
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Muat seluruh aset gambar milik pengguna yang tersimpan di database gm_bg_images
+        $db_assets = get_user_bg_images($pdo, (int)$user_id);
+        foreach ($db_assets as $dba) {
+            $path_dir = rtrim(str_replace('\\', '/', (string)$dba['path']), '/');
+            if (str_ends_with($path_dir, '/' . $dba['image'])) {
+                $full_url = $path_dir;
+            } else {
+                $full_url = $path_dir . '/' . $dba['image'];
+            }
+            $full_url = ltrim($full_url, '/');
+            if (!isset($seen_asset_urls[$full_url])) {
+                $seen_asset_urls[$full_url] = true;
+                $user_assets[] = [
+                    'id'   => (int)$dba['image_id'],
+                    'name' => trim((string)($dba['image_name'] ?: pathinfo($dba['image'], PATHINFO_FILENAME))),
+                    'url'  => $full_url,
+                    'file' => (string)$dba['image'],
+                ];
+            }
+        }
+
+        if ($project_id > 0) {
+            $proj = get_project_by_id($pdo, $project_id);
+            if (!empty($proj['user_id']) && (int)$proj['user_id'] !== (int)$user_id) {
+                $p_assets = get_user_bg_images($pdo, (int)$proj['user_id']);
+                foreach ($p_assets as $pa) {
+                    $path_dir = rtrim(str_replace('\\', '/', (string)$pa['path']), '/');
+                    if (str_ends_with($path_dir, '/' . $pa['image'])) {
+                        $full_url = $path_dir;
+                    } else {
+                        $full_url = $path_dir . '/' . $pa['image'];
+                    }
+                    $full_url = ltrim($full_url, '/');
+                    if (!isset($seen_asset_urls[$full_url])) {
+                        $seen_asset_urls[$full_url] = true;
+                        $user_assets[] = [
+                            'id'   => (int)$pa['image_id'],
+                            'name' => trim((string)($pa['image_name'] ?: pathinfo($pa['image'], PATHINFO_FILENAME))),
+                            'url'  => $full_url,
+                            'file' => (string)$pa['image'],
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Jika aset pengguna masih kosong, sertakan aset yang tersedia di sistem
+        if (empty($user_assets)) {
+            $all_sys_assets = $pdo->query("SELECT image_id, image, image_name, path FROM gm_bg_images ORDER BY created_at DESC LIMIT 30")->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($all_sys_assets as $sa) {
+                $path_dir = rtrim(str_replace('\\', '/', (string)$sa['path']), '/');
+                if (str_ends_with($path_dir, '/' . $sa['image'])) {
+                    $full_url = $path_dir;
+                } else {
+                    $full_url = $path_dir . '/' . $sa['image'];
+                }
+                $full_url = ltrim($full_url, '/');
+                if (!isset($seen_asset_urls[$full_url])) {
+                    $seen_asset_urls[$full_url] = true;
+                    $user_assets[] = [
+                        'id'   => (int)$sa['image_id'],
+                        'name' => trim((string)($sa['image_name'] ?: pathinfo($sa['image'], PATHINFO_FILENAME))),
+                        'url'  => $full_url,
+                        'file' => (string)$sa['image'],
+                    ];
+                }
+            }
+        }
 
         // Ekstrak foto/gambar referensi jika diunggah pengguna (Multimodal Vision / Multi-Foto)
         $raw_ref_images = [];
@@ -405,7 +575,8 @@ switch ($ai_action) {
                     $reusable_comps,
                     $all_db_frames,
                     $clean_ref_images,
-                    $read_memory
+                    $read_memory,
+                    $user_assets
                 );
                 $img_cnt = count($clean_ref_images);
                 $source_mode = 'Google Gemini Vision (Auto-routed untuk ' . ($img_cnt > 1 ? "{$img_cnt} Foto" : "Foto") . ')';
@@ -424,7 +595,8 @@ switch ($ai_action) {
                     $reusable_comps,
                     $all_db_frames,
                     $clean_ref_images,
-                    $read_memory
+                    $read_memory,
+                    $user_assets
                 );
                 $source_mode = 'Groq Cloud (' . ($ai_res['used_model'] ?? $groq_model) . ')';
             } else {
@@ -448,7 +620,8 @@ switch ($ai_action) {
                     $reusable_comps,
                     $all_db_frames,
                     $clean_ref_images,
-                    $read_memory
+                    $read_memory,
+                    $user_assets
                 );
                 $source_mode = 'OpenRouter Cloud (' . ($ai_res['used_model'] ?? $or_model) . ')';
             } else {
@@ -468,7 +641,8 @@ switch ($ai_action) {
                 $frames_snapshot,
                 $pdo,
                 $project_id,
-                $read_memory
+                $read_memory,
+                $user_assets
             );
             $source_mode = 'Antigravity Cloud Bridge';
         } elseif ($active_provider === 'gemini') {
@@ -487,7 +661,8 @@ switch ($ai_action) {
                     $reusable_comps,
                     $all_db_frames,
                     $clean_ref_images,
-                    $read_memory
+                    $read_memory,
+                    $user_assets
                 );
                 $source_mode = 'Google Gemini (' . ($ai_res['used_model'] ?? $gemini_model) . ')';
             } else {
@@ -507,7 +682,7 @@ switch ($ai_action) {
             if ($ai_res !== null && !empty($ai_res['error'])) {
                 $api_warning = $ai_res['error'];
             }
-            $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot, $pdo, $project_id);
+            $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot, $pdo, $project_id, $user_assets);
             if ($local_cmd !== null) {
                 $operation          = $local_cmd['operation'];
                 $generated_html     = $local_cmd['html'] ?? '';
@@ -517,7 +692,7 @@ switch ($ai_action) {
                 $patch_data         = $local_cmd['patch'] ?? null;
                 $breakpoints_to_add = $local_cmd['breakpoints_to_add'] ?? [];
             } else {
-                $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
+                $generated_html = ensure_gm_object_class(generate_smart_preset_component($prompt, $user_assets));
             }
         }
 
@@ -791,6 +966,7 @@ switch ($ai_action) {
             'breakpoints_to_add'      => $breakpoints_to_add,
             'component'               => $saved_component,
             'ai_memory'               => $ai_memory,
+            'used_assets_count'       => count($user_assets),
         ]);
         break;
 }

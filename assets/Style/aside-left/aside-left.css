@@ -166,6 +166,29 @@
       display: flex;
   }
 
+  /* Menu 4: Komponen (Fix flex-direction column & full height) */
+  .gm-content-left-menu.content-menu-4 {
+      width: 100% !important;
+      height: 100% !important;
+      max-height: 100% !important;
+      display: none;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      box-sizing: border-box !important;
+      background: #ffffff !important;
+      font-size: 13px !important;
+  }
+
+  .gm-content-left-menu.content-menu-4.gm-clicked {
+      display: flex !important;
+  }
+
+  .gm-bottom-menu-left:has(.content-menu-4.gm-clicked) {
+      overflow: hidden !important;
+  }
+
   .gm-DOM-cont {
       width: 100%;
       padding: 1em;

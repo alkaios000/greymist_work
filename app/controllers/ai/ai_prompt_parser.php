@@ -51,7 +51,13 @@ if (!function_exists('get_greymist_system_instruction')) {
                 . "   Jika pengguna meminta mengubah/menambah/menghapus atribut (warna, font, ukuran, border, animasi, text) pada komponen yang sudah ada, kembalikan HANYA format JSON:\n"
                 . "   <!--GM_OP:PATCH_ATTRIBUTES-->\n"
                 . "   {\"target\":\"self\",\"target_all\":true,\"stagger\":0.15,\"classes_to_add\":[\"gm-anim-base\",\"gm-anim-slide-up\"],\"classes_to_remove\":[\"gm-anim-fade-in\"],\"attributes\":{\"data-gm-anim\":\"gm-anim-slide-up\",\"data-gm-anim-dur\":\"0.8\",\"data-gm-anim-del\":\"0\",\"data-gm-anim-loop\":\"1\"},\"styles\":{\"--gm-anim-duration\":\"0.8s\",\"--gm-anim-delay\":\"0s\"},\"summary\":\"Ringkasan perubahan.\"}\n"
-                . "10. FORMAT OPERASI LAINNYA:\n"
+                . "10. ATURAN INTEGRASI ASSET GAMBAR (MENU ASSETS):\n"
+                . "   - Greymist terhubung ke Menu Assets sistem tempat pengguna menyimpan file gambar/foto proyek.\n"
+                . "   - Jika konteks memuat '=== DAFTAR ASSET GAMBAR TERSEDIA DARI MENU ASSETS PENGGUNA ===':\n"
+                . "     * PRIORITASKAN MEMILIH & MENGGUNAKAN GAMBAR DARI DAFTAR ASSET TERSEBUT daripada membuat URL dummy fiktif!\n"
+                . "     * Cocokkan nama aset dengan elemen: aset logo/brand -> logo Navbar/Header, aset banner/hero -> hero section / background, aset produk/item -> card produk, aset avatar/orang/profil -> foto tim / testimoni.\n"
+                . "     * WAJIB class 'gm-object', atribut src persis path asset (contoh: uploads/assets/nama_file.png), dan atribut alt deskriptif.\n"
+                . "11. FORMAT OPERASI LAINNYA:\n"
                 . "   - Komponen baru: <!--GM_OP:APPEND--> <kode html>\n"
                 . "   - Ubah objek terpilih: <!--GM_OP:REPLACE_SELECTED--> <kode html>\n"
                 . "   - Ganti nama project: <!--GM_OP:RENAME_PROJECT:Nama Baru-->\n"
@@ -233,6 +239,17 @@ if (!function_exists('get_greymist_system_instruction')) {
             . "      <a class=\"gm-object\" href=\"#contact\" data-action-type=\"scroll\" data-action-target=\"contact\">Hubungi Kami</a>\n"
             . "    - Tombol CTA Utama (misal di Hero / Banner) juga harus diarahkan ke section tujuan (misal ke #contact atau #pricing) dengan data-action-type=\"scroll\".\n"
             . "    - DILARANG KERAS menghasilkan tag <section> tanpa id atau membiarkan href=\"#\" kosong!\n\n"
+            . "13. ATURAN INTEGRASI ASSET GAMBAR PROYEK (MENU ASSETS):\n"
+            . "    - Greymist terhubung langsung dengan koleksi Menu Assets tempat pengguna mengunggah gambar/foto (logo, banner, foto produk, avatar tim, dll).\n"
+            . "    - Jika pada konteks terdapat '=== DAFTAR ASSET GAMBAR TERSEDIA DARI MENU ASSETS PENGGUNA ===':\n"
+            . "      * AI WAJIB MEMPRIORITASKAN MENGGUNAKAN GAMBAR DARI DAFTAR ASSET TERSEBUT daripada menggunakan URL dummy fiktif atau gambar kosong!\n"
+            . "      * Analisis nama file dan deskripsi setiap aset, lalu tempatkan sesuai peruntukannya secara cerdas:\n"
+            . "        - Aset dengan nama 'logo', 'brand', 'simbol' -> jadikan elemen logo di Navbar / Header: <img src=\"uploads/assets/...\" class=\"gm-object\" alt=\"Logo\" style=\"height: 36px; max-width: 140px; object-fit: contain;\">.\n"
+            . "        - Aset 'banner', 'hero', 'bg', 'cover', 'wallpaper' -> sematkan di Hero section atau sebagai gambar latar dengan style=\"background-image: url('uploads/assets/...'); background-size: cover; background-position: center;\".\n"
+            . "        - Aset 'produk', 'item', 'menu', 'katalog' -> pasang pada kartu produk / layanan / katalog.\n"
+            . "        - Aset 'avatar', 'user', 'orang', 'tim', 'profil', 'foto' -> pasang pada kartu testimoni atau profil tim: <img src=\"uploads/assets/...\" class=\"gm-object\" alt=\"Foto Profil\" style=\"width: 48px; height: 48px; border-radius: 50%; object-fit: cover;\">.\n"
+            . "      * Setiap tag <img> WAJIB memiliki class=\"gm-object\", atribut src yang valid mengarah ke path aset, atribut alt deskriptif, dan gaya dimensi yang proporsional.\n"
+            . "      * DILARANG KERAS memodifikasi atau salah mengeja nama file aset asli!\n\n"
             . "PILIHAN FORMAT OPERASI LAINNYA:\n"
             . "1. MEMBACA/MENJELASKAN: <!--GM_OP:EXPLAIN--> diikuti penjelasan dalam Bahasa Indonesia.\n"
             . "2. GANTI NAMA PROYEK: <!--GM_OP:RENAME_PROJECT:Nama Proyek Baru--> diikuti konfirmasi.\n"
@@ -255,7 +272,8 @@ if (!function_exists('build_greymist_context_input')) {
         array $selected_object_attrs = [],
         array $reusable_components = [],
         array $all_project_frames = [],
-        $reference_images = null
+        $reference_images = null,
+        array $user_assets = []
     ): string {
         $context_input = "";
         if ($memory_context_text !== '') {
@@ -263,6 +281,26 @@ if (!function_exists('build_greymist_context_input')) {
         }
         $context_input .= "TARGET_MODE: " . $target_mode . "\n";
         $context_input .= "CURRENT_FRAME_HTML (Frame yang sedang dibuka pengguna):\n" . ($current_frame_html !== '' ? $current_frame_html : "(Frame masih kosong)") . "\n\n";
+
+        // Blok Daftar Asset Gambar dari Menu Assets Pengguna
+        if (!empty($user_assets) && is_array($user_assets)) {
+            $context_input .= "=== DAFTAR ASSET GAMBAR TERSEDIA DARI MENU ASSETS PENGGUNA ===\n"
+                . "Pengguna memiliki " . count($user_assets) . " aset gambar yang sudah diunggah di Menu Assets Greymist.\n"
+                . "Ketika membuat komponen yang membutuhkan gambar (logo, hero banner, background, avatar tim, kartu produk, galeri), PRIORITASKAN MEMILIH GAMBAR DARI DAFTAR BERIKUT:\n";
+            foreach ($user_assets as $idx => $ast) {
+                $a_name = !empty($ast['name']) ? $ast['name'] : (!empty($ast['image_name']) ? $ast['image_name'] : ('Asset ' . ($idx + 1)));
+                $a_url = !empty($ast['url']) ? $ast['url'] : ((!empty($ast['path']) ? rtrim($ast['path'], '/') . '/' : 'uploads/assets/') . ($ast['image'] ?? $ast['file'] ?? ''));
+                $a_url = ltrim($a_url, '/');
+                if ($a_url !== '') {
+                    $context_input .= ($idx + 1) . ". Nama: \"{$a_name}\" -> URL: \"{$a_url}\"\n";
+                }
+            }
+            $context_input .= "PETUNJUK PENGGUNAAN ASSET:\n"
+                . "- Sematkan tag semantik <img src=\"URL_DI_ATAS\" class=\"gm-object\" alt=\"Deskripsi\">\n"
+                . "- Atau inline style: background-image: url('URL_DI_ATAS'); background-size: cover; background-position: center;\n"
+                . "- Sesuaikan nama aset dengan posisi komponen (misal 'logo' untuk navbar, 'banner' untuk hero, 'avatar' untuk testimoni).\n"
+                . "=================================================================\n\n";
+        }
 
         if (!empty($reusable_components['navbar'])) {
             $context_input .= "KOMPONEN YANG SUDAH ADA UNTUK DIGUNAKAN ULANG (REUSE):\n";

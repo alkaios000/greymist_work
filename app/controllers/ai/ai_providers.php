@@ -23,7 +23,8 @@ if (!function_exists('call_openai_compatible_api')) {
         array $reusable_components = [],
         array $all_project_frames = [],
         $reference_images = null,
-        bool $read_memory = false
+        bool $read_memory = false,
+        array $user_assets = []
     ): array {
         if (trim($api_key) === '') {
             return ['success' => false, 'error' => "API Key untuk {$provider_name} belum disetel di pengaturan."];
@@ -48,7 +49,8 @@ if (!function_exists('call_openai_compatible_api')) {
             $selected_object_attrs,
             $reusable_components,
             $all_project_frames,
-            $images_list
+            $images_list,
+            $user_assets
         );
 
         $messages = [
@@ -149,7 +151,8 @@ if (!function_exists('call_antigravity_bridge_api')) {
         ?array $frames_snapshot = [],
         ?PDO $pdo = null,
         int $project_id = 0,
-        bool $read_memory = false
+        bool $read_memory = false,
+        array $user_assets = []
     ): array {
         $bridge_dir = ROOT_PATH . '/.agents/bridge';
         if (!is_dir($bridge_dir)) {
@@ -172,6 +175,8 @@ if (!function_exists('call_antigravity_bridge_api')) {
             'has_reference_image'    => !empty($images_list),
             'reference_images_count' => count($images_list),
             'current_frame_preview'  => mb_substr($current_frame_html, 0, 500),
+            'user_assets_count'      => count($user_assets),
+            'user_assets'            => $user_assets,
         ];
         @file_put_contents($bridge_dir . '/last_request.json', json_encode($task_payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
 
@@ -224,7 +229,8 @@ if (!function_exists('call_antigravity_bridge_api')) {
                 $reusable_components,
                 $all_project_frames,
                 $images_list,
-                $read_memory
+                $read_memory,
+                $user_assets
             );
             if (!empty($res['success'])) {
                 $img_count = count($images_list);
@@ -250,7 +256,8 @@ if (!function_exists('call_antigravity_bridge_api')) {
                 $reusable_components,
                 $all_project_frames,
                 $images_list,
-                $read_memory
+                $read_memory,
+                $user_assets
             );
             if (!empty($res['success'])) {
                 $res['used_model'] = 'Antigravity Cloud (Groq 120B)';
@@ -272,7 +279,8 @@ if (!function_exists('call_antigravity_bridge_api')) {
                 $reusable_components,
                 $all_project_frames,
                 $images_list,
-                $read_memory
+                $read_memory,
+                $user_assets
             );
             if (!empty($res['success'])) {
                 $res['used_model'] = 'Antigravity Cloud (Gemini 3.5)';
@@ -281,7 +289,7 @@ if (!function_exists('call_antigravity_bridge_api')) {
         }
 
         // 3. Fallback jika seluruh koneksi internet offline
-        $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot ?? [], $pdo, $project_id);
+        $local_cmd = process_local_frame_command($prompt, $current_frame_html, $selected_object_html, $target_mode, $frames_snapshot ?? [], $pdo, $project_id, $user_assets);
         if ($local_cmd !== null) {
             return [
                 'success'            => true,
@@ -297,7 +305,7 @@ if (!function_exists('call_antigravity_bridge_api')) {
             ];
         }
 
-        $gen_html = ensure_gm_object_class(generate_smart_preset_component($prompt));
+        $gen_html = ensure_gm_object_class(generate_smart_preset_component($prompt, $user_assets));
         return [
             'success'            => true,
             'used_model'         => 'Antigravity Engine (Preset Lokal)',
@@ -475,7 +483,8 @@ if (!function_exists('call_gemini_interactions_api')) {
         array $reusable_components = [],
         array $all_project_frames = [],
         $reference_images = null,
-        bool $read_memory = false
+        bool $read_memory = false,
+        array $user_assets = []
     ): array {
         $images_list = [];
         if (!empty($reference_images)) {
@@ -496,7 +505,8 @@ if (!function_exists('call_gemini_interactions_api')) {
             $selected_object_attrs,
             $reusable_components,
             $all_project_frames,
-            $images_list
+            $images_list,
+            $user_assets
         );
 
         $free_models = array_values(array_unique([

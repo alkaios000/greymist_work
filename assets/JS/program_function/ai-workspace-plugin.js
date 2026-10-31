@@ -655,9 +655,30 @@
                         <button type="button" class="gm-ai-sound-btn" id="gm-ai-voice-bar-btn" title="Sound to Design: Bicara langsung untuk membuat desain UI!">
                             <i class="fa-solid fa-microphone"></i> <span>Sound to Design</span>
                         </button>
+                        <button type="button" class="gm-ai-sound-btn" id="gm-ai-assets-bar-btn" title="Aset Media: Hubungkan & pilih gambar yang sudah diupload di menu assets!">
+                            <i class="fa-solid fa-images"></i> <span>Aset (<span id="gm-ai-assets-badge-count">0</span>)</span>
+                        </button>
                         <input type="file" id="gm-ai-img-file" accept="image/png,image/jpeg,image/webp,image/gif" multiple style="display:none;">
                         <span class="gm-ai-upload-hint"><i class="fa-solid fa-paste"></i> Paste Ctrl+V</span>
                     </div>
+
+                    <!-- Drawer Koleksi Aset Menu Assets -->
+                    <div class="gm-ai-assets-drawer" id="gm-ai-assets-drawer" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px;margin-top:6px;box-sizing:border-box;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                            <span style="font-size:11px;font-weight:600;color:#334155;"><i class="fa-solid fa-folder-open" style="color:#0078ff;"></i> Aset dari Menu Assets (<span id="gm-ai-assets-list-count">0</span>)</span>
+                            <div style="display:flex;gap:4px;">
+                                <button type="button" id="gm-ai-assets-select-all" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;color:#475569;">Pilih Semua</button>
+                                <button type="button" id="gm-ai-assets-clear-sel" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;color:#475569;">Batal</button>
+                            </div>
+                        </div>
+                        <div id="gm-ai-assets-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(70px, 1fr));gap:6px;max-height:120px;overflow-y:auto;padding:2px;">
+                            <!-- Kartu thumbnail aset terisi otomatis -->
+                        </div>
+                        <div style="font-size:10px;color:#64748b;margin-top:6px;line-height:1.35;">
+                            <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Seluruh gambar dari menu assets otomatis terhubung. Klik gambar di atas jika ingin memprioritaskan aset tertentu.
+                        </div>
+                    </div>
+
                     <div class="gm-ai-img-preview" id="gm-ai-img-preview" style="display:none;">
                         <div class="gm-ai-preview-header" id="gm-ai-preview-header">
                             <span id="gm-ai-preview-count"><i class="fa-solid fa-images"></i> 1 Foto Terpilih</span>
@@ -859,6 +880,99 @@
         // Pasang juga fitur AI Edit Object pada menu klik kanan (.gm-object-menu)
         setupRightClickAiObjectEditor();
 
+        // Setup listener Koleksi Asset dari Menu Assets
+        let loadedUserAssets = [];
+        let selectedUserAssetIds = new Set();
+        const assetsBarBtn = document.getElementById("gm-ai-assets-bar-btn");
+        const assetsDrawer = document.getElementById("gm-ai-assets-drawer");
+        const assetsBadgeCount = document.getElementById("gm-ai-assets-badge-count");
+        const assetsListCount = document.getElementById("gm-ai-assets-list-count");
+        const assetsGrid = document.getElementById("gm-ai-assets-grid");
+        const assetsSelectAllBtn = document.getElementById("gm-ai-assets-select-all");
+        const assetsClearSelBtn = document.getElementById("gm-ai-assets-clear-sel");
+
+        const renderUserAssetsGrid = () => {
+            if (!assetsGrid) return;
+            if (loadedUserAssets.length === 0) {
+                assetsGrid.innerHTML = `<div style="grid-column: 1 / -1; font-size: 11px; color: #94a3b8; text-align: center; padding: 12px 0;">Belum ada gambar yang diupload di Menu Assets.</div>`;
+                return;
+            }
+            assetsGrid.innerHTML = loadedUserAssets.map(ast => {
+                const isSelected = selectedUserAssetIds.has(ast.id);
+                return `
+                    <div class="gm-ai-asset-card" data-asset-id="${ast.id}" title="${ast.name} (${ast.url})" style="position:relative;cursor:pointer;border-radius:5px;overflow:hidden;border:2px solid ${isSelected ? '#0078ff' : '#cbd5e1'};background:#fff;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all 0.15s ease;">
+                        <img src="${ast.url}" alt="${ast.name}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                        <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:18px;color:#94a3b8;background:#f1f5f9;"><i class="fa-solid fa-image"></i></div>
+                        ${isSelected ? '<div style="position:absolute;top:2px;right:2px;background:#0078ff;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-check"></i></div>' : ''}
+                        <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;">${ast.name}</div>
+                    </div>
+                `;
+            }).join("");
+        };
+
+        const loadUserAssets = async () => {
+            try {
+                const pId = getCurrentProjectId();
+                const resp = await fetch("index.php?action=ai_get_user_assets&project_id=" + encodeURIComponent(pId));
+                const res = await resp.json();
+                if (res && res.success && Array.isArray(res.assets)) {
+                    loadedUserAssets = res.assets;
+                    if (assetsBadgeCount) assetsBadgeCount.textContent = loadedUserAssets.length;
+                    if (assetsListCount) assetsListCount.textContent = loadedUserAssets.length;
+                    renderUserAssetsGrid();
+                }
+            } catch (err) {
+                console.warn("[Greymist AI] Gagal memuat aset pengguna:", err);
+            }
+        };
+
+        if (assetsBarBtn && assetsDrawer) {
+            assetsBarBtn.addEventListener("click", () => {
+                const isShown = assetsDrawer.style.display !== "none";
+                assetsDrawer.style.display = isShown ? "none" : "block";
+                assetsBarBtn.style.background = isShown ? "" : "#e0f2fe";
+                assetsBarBtn.style.borderColor = isShown ? "" : "#38bdf8";
+                assetsBarBtn.style.color = isShown ? "" : "#0284c7";
+                if (!isShown && loadedUserAssets.length === 0) {
+                    loadUserAssets();
+                }
+            });
+        }
+
+        if (assetsGrid) {
+            assetsGrid.addEventListener("click", (e) => {
+                const card = e.target.closest(".gm-ai-asset-card");
+                if (card) {
+                    const id = parseInt(card.dataset.assetId, 10);
+                    if (!isNaN(id)) {
+                        if (selectedUserAssetIds.has(id)) {
+                            selectedUserAssetIds.delete(id);
+                        } else {
+                            selectedUserAssetIds.add(id);
+                        }
+                        renderUserAssetsGrid();
+                    }
+                }
+            });
+        }
+
+        if (assetsSelectAllBtn) {
+            assetsSelectAllBtn.addEventListener("click", () => {
+                loadedUserAssets.forEach(a => selectedUserAssetIds.add(a.id));
+                renderUserAssetsGrid();
+            });
+        }
+
+        if (assetsClearSelBtn) {
+            assetsClearSelBtn.addEventListener("click", () => {
+                selectedUserAssetIds.clear();
+                renderUserAssetsGrid();
+            });
+        }
+
+        // Muat aset pengguna saat panel AI disiapkan
+        loadUserAssets();
+
         // Muat & sinkronkan memori AI proyek setelah frame selesai dimuat
         setTimeout(syncProjectAiMemory, 800);
 
@@ -1050,7 +1164,12 @@
                     reference_image: (typeof attachedReferenceImages !== "undefined" && Array.isArray(attachedReferenceImages) && attachedReferenceImages.length > 0) ? {
                         data: attachedReferenceImages[0].data,
                         mime_type: attachedReferenceImages[0].mime_type
-                    } : null
+                    } : null,
+                    user_assets: (typeof loadedUserAssets !== "undefined" && Array.isArray(loadedUserAssets)) ? (
+                        selectedUserAssetIds.size > 0
+                            ? loadedUserAssets.filter(a => selectedUserAssetIds.has(a.id))
+                            : loadedUserAssets
+                    ) : []
                 })
             })
                 .then(r => r.json())

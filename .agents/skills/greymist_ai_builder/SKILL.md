@@ -520,3 +520,30 @@ Ketika membangun landing page 1 halaman (single-page website):
 3. **Smooth Scroll Interaktif Langsung di Editor:**
    - Greymist Action Runner menangkap klik langsung pada link navigasi (`a[href^="#"]` atau `data-action-type="scroll"`).
    - Kanvas akan melakukan *smooth scrolling* ke section tujuan secara mulus disertai highlight sekilas pada section yang dituju.
+
+---
+
+## 20. Integrasi Penuh AI dengan Menu Assets (Koleksi Gambar Unggahan Pengguna)
+
+Greymist AI terhubung secara otomatis dengan koleksi gambar/media yang telah diunggah pengguna pada **Menu Assets** (`gm_bg_images`):
+
+1. **Deteksi & Injeksi Otomatis ke Konteks AI:**
+   - Setiap kali AI dijalankan, sistem secara otomatis memuat daftar aset gambar pengguna (nama file, judul aset, dan URL relatif seperti `uploads/assets/asset_xxxx.png`).
+   - AI menerima daftar tersebut dalam blok `=== DAFTAR ASSET GAMBAR TERSEDIA DARI MENU ASSETS PENGGUNA ===`.
+
+2. **Aturan Penempatan Aset Berdasarkan Konteks:**
+   - **Logo / Brand:** Jika terdapat aset dengan nama mengandung `logo`, `brand`, atau `icon`, AI WAJIB menyematkannya pada Navbar atau Header:
+     `<img src="uploads/assets/..." class="gm-object" alt="Logo" style="height: 36px; max-width: 140px; object-fit: contain;">`
+   - **Hero Banner / Cover:** Jika terdapat aset dengan nama `banner`, `hero`, `bg`, `cover`, AI menggunakannya sebagai ilustrasi utama hero atau latar belakang section (`style="background-image: url('uploads/assets/...'); background-size: cover; background-position: center;"`).
+   - **Kartu Produk / Galeri / Portofolio:** Menggunakan gambar produk atau foto proyek yang relevan dari koleksi aset.
+   - **Avatar Tim / Testimoni:** Menggunakan gambar avatar/orang untuk kartu profil atau review:
+     `<img src="uploads/assets/..." class="gm-object" alt="Foto Profil" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover;">`
+
+3. **Drawer Pemilih Aset pada Modal AI:**
+   - Terdapat tombol `Aset (N)` di samping Foto Referensi dan Sound to Design pada modal AI Greymist.
+   - Mengklik tombol membuka drawer thumbnail aset: pengguna dapat melihat seluruh gambar yang diunggah, memilih aset tertentu yang ingin diprioritaskan, atau membiarkan seluruh aset terhubung agar AI memilih yang paling cocok secara otomatis.
+
+4. **Standar Penulisan Tag Gambar di Greymist:**
+   - Tag: Selalu gunakan `<img class="gm-object" src="uploads/assets/..." alt="...">`.
+   - DILARANG menggunakan URL dummy placeholder fiktif jika aset gambar yang cocok sudah tersedia di Menu Assets.
+   - Pertahankan path dan nama file aset persis seperti yang terdaftar.
