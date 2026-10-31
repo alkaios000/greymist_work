@@ -470,3 +470,53 @@ Di bagian bawah setiap slide, WAJIB sertakan Slide Navigation Bar yang saling te
 - **Slide 2 - N-1 (Isi & Analisis):** H2 (28px), kartu-kartu poin bernomor (1, 2, 3) atau grid perbandingan visual dengan padding dan kontras yang proporsional.
 - **Slide Akhir (Penutup & Kesimpulan):** Ringkasan takeaway, kutipan penutup, CTA, atau ucapan terima kasih.
 - **Tanpa Emotikon:** Selalu gunakan ikon Font Awesome (`<i class="fa-solid fa-..."></i>`).
+
+---
+
+## 18. Fitur Sound to Design (Voice-to-Design) & Antarmuka Modal Ramping
+
+Greymist AI mendukung fitur **Sound to Design**:
+1. **Aktivasi 1-Klik:** Pengguna mengklik ikon mikrofon `🎙️` di dalam kolom prompt atau tombol `Sound to Design` di bilah upload.
+2. **Speech-to-Text Realtime:**
+   - Menggunakan native Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`) dengan bahasa `id-ID` yang otomatis menangkap kalimat bahasa Indonesia maupun terminologi UI/UX bahasa Inggris secara presisi.
+   - Fallback otomatis ke model Groq `whisper-large-v3-turbo` via MediaRecorder jika browser pengguna tidak mendukung Web Speech API bawaan.
+3. **Instan Menjadi Desain (Zero-Friction):**
+   - Transkrip kata yang diucapkan langsung tampil di kolom prompt secara realtime.
+   - Segera setelah pengguna berhenti berbicara (speech end), sistem otomatis memicu pembuatan desain (`Jalankan AI`) tanpa perlu klik tombol tambahan lagi.
+4. **Modal AI Ramping (Clean UX):**
+   - Kotak inspektor `Isi Frame` telah ditiadakan dari modal AI agar tampilan modal ringkas, fokus pada instruksi kreatif, suara, preset, dan foto referensi. Inspeksi hierarki DOM tetap dapat diakses di panel kiri kanvas Greymist.
+
+---
+
+## 19. Standar ID & Class Semantik Serta One-Page Smooth Scroll Navigation
+
+Ketika membangun landing page 1 halaman (single-page website):
+1. **Wajib ID & Class Semantik pada Setiap Section:**
+   - DILARANG membiarkan `<section>` tanpa atribut `id` atau `class`.
+   - Pola baku penamaan ID & Class:
+     * Hero: `<section id="hero" class="gm-object hero-section">`
+     * About / Tentang: `<section id="about" class="gm-object about-section">`
+     * Services / Layanan: `<section id="services" class="gm-object services-section">`
+     * Features / Keunggulan: `<section id="features" class="gm-object features-section">`
+     * Portfolio / Proyek: `<section id="portfolio" class="gm-object portfolio-section">`
+     * Pricing / Harga: `<section id="pricing" class="gm-object pricing-section">`
+     * Testimonials / Ulasan: `<section id="testimonials" class="gm-object testimonials-section">`
+     * FAQ / Tanya Jawab: `<section id="faq" class="gm-object faq-section">`
+     * Contact / Kontak: `<section id="contact" class="gm-object contact-section">`
+     * Footer: `<footer id="footer" class="gm-object footer-section">`
+2. **Koneksi Presisi Link Navbar ke Section:**
+   - Setiap link menu pada `<nav>` wajib ditautkan secara presisi menggunakan format ganda:
+     `href="#{id}"` DAN `data-action-type="scroll" data-action-target="{id}"`.
+   - Contoh:
+     ```html
+     <nav class="gm-object main-navbar" style="...">
+       <a class="gm-object" href="#about" data-action-type="scroll" data-action-target="about">Tentang</a>
+       <a class="gm-object" href="#services" data-action-type="scroll" data-action-target="services">Layanan</a>
+       <a class="gm-object" href="#portfolio" data-action-type="scroll" data-action-target="portfolio">Portofolio</a>
+       <a class="gm-object" href="#pricing" data-action-type="scroll" data-action-target="pricing">Harga</a>
+       <a class="gm-object" href="#contact" data-action-type="scroll" data-action-target="contact">Kontak</a>
+     </nav>
+     ```
+3. **Smooth Scroll Interaktif Langsung di Editor:**
+   - Greymist Action Runner menangkap klik langsung pada link navigasi (`a[href^="#"]` atau `data-action-type="scroll"`).
+   - Kanvas akan melakukan *smooth scrolling* ke section tujuan secara mulus disertai highlight sekilas pada section yang dituju.

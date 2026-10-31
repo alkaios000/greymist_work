@@ -27,20 +27,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         } else if (type === "scroll") {
-            const scrollId = el.dataset.actionScrollTarget || el.dataset.actionTarget;
-            if(scrollId) {
-                // Gunakan class atau id dari preview jika dibutuhkan, atau query di document
-                // Tapi ini dijalankan di Main Editor
-                let scrollEl = document.getElementById(scrollId) || document.querySelector("." + scrollId);
-                // Jika tidak ketemu di global, cari di dalam active core
+            const rawTarget = el.dataset.actionScrollTarget || el.dataset.actionTarget || el.getAttribute("href") || "";
+            const scrollId = rawTarget.replace(/^#/, "").trim();
+            if (scrollId) {
+                // 1. Cari elemen berdasarkan ID, class, atau name di document
+                let scrollEl = document.getElementById(scrollId) || document.querySelector("." + scrollId) || document.querySelector(`[name="${scrollId}"]`);
+                // 2. Jika belum ketemu, cari di dalam active object-core
                 if (!scrollEl) {
-                    const activeCore = document.querySelector(".gm-object-core.actived");
+                    const activeThumb = document.querySelector(".gm-frame-thumbnail.actived");
+                    const activeFrameId = activeThumb ? activeThumb.dataset.frame : null;
+                    const activeCore = (activeFrameId ? document.getElementById("object-core-" + activeFrameId) : null) || document.querySelector(".gm-object-core.actived") || document.querySelector(".gm-object-core");
                     if (activeCore) {
-                        scrollEl = activeCore.querySelector("#" + scrollId) || activeCore.querySelector("." + scrollId);
+                        scrollEl = activeCore.querySelector("#" + scrollId) || activeCore.querySelector("." + scrollId) || activeCore.querySelector(`[name="${scrollId}"]`);
                     }
                 }
                 if (scrollEl) {
                     scrollEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                    // Highlight section tujuan secara halus
+                    scrollEl.style.transition = "outline 0.3s ease";
+                    scrollEl.style.outline = "2px dashed #0078ff";
+                    setTimeout(() => { scrollEl.style.outline = ""; }, 1200);
                 }
             }
         } else if (type === "modal") {
@@ -111,7 +117,43 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 2. Untuk objek umum: Alt + Click atau mode interaksi
+        // 2. Jika link navigasi navbar atau elemen scroll (data-action-type='scroll' atau a[href^='#'])
+        const scrollBtn = e.target.closest("[data-action-type='scroll'], a[href^='#'], nav a, .nav-link");
+        if (scrollBtn) {
+            const rawHref = scrollBtn.getAttribute("href") || "";
+            const isInternalHash = rawHref.startsWith("#") && rawHref.length > 1;
+            const hasScrollAction = scrollBtn.dataset.actionType === "scroll";
+
+            if (isInternalHash || hasScrollAction) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (hasScrollAction) {
+                    window.runObjectAction(scrollBtn);
+                } else {
+                    const targetKey = rawHref.substring(1).trim();
+                    if (targetKey) {
+                        let targetEl = document.getElementById(targetKey) || document.querySelector("." + targetKey) || document.querySelector(`[name="${targetKey}"]`);
+                        if (!targetEl) {
+                            const activeThumb = document.querySelector(".gm-frame-thumbnail.actived");
+                            const activeFrameId = activeThumb ? activeThumb.dataset.frame : null;
+                            const activeCore = (activeFrameId ? document.getElementById("object-core-" + activeFrameId) : null) || document.querySelector(".gm-object-core.actived") || document.querySelector(".gm-object-core");
+                            if (activeCore) {
+                                targetEl = activeCore.querySelector("#" + targetKey) || activeCore.querySelector("." + targetKey) || activeCore.querySelector(`[name="${targetKey}"]`);
+                            }
+                        }
+                        if (targetEl) {
+                            targetEl.scrollIntoView({ behavior: "smooth", block: "start" });
+                            targetEl.style.transition = "outline 0.3s ease";
+                            targetEl.style.outline = "2px dashed #0078ff";
+                            setTimeout(() => { targetEl.style.outline = ""; }, 1200);
+                        }
+                    }
+                }
+                return;
+            }
+        }
+
+        // 3. Untuk objek umum: Alt + Click atau mode interaksi
         const isInteractionMode = document.body.classList.contains('gm-interaction-mode-on');
         if (e.altKey || isInteractionMode) {
             const obj = e.target.closest("[data-action-type]");
