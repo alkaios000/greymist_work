@@ -12,6 +12,7 @@
         init: function () {
             this.bindEvents();
             this.loadComponents();
+            document.addEventListener('gm-includes-updated', () => self.renderProjectIncludes());
         },
 
         bindEvents: function () {
@@ -476,6 +477,62 @@
         /**
          * Render komponen ke list di part/aside-left/bottom/template.html
          */
+        /**
+         * Render daftar Include Components proyek (PHP-like Includes)
+         */
+        renderProjectIncludes: function () {
+            const container = document.getElementById("gm-project-includes-container");
+            const listEl = document.getElementById("gm-project-includes-list");
+            const countBadge = document.getElementById("gm-project-includes-count");
+            if (!container || !listEl) return;
+
+            const includes = (window.gmIncludeEngine && typeof window.gmIncludeEngine.getIncludes === "function")
+                ? window.gmIncludeEngine.getIncludes()
+                : [];
+
+            if (countBadge) countBadge.textContent = includes.length;
+
+            if (includes.length === 0) {
+                container.style.display = "none";
+                listEl.innerHTML = "";
+                return;
+            }
+
+            container.style.display = "block";
+            listEl.innerHTML = "";
+
+            includes.forEach(inc => {
+                const card = document.createElement("div");
+                card.className = "gm-include-sidebar-card";
+                card.style.cssText = "background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; gap: 6px;";
+                card.innerHTML = `
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 12px; font-weight: 700; color: #0369a1; display: flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-link"></i> ${inc.name}
+                        </span>
+                        <span style="font-size: 10px; color: #0284c7; background: #e0f2fe; padding: 1px 5px; border-radius: 4px;">
+                            ${(inc.frames || []).length} frames
+                        </span>
+                    </div>
+                    <div style="display: flex; gap: 6px;">
+                        <button type="button" class="gm-btn-insert-include" data-id="${inc.id}" style="flex: 1; padding: 4px 8px; font-size: 11px; font-weight: 600; background: #0284c7; color: #fff; border: none; border-radius: 4px; cursor: pointer;">
+                            Sisipkan ke Lokasi Aktif
+                        </button>
+                    </div>
+                `;
+
+                card.querySelector(".gm-btn-insert-include").addEventListener("click", function (e) {
+                    e.preventDefault();
+                    const activeObj = document.querySelector(".gm-object.gm-active") || document.querySelector(".gm-object-core.actived");
+                    if (window.gmIncludeEngine) {
+                        window.gmIncludeEngine.insertIncludeAtTarget(inc.id, activeObj);
+                    }
+                });
+
+                listEl.appendChild(card);
+            });
+        },
+
         renderComponents: function (components) {
             const self = this;
             self.savedComponents = components;
@@ -485,6 +542,7 @@
             if (countBadge) {
                 countBadge.textContent = components.length;
             }
+            self.renderProjectIncludes();
 
             if (!container) return;
 

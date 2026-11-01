@@ -672,6 +672,7 @@ switch ($ai_action) {
             $frames_updates     = $ai_res['frames_updates'] ?? [];
             $patch_data         = $ai_res['patch'] ?? null;
             $breakpoints_to_add = $ai_res['breakpoints_to_add'] ?? [];
+            $custom_js_to_add   = $ai_res['custom_js'] ?? null;
         } else {
             if ($ai_res !== null && !empty($ai_res['error'])) {
                 $api_warning = $ai_res['error'];
@@ -685,6 +686,7 @@ switch ($ai_action) {
                 $frames_updates     = $local_cmd['frames_updates'] ?? [];
                 $patch_data         = $local_cmd['patch'] ?? null;
                 $breakpoints_to_add = $local_cmd['breakpoints_to_add'] ?? [];
+                $custom_js_to_add   = $local_cmd['custom_js'] ?? null;
             } else {
                 $is_removal_or_tweak = (bool)preg_match('/\b(hapus|hilangkan|buang|delete|remove|tanpa|tiadakan|singkirkan|ganti|ubah|edit|perbaiki|pindah)\b/i', $prompt);
                 if ($is_removal_or_tweak) {
@@ -928,6 +930,30 @@ switch ($ai_action) {
             default               => 'Komponen berhasil ditambahkan (' . $source_mode . ').',
         };
 
+        // Simpan Custom JS ke database jika AI menghasilkan script
+        if (!empty($custom_js_to_add) && $pdo) {
+            $target_fid = $active_frame_id;
+            if ($target_fid <= 0 && !empty($created_frames)) {
+                $target_fid = (int)$created_frames[0]['frame_id'];
+            }
+            if ($target_fid > 0) {
+                $stmtJs = $pdo->prepare("UPDATE gm_frames SET custom_js = ? WHERE frame_id = ?");
+                $stmtJs->execute([$custom_js_to_add, $target_fid]);
+            }
+        }
+
+        // Simpan Custom Breakpoints ke frame jika AI menghasilkan breakpoint baru
+        if (!empty($breakpoints_to_add) && $pdo) {
+            $target_fid = $active_frame_id;
+            if ($target_fid <= 0 && !empty($created_frames)) {
+                $target_fid = (int)$created_frames[0]['frame_id'];
+            }
+            if ($target_fid > 0) {
+                $stmtBp = $pdo->prepare("UPDATE gm_frames SET custom_breakpoints = ? WHERE frame_id = ?");
+                $stmtBp->execute([json_encode($breakpoints_to_add), $target_fid]);
+            }
+        }
+
         // Perbarui & simpan cache memori AI proyek ke database gm_projects
         if ($project_id > 0) {
             $updated_memory = get_project_ai_memory($pdo, $project_id, []);
@@ -965,6 +991,7 @@ switch ($ai_action) {
             'renamed_project'         => $renamed_project,
             'frames_updates'          => $saved_batch_updates,
             'breakpoints_to_add'      => $breakpoints_to_add,
+            'custom_js'               => $custom_js_to_add ?? null,
             'component'               => $saved_component,
             'ai_memory'               => $ai_memory,
             'used_assets_count'       => count($user_assets),

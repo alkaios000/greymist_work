@@ -50,6 +50,8 @@ $action_whitelist = [
     'delete_frame'           => 'frame_action.php',
     'save_frame'             => 'frame_action.php',
     'save_cores'             => 'frame_action.php',
+    'get_frame_script'       => 'frame_action.php',
+    'save_frame_script'      => 'frame_action.php',
 
     // Component Actions
     'get_components'         => 'component_action.php',

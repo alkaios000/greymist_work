@@ -526,6 +526,30 @@ html, body {
 
 .gm-object {
   transition: 0.3s ease-in-out;
+}
+
+/* Responsive & Hamburger Menu */
+.gm-hamburger-btn {
+  display: none;
+  cursor: pointer;
+  user-select: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  padding: 0 !important;
+}
+
+@media (max-width: 1024px) {
+  .gm-navbar .gm-nav-links:not(.gm-menu-open) { display: none !important; }
+  .gm-navbar .gm-hamburger-btn, .gm-hamburger-btn, [data-action-type="toggle-sidebar"] { display: flex !important; }
+  .gm-mobile-drawer:not(.gm-menu-open) { display: none !important; }
+  .gm-mobile-drawer.gm-menu-open { display: flex !important; }
+  aside.gm-mobile-drawer:not(.gm-menu-open), .gm-sidebar:not(.gm-menu-open), aside.sidebar-section:not(.gm-menu-open) { transform: translateX(-100%) !important; }
+  aside.gm-mobile-drawer.gm-menu-open, .gm-sidebar.gm-menu-open, aside.sidebar-section.gm-menu-open { transform: translateX(0) !important; display: flex !important; z-index: 99999 !important; box-shadow: 4px 0 24px rgba(0,0,0,0.2) !important; }
+  #main-content-area, .main-content-area { margin-left: 0 !important; width: 100% !important; }
 }`;
 
         // Atribut yang akan dihapus
@@ -540,8 +564,11 @@ html, body {
 
         // Class yang akan dihapus
         function shouldRemoveClass(className) {
-            // PERLINDUNGAN: Jangan hapus class animasi
+            // PERLINDUNGAN: Jangan hapus class animasi & responsive
             if (className === 'gm-anim-base' || (className.startsWith('gm-anim-') && !className.includes('done'))) {
+                return false;
+            }
+            if (['gm-navbar', 'gm-nav-links', 'gm-hamburger-btn', 'gm-mobile-drawer', 'gm-menu-open', 'gm-sidebar'].includes(className)) {
                 return false;
             }
 
@@ -982,6 +1009,16 @@ document.addEventListener("DOMContentLoaded", () => {
         delete obj._gmHoverApplied;
     }, true);
     document.addEventListener("click", e => {
+        const hBtn = e.target.closest('.gm-hamburger-btn, [data-action-type="toggle-sidebar"], [data-action-type="toggle-menu"]');
+        const hDrawer = document.querySelector('.gm-mobile-drawer, aside.gm-mobile-drawer, .gm-sidebar, aside.sidebar-section, .gm-navbar .gm-nav-links');
+        if (hBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (hDrawer) hDrawer.classList.toggle('gm-menu-open');
+            return;
+        } else if (hDrawer && hDrawer.classList.contains('gm-menu-open') && !hDrawer.contains(e.target)) {
+            hDrawer.classList.remove('gm-menu-open');
+        }
         const obj = e.target.closest("[data-action-type]");
         if (!obj) return;
         e.preventDefault();

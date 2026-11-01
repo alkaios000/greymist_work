@@ -116,6 +116,103 @@
             menu.querySelectorAll(".gm-no-active-menu").forEach(i => i.style.display = "block");
         }
 
+        // ===== INTEGRASI INCLUDE COMPONENT ENGINE (PHP-LIKE INCLUDE) =====
+        const makeIncludeItem = document.getElementById("gmMakeIncludeMenuItem");
+        const insertIncludeItem = document.getElementById("gmInsertIncludeMenuItem");
+        const syncIncludeItem = document.getElementById("gmSyncIncludeMenuItem");
+        const unlinkIncludeItem = document.getElementById("gmUnlinkIncludeMenuItem");
+        const includeSubmenuList = document.getElementById("gmIncludeSubmenuList");
+        const existingIncludeEl = targetObj ? targetObj.closest("[data-gm-include]") : null;
+
+        if (makeIncludeItem) {
+            makeIncludeItem.style.display = targetObj ? "block" : "none";
+            if (existingIncludeEl) {
+                const incName = existingIncludeEl.dataset.gmIncludeName || "Komponen";
+                makeIncludeItem.innerHTML = `<i class="fa-solid fa-link" style="color: #0284c7; margin-right: 6px; font-size: 13px;"></i> Pengaturan Include: "${incName}"...`;
+            } else {
+                makeIncludeItem.innerHTML = `<i class="fa-solid fa-link" style="color: #0284c7; margin-right: 6px; font-size: 13px;"></i> Jadikan Include Component (PHP Include)...`;
+            }
+            makeIncludeItem.onclick = function(e) {
+                e.preventDefault();
+                closeMenu();
+                const elToInclude = existingIncludeEl || targetObj;
+                if (window.gmIncludeEngine) window.gmIncludeEngine.openModal(elToInclude);
+                else if (window.gmSyncNavbarEngine) window.gmSyncNavbarEngine.openModal(elToInclude);
+            };
+        }
+
+        if (syncIncludeItem) {
+            syncIncludeItem.style.display = existingIncludeEl ? "block" : "none";
+            if (existingIncludeEl) {
+                syncIncludeItem.onclick = function(e) {
+                    e.preventDefault();
+                    closeMenu();
+                    if (window.gmIncludeEngine) window.gmIncludeEngine.propagate(existingIncludeEl);
+                    else if (window.gmSyncNavbarEngine) window.gmSyncNavbarEngine.propagate(existingIncludeEl);
+                };
+            }
+        }
+
+        if (unlinkIncludeItem) {
+            unlinkIncludeItem.style.display = existingIncludeEl ? "block" : "none";
+            if (existingIncludeEl) {
+                unlinkIncludeItem.onclick = function(e) {
+                    e.preventDefault();
+                    closeMenu();
+                    if (confirm("Lepas kaitan Include pada elemen ini di halaman ini? Perubahan selanjutnya tidak akan disinkronkan lagi ke halaman lain.")) {
+                        if (window.gmIncludeEngine) window.gmIncludeEngine.unlink(existingIncludeEl);
+                    }
+                };
+            }
+        }
+
+        if (insertIncludeItem && includeSubmenuList) {
+            insertIncludeItem.style.display = targetObj ? "block" : "none";
+            const includes = (window.gmIncludeEngine && typeof window.gmIncludeEngine.getIncludes === "function") 
+                ? window.gmIncludeEngine.getIncludes() 
+                : [];
+            
+            includeSubmenuList.innerHTML = "";
+            if (includes.length === 0) {
+                includeSubmenuList.innerHTML = `<li class="gm-menu-item" style="color: #94a3b8; font-size: 11px; padding: 6px 10px;">(Belum ada include di proyek)</li>`;
+            } else {
+                includes.forEach(inc => {
+                    const li = document.createElement("li");
+                    li.className = "gm-menu-item";
+                    li.style.cssText = "display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; padding: 7px 12px;";
+                    li.innerHTML = `
+                        <span style="font-weight: 600; color: #1e293b;">${inc.name}</span>
+                        <span style="font-size: 10px; background: #e0f2fe; color: #0284c7; padding: 1px 5px; border-radius: 4px;">Include</span>
+                    `;
+                    li.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        closeMenu();
+                        if (window.gmIncludeEngine) {
+                            window.gmIncludeEngine.insertIncludeAtTarget(inc.id, targetObj);
+                        }
+                    });
+                    includeSubmenuList.appendChild(li);
+                });
+            }
+        }
+
+        // Tampilkan opsi Sinkronisasi Navbar jika target berupa / di dalam Navbar (Backward Compatibility)
+        const syncNavMenuItem = document.getElementById("gmSyncNavbarMenuItem");
+        if (syncNavMenuItem) {
+            const hasNav = targetObj && (targetObj.closest(".gm-navbar") || targetObj.closest("nav") || (targetObj.classList && targetObj.classList.contains("gm-navbar")) || (targetObj.classList && targetObj.classList.contains("gm-synced-navbar")));
+            syncNavMenuItem.style.display = hasNav ? "block" : "none";
+            if (hasNav) {
+                syncNavMenuItem.onclick = function(e) {
+                    e.preventDefault();
+                    closeMenu();
+                    const nav = targetObj.closest(".gm-navbar") || targetObj.closest("nav") || targetObj;
+                    if (window.gmIncludeEngine) window.gmIncludeEngine.openModal(nav);
+                    else if (window.gmSyncNavbarEngine) window.gmSyncNavbarEngine.openModal(nav);
+                };
+            }
+        }
+
         // ===== Info Modal (Tag name & Class info) =====
         if (infoModal && activeObjects.length === 1) {
             const obj = activeObjects[0];

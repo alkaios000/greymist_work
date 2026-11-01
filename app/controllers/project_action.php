@@ -178,13 +178,33 @@ switch ($project_action) {
                 SET frame_name = ?, core_content = ?, sort_order = ?
                 WHERE frame_id = ?
             ");
+            $stmtWithBp = $pdo->prepare("
+                UPDATE gm_frames
+                SET frame_name = ?, core_content = ?, sort_order = ?,
+                    custom_breakpoints = COALESCE(?, custom_breakpoints),
+                    custom_js = COALESCE(?, custom_js)
+                WHERE frame_id = ?
+            ");
             foreach ($data['frames'] as $index => $f) {
-                $stmt->execute([
-                    $f['frame_name'] ?? '',
-                    $f['core_content'] ?? '',
-                    $index + 1,
-                    $f['frame_id'],
-                ]);
+                if (isset($f['custom_breakpoints']) || isset($f['custom_js'])) {
+                    $bp = isset($f['custom_breakpoints']) ? (is_array($f['custom_breakpoints']) ? json_encode($f['custom_breakpoints']) : (string)$f['custom_breakpoints']) : null;
+                    $js = isset($f['custom_js']) ? (string)$f['custom_js'] : null;
+                    $stmtWithBp->execute([
+                        $f['frame_name'] ?? '',
+                        $f['core_content'] ?? '',
+                        $index + 1,
+                        $bp,
+                        $js,
+                        $f['frame_id'],
+                    ]);
+                } else {
+                    $stmt->execute([
+                        $f['frame_name'] ?? '',
+                        $f['core_content'] ?? '',
+                        $index + 1,
+                        $f['frame_id'],
+                    ]);
+                }
             }
             $pdo->commit();
             json_response(['status' => 'ok', 'success' => true]);

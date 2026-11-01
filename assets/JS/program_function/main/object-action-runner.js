@@ -1,38 +1,160 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+    // ==============================================================
+    // MESIN RESOLUSI FRAME DINAMIS & CERDAS (DYNAMIC FRAME RESOLVER)
+    // ==============================================================
+    window.gmResolveFrame = function(targetIdentifier, linkEl = null) {
+        const allThumbs = Array.from(document.querySelectorAll('.gm-frame-thumbnail'));
+        let allFrames = allThumbs.map((t, idx) => {
+            const fid = parseInt(t.dataset.frame) || 0;
+            const nameEl = t.querySelector('.gm-frame-name');
+            const fname = (nameEl ? nameEl.textContent : '').trim();
+            return {
+                id: fid,
+                name: fname,
+                lowerName: fname.toLowerCase(),
+                index: idx,
+                thumb: t,
+                core: document.getElementById('object-core-' + fid)
+            };
+        });
+
+        // Fallback jika thumbnail belum siap, cari langsung di core
+        if (allFrames.length === 0) {
+            const cores = Array.from(document.querySelectorAll('.gm-object-core'));
+            allFrames = cores.map((c, idx) => {
+                const fid = parseInt(c.dataset.frame) || 0;
+                return {
+                    id: fid,
+                    name: `Frame #${fid}`,
+                    lowerName: `frame #${fid}`,
+                    index: idx,
+                    thumb: null,
+                    core: c
+                };
+            });
+        }
+
+        if (allFrames.length === 0) return null;
+
+        // 1. Cek dari ID frame permanen pada linkEl (Paling Akurat & Kebal Rename)
+        const frameIdFromData = linkEl ? parseInt(linkEl.dataset.actionFrameId || linkEl.dataset.actionTarget) : parseInt(targetIdentifier);
+        if (frameIdFromData > 0) {
+            const byId = allFrames.find(f => f.id === frameIdFromData);
+            if (byId) return byId;
+        }
+
+        // 2. Kumpulkan kandidat kata kunci pencarian
+        const candidates = [];
+        if (targetIdentifier && typeof targetIdentifier === 'string') {
+            candidates.push(targetIdentifier.trim());
+        }
+        if (linkEl) {
+            if (linkEl.dataset.actionFrameName) candidates.push(linkEl.dataset.actionFrameName.trim());
+            if (linkEl.dataset.actionTarget) candidates.push(linkEl.dataset.actionTarget.trim());
+            const href = linkEl.getAttribute('href');
+            if (href && href !== '#' && href.startsWith('#')) {
+                candidates.push(href.replace(/^#/, '').trim());
+            }
+            const txt = linkEl.textContent.trim();
+            if (txt) candidates.push(txt);
+            if (linkEl.title) candidates.push(linkEl.title.trim());
+        }
+
+        // 3. Kamus Sinonim Cerdas (Bilingual: Indonesia & Inggris)
+        const synonymMap = {
+            'home': ['beranda', 'main frame', 'home', 'index', 'dashboard', 'awal', 'pertama', '1'],
+            'beranda': ['beranda', 'home', 'main frame', 'index', 'dashboard', 'awal', 'pertama', '1'],
+            'about': ['tentang', 'tentang kami', 'profil', 'profile', 'about', 'about us', 'company', 'kedua', '2'],
+            'tentang': ['tentang', 'tentang kami', 'profil', 'profile', 'about', 'about us', 'company', 'kedua', '2'],
+            'services': ['layanan', 'produk', 'fitur', 'service', 'services', 'products', 'features', 'ketiga', '3'],
+            'layanan': ['layanan', 'produk', 'fitur', 'service', 'services', 'products', 'features', 'ketiga', '3'],
+            'contact': ['kontak', 'hubungi', 'hubungi kami', 'contact', 'contact us', 'bantuan', 'support'],
+            'kontak': ['kontak', 'hubungi', 'hubungi kami', 'contact', 'contact us', 'bantuan', 'support'],
+            'pricing': ['harga', 'paket', 'biaya', 'pricing', 'plans', 'tarif'],
+            'harga': ['harga', 'paket', 'biaya', 'pricing', 'plans', 'tarif'],
+            'gallery': ['galeri', 'gallery', 'portfolio', 'portofolio', 'karya'],
+            'galeri': ['galeri', 'gallery', 'portfolio', 'portofolio', 'karya']
+        };
+
+        for (let rawCand of candidates) {
+            const cand = rawCand.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
+            if (!cand) continue;
+
+            // a. Jika kandidat berupa angka murni
+            if (/^\d+$/.test(rawCand)) {
+                const num = parseInt(rawCand);
+                const byId = allFrames.find(f => f.id === num);
+                if (byId) return byId;
+                if (num >= 1 && num <= allFrames.length) {
+                    return allFrames[num - 1];
+                }
+            }
+
+            // b. Pencocokan eksak nama frame
+            const exact = allFrames.find(f => f.lowerName === cand || f.lowerName.replace(/[^a-z0-9]/g, ' ').trim() === cand);
+            if (exact) {
+                if (linkEl) linkEl.dataset.actionFrameId = exact.id;
+                return exact;
+            }
+
+            // c. Pencocokan substring
+            const sub = allFrames.find(f => f.lowerName.includes(cand) || cand.includes(f.lowerName));
+            if (sub) {
+                if (linkEl) linkEl.dataset.actionFrameId = sub.id;
+                return sub;
+            }
+
+            // d. Pencocokan berdasarkan sinonim
+            for (let [key, syns] of Object.entries(synonymMap)) {
+                if (cand === key || syns.includes(cand) || syns.some(s => cand.includes(s))) {
+                    const matchSyn = allFrames.find(f => {
+                        return syns.some(s => f.lowerName.includes(s) || s.includes(f.lowerName));
+                    });
+                    if (matchSyn) {
+                        if (linkEl) linkEl.dataset.actionFrameId = matchSyn.id;
+                        return matchSyn;
+                    }
+                }
+            }
+        }
+
+        return null;
+    };
+
+    // ==============================================================
+    // EKSEKUSI AKSI OBJEK (RUN OBJECT ACTION)
+    // ==============================================================
     window.runObjectAction = function(el) {
-        if (!el || !el.dataset.actionType) return;
+        if (!el) return;
         
-        const type = el.dataset.actionType;
+        const type = el.dataset.actionType || (el.closest('.gm-navbar, nav, .gm-nav-links') ? 'goto' : null);
+        if (!type) return;
         
         if (type === "goto") {
-            const targetId = (el.dataset.actionTarget || "").trim();
-            if (targetId) {
-                // 1. Cari berdasarkan frame_id numerik
-                let thumb = document.querySelector(`.gm-frame-thumbnail[data-frame="${targetId}"]`);
-                // 2. Jika bukan ID numerik, cari berdasarkan nama frame (case-insensitive)
-                if (!thumb) {
-                    const cleanTarget = targetId.toLowerCase();
-                    const allThumbs = Array.from(document.querySelectorAll('.gm-frame-thumbnail'));
-                    thumb = allThumbs.find(t => {
-                        const nameEl = t.querySelector('.gm-frame-name');
-                        const fName = (nameEl ? nameEl.textContent : '').trim().toLowerCase();
-                        return fName === cleanTarget || fName.includes(cleanTarget) || cleanTarget.includes(fName);
-                    });
+            const targetId = (el.dataset.actionTarget || el.dataset.actionFrameId || el.getAttribute("href") || el.textContent || "").trim();
+            const frame = window.gmResolveFrame(targetId, el);
+            if (frame) {
+                // Permanenkan ID frame agar kebal terhadap rename frame
+                el.dataset.actionFrameId = frame.id;
+                el.dataset.actionType = "goto";
+                el.dataset.actionTarget = frame.id;
+                el.dataset.actionFrameName = frame.name;
+
+                if (typeof window.activateFrame === "function") {
+                    window.activateFrame(frame.id);
+                } else if (frame.thumb) {
+                    frame.thumb.click();
                 }
-                if (thumb) {
-                    thumb.click();
-                } else if (typeof window.activateFrame === "function") {
-                    window.activateFrame(targetId);
-                }
+                return;
+            } else {
+                console.warn("[runObjectAction] Tidak dapat menemukan frame untuk target:", targetId);
             }
         } else if (type === "scroll") {
             const rawTarget = el.dataset.actionScrollTarget || el.dataset.actionTarget || el.getAttribute("href") || "";
             const scrollId = rawTarget.replace(/^#/, "").trim();
             if (scrollId) {
-                // 1. Cari elemen berdasarkan ID, class, atau name di document
                 let scrollEl = document.getElementById(scrollId) || document.querySelector("." + scrollId) || document.querySelector(`[name="${scrollId}"]`);
-                // 2. Jika belum ketemu, cari di dalam active object-core
                 if (!scrollEl) {
                     const activeThumb = document.querySelector(".gm-frame-thumbnail.actived");
                     const activeFrameId = activeThumb ? activeThumb.dataset.frame : null;
@@ -43,7 +165,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
                 if (scrollEl) {
                     scrollEl.scrollIntoView({ behavior: "smooth", block: "start" });
-                    // Highlight section tujuan secara halus
                     scrollEl.style.transition = "outline 0.3s ease";
                     scrollEl.style.outline = "2px dashed #0078ff";
                     setTimeout(() => { scrollEl.style.outline = ""; }, 1200);
@@ -55,9 +176,8 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     function showModalPreview(el) {
-        // Hapus modal lama jika ada
         let existing = document.getElementById("gm-test-action-modal");
-        if(existing) existing.remove();
+        if (existing) existing.remove();
 
         const title = el.dataset.actionModalTitle || "Modal Title";
         const content = el.dataset.actionModalContent || "Modal Content";
@@ -106,9 +226,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Intercept click: direct click untuk tombol slide nav, atau Alt + Click / mode interaksi untuk objek lain
+    // ==============================================================
+    // EVENT LISTENER KLIK PADA LINK & OBJEK INTERAKTIF
+    // ==============================================================
     document.addEventListener("click", (e) => {
-        // 1. Jika tombol navigasi slide PPT (.gm-slide-nav-btn atau dalam .slide-navigation), aktifkan langsung tanpa perlu Alt
+        // Jangan picu navigasi jika pengguna sedang aktif mengetik/mengedit teks contenteditable
+        if (e.target.isContentEditable || e.target.closest('[contenteditable="true"]')) {
+            return;
+        }
+
+        // 1. Direct click untuk tombol navigasi slide PPT
         const slideNavBtn = e.target.closest(".gm-slide-nav-btn, .slide-navigation [data-action-type='goto']");
         if (slideNavBtn) {
             e.preventDefault();
@@ -117,8 +244,18 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 2. Jika link navigasi navbar atau elemen scroll (data-action-type='scroll' atau a[href^='#'])
-        const scrollBtn = e.target.closest("[data-action-type='scroll'], a[href^='#'], nav a, .nav-link");
+        // 2. Direct click untuk Link Navigasi Navbar & Menu Halaman
+        const navLink = e.target.closest('.gm-navbar a, .gm-nav-links a, .gm-nav-link, nav a, .gm-navbar [data-action-type="goto"]');
+        if (navLink) {
+            // Jika link memiliki target frame atau aksi goto, jalankan navigasi langsung
+            e.preventDefault();
+            e.stopPropagation();
+            window.runObjectAction(navLink);
+            return;
+        }
+
+        // 3. Link navigasi scroll (data-action-type='scroll' atau a[href^='#'])
+        const scrollBtn = e.target.closest("[data-action-type='scroll'], a[href^='#'], .nav-link");
         if (scrollBtn) {
             const rawHref = scrollBtn.getAttribute("href") || "";
             const isInternalHash = rawHref.startsWith("#") && rawHref.length > 1;
@@ -153,8 +290,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        // 3. Untuk objek umum: Alt + Click atau mode interaksi
-        const isInteractionMode = document.body.classList.contains('gm-interaction-mode-on');
+        // 4. Untuk objek umum: Alt + Click atau mode interaksi
+        const isInteractionMode = document.body.classList.contains('gm-interaction-mode-on') || document.body.classList.contains('gm-fullscreen-preview');
         if (e.altKey || isInteractionMode) {
             const obj = e.target.closest("[data-action-type]");
             if (obj) {
@@ -163,11 +300,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.runObjectAction(obj);
             }
         }
-    }, true); // Capture phase agar menangkap event lebih dulu
+    }, true); // Capture phase agar menangkap event sebelum terblokir
 
     // Navigasi Keyboard Presentasi (Panah Kanan = Next Slide, Panah Kiri = Prev Slide)
     document.addEventListener("keydown", (e) => {
-        // Jangan aktifkan jika pengguna sedang mengetik teks di input/textarea/editor teks
         const activeTag = (document.activeElement?.tagName || "").toLowerCase();
         if (activeTag === "input" || activeTag === "textarea" || document.activeElement?.isContentEditable) {
             return;

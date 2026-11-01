@@ -1,0 +1,979 @@
+<!--
+    File: part/main/frame/attribute/object-responsive-script.html
+    Fungsi: Panel Responsif, Breakpoint per Halaman, Generator Hamburger Menu, dan Editor Custom JS
+-->
+<style>
+.gm-resp-panel {
+    display: flex;
+    gap: 14px;
+    width: 100%;
+    min-height: 230px;
+    max-height: 290px;
+    padding: 6px 12px;
+    box-sizing: border-box;
+    font-family: inherit;
+    font-size: 0.85em;
+    color: #333;
+    overflow-x: auto;
+}
+
+.gm-resp-col {
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.gm-resp-col-title {
+    font-size: 0.9em;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.gm-resp-col-title span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.gm-resp-badge {
+    font-size: 0.75em;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+/* Col 1: Breakpoints */
+.gm-resp-col-bp {
+    flex: 1.1;
+    min-width: 260px;
+}
+
+.gm-bp-list {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-height: 125px;
+    padding-right: 4px;
+    margin-bottom: 8px;
+}
+
+.gm-bp-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 4px 8px;
+    transition: all 0.15s ease;
+}
+
+.gm-bp-item.active {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.gm-bp-item-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85em;
+}
+
+.gm-bp-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.gm-bp-btn-sm {
+    border: none;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 0.75em;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.gm-bp-btn-sm:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.gm-bp-btn-sm.del:hover {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.gm-bp-add-row {
+    display: flex;
+    gap: 6px;
+    margin-top: auto;
+}
+
+.gm-bp-input {
+    padding: 4px 6px;
+    font-size: 0.8em;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    outline: none;
+}
+
+/* Col 2: Hamburger Generator */
+.gm-resp-col-nav {
+    flex: 1.1;
+    min-width: 250px;
+}
+
+.gm-nav-feature-desc {
+    font-size: 0.78em;
+    color: #64748b;
+    margin-bottom: 8px;
+    line-height: 1.35;
+}
+
+.gm-nav-actions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.gm-nav-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.82em;
+    font-weight: 500;
+    color: #1e293b;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s ease;
+}
+
+.gm-nav-action-btn:hover {
+    background: #f0fdf4;
+    border-color: #22c55e;
+    color: #15803d;
+    box-shadow: 0 1px 3px rgba(34,197,94,0.15);
+}
+
+.gm-nav-action-btn i {
+    font-size: 1.1em;
+    color: #0ea5e9;
+}
+
+.gm-nav-action-btn:hover i {
+    color: #16a34a;
+}
+
+/* Col 3: Custom JS Editor */
+.gm-resp-col-js {
+    flex: 1.8;
+    min-width: 380px;
+}
+
+.gm-js-scope-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.gm-js-scope-btn {
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #475569;
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 0.75em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.gm-js-scope-btn.active {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #fff;
+}
+
+.gm-js-templates-bar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.gm-js-tpl-pill {
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #334155;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 0.72em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.12s ease;
+}
+
+.gm-js-tpl-pill:hover {
+    background: #e0f2fe;
+    border-color: #38bdf8;
+    color: #0369a1;
+}
+
+.gm-js-editor-wrap {
+    flex: 1;
+    position: relative;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+}
+
+.gm-js-textarea {
+    flex: 1;
+    width: 100%;
+    min-height: 100px;
+    max-height: 140px;
+    background: transparent;
+    color: #38bdf8;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 0.82em;
+    line-height: 1.4;
+    border: none;
+    outline: none;
+    padding: 8px;
+    resize: none;
+    box-sizing: border-box;
+    white-space: pre;
+}
+
+.gm-js-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+}
+
+.gm-btn-primary-sm {
+    background: #0284c7;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    font-size: 0.8em;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.15s ease;
+}
+
+.gm-btn-primary-sm:hover {
+    background: #0369a1;
+}
+
+.gm-btn-secondary-sm {
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #cbd5e1;
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 0.8em;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+}
+
+.gm-btn-secondary-sm:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+</style>
+
+<div class="gm-resp-panel">
+    <!-- Kolom 1: Breakpoint Halaman Ini -->
+    <div class="gm-resp-col gm-resp-col-bp">
+        <div class="gm-resp-col-title">
+            <span><i class="fas fa-mobile-alt" style="color: #0284c7;"></i> Breakpoint Halaman</span>
+            <span class="gm-resp-badge" id="gm-resp-page-name">Frame Aktif</span>
+        </div>
+
+        <div class="gm-bp-list" id="gm-resp-bp-list">
+            <!-- Breakpoint list dynamically populated -->
+        </div>
+
+        <div class="gm-bp-add-row">
+            <select id="gm-resp-add-type" class="gm-bp-input" style="width: 80px;">
+                <option value="max">Max-W</option>
+                <option value="min">Min-W</option>
+            </select>
+            <input type="number" id="gm-resp-add-px" class="gm-bp-input" placeholder="768" style="flex: 1;" min="240" max="3840">
+            <button id="gm-resp-btn-add-bp" class="gm-btn-primary-sm" style="padding: 4px 8px;" title="Tambah Breakpoint">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
+
+        <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <button id="gm-resp-btn-apply-all-bp" class="gm-btn-secondary-sm" style="flex: 1; font-size: 0.73em; justify-content: center;" title="Terapkan breakpoint halaman ini ke seluruh frame proyek">
+                <i class="fas fa-globe"></i> Ke Semua Halaman
+            </button>
+            <button id="gm-resp-btn-save-bp" class="gm-btn-primary-sm" style="font-size: 0.73em; justify-content: center;" title="Simpan breakpoint halaman ke database">
+                <i class="fas fa-save"></i> Simpan
+            </button>
+        </div>
+    </div>
+
+    <!-- Kolom 2: Fitur Hamburger & Navigasi Responsif -->
+    <div class="gm-resp-col gm-resp-col-nav">
+        <div class="gm-resp-col-title">
+            <span><i class="fas fa-bars" style="color: #10b981;"></i> Hamburger Responsif</span>
+            <span class="gm-resp-badge" style="background: #dcfce7; color: #15803d;">Auto UI</span>
+        </div>
+
+        <div class="gm-nav-feature-desc">
+            Ubah navbar atau elemen menjadi hamburger toggle di Android & Tablet (<= 768px).
+        </div>
+
+        <div class="gm-nav-actions-list">
+            <button id="gm-btn-create-resp-nav" class="gm-nav-action-btn" title="Buat komponen Navbar responsif lengkap">
+                <i class="fas fa-plus-circle"></i>
+                <div>
+                    <div>+ Navbar Responsif Lengkap</div>
+                    <small style="color: #64748b; font-size: 0.88em;">Horizontal di Desktop, Hamburger di Mobile</small>
+                </div>
+            </button>
+
+            <button id="gm-btn-convert-hamburger" class="gm-nav-action-btn" title="Pasang tombol hamburger pada elemen navbar yang sedang dipilih">
+                <i class="fas fa-hamburger"></i>
+                <div>
+                    <div>Pasang Hamburger di Objek</div>
+                    <small style="color: #64748b; font-size: 0.88em;">Sisipkan tombol toggle ke elemen terpilih</small>
+                </div>
+            </button>
+
+            <button id="gm-btn-insert-nav-script" class="gm-nav-action-btn" title="Pasang JS event listener klik untuk hamburger menu">
+                <i class="fas fa-bolt"></i>
+                <div>
+                    <div>Pasang Script Toggle JS</div>
+                    <small style="color: #64748b; font-size: 0.88em;">Aktifkan interaksi klik buka/tutup menu</small>
+                </div>
+            </button>
+
+            <button id="gm-btn-sync-navbar-all" class="gm-nav-action-btn" style="border-left: 3px solid #0284c7; background: #f0f9ff;" title="Hubungkan Navbar ini ke halaman lain (Shared / Synced Navbar)">
+                <i class="fas fa-link" style="color: #0284c7;"></i>
+                <div>
+                    <div style="color: #0369a1; font-weight: 600;">Hubungkan Navbar ke Pages Lain</div>
+                    <small style="color: #64748b; font-size: 0.88em;">1 Navbar dipakai bersama, auto-sync saat diedit</small>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- Kolom 3: Editor Custom JavaScript (Page & Project) -->
+    <div class="gm-resp-col gm-resp-col-js">
+        <div class="gm-resp-col-title">
+            <span><i class="fab fa-js-square" style="color: #f59e0b;"></i> Custom JavaScript</span>
+            <div class="gm-js-scope-row" style="margin-bottom: 0;">
+                <button type="button" class="gm-js-scope-btn active" id="gm-js-scope-page">Halaman Ini</button>
+                <button type="button" class="gm-js-scope-btn" id="gm-js-scope-proj">Proyek Global</button>
+            </div>
+        </div>
+
+        <div class="gm-js-templates-bar">
+            <span style="font-size: 0.75em; color: #64748b; margin-right: 2px;">Template:</span>
+            <span class="gm-js-tpl-pill" data-tpl="hamburger">+ Hamburger Toggle</span>
+            <span class="gm-js-tpl-pill" data-tpl="modal">+ Modal / Dialog</span>
+            <span class="gm-js-tpl-pill" data-tpl="scroll">+ Smooth Scroll</span>
+            <span class="gm-js-tpl-pill" data-tpl="accordion">+ Accordion</span>
+        </div>
+
+        <div class="gm-js-editor-wrap">
+            <textarea id="gm-custom-js-input" class="gm-js-textarea" placeholder="// Tuliskan JavaScript interaktif untuk halaman ini..." spellcheck="false"></textarea>
+        </div>
+
+        <div class="gm-js-footer-actions">
+            <button id="gm-btn-run-js" class="gm-btn-secondary-sm" title="Jalankan dan tes script langsung di canvas">
+                <i class="fas fa-play" style="color: #10b981;"></i> Jalankan di Canvas
+            </button>
+            <div style="display: flex; gap: 6px;">
+                <button id="gm-btn-clear-js" class="gm-btn-secondary-sm" style="color: #dc2626;" title="Kosongkan editor">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+                <button id="gm-btn-save-js" class="gm-btn-primary-sm" title="Simpan Custom JavaScript ke database">
+                    <i class="fas fa-save"></i> Simpan Script
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // State internal
+    let currentScope = 'frame'; // 'frame' atau 'project'
+    let currentFrameId = 0;
+    let frameJsStore = {};
+    let projectJsStore = '';
+    const projId = new URLSearchParams(location.search).get("project_id") || "0";
+
+    // Templates JS Siap Pakai
+    const jsTemplates = {
+        hamburger: `// Toggle Hamburger Menu Interaktif
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.gm-hamburger-btn');
+    const drawer = document.querySelector('.gm-mobile-drawer, aside.gm-mobile-drawer');
+    if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (drawer) {
+            drawer.classList.toggle('gm-menu-open');
+        }
+    } else if (drawer && drawer.classList.contains('gm-menu-open')) {
+        if (!drawer.contains(e.target)) {
+            drawer.classList.remove('gm-menu-open');
+        }
+    }
+});`,
+        modal: `// Modal Dialog Open & Close
+document.querySelectorAll('[data-gm-toggle="modal"]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const targetId = this.getAttribute('data-gm-target');
+        const modal = document.querySelector(targetId);
+        if (modal) {
+            modal.style.display = (modal.style.display === 'none' || !modal.style.display) ? 'flex' : 'none';
+        }
+    });
+});`,
+        scroll: `// Smooth Scroll untuk Navigasi Internal
+document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
+    anchor.addEventListener('click', function(e) {
+        const href = this.getAttribute('href');
+        if (href && href !== '#') {
+            const el = document.querySelector(href);
+            if (el) {
+                e.preventDefault();
+                el.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    });
+});`,
+        accordion: `// Accordion FAQ / Dropdown
+document.querySelectorAll('.gm-accordion-header').forEach(function(hdr) {
+    hdr.addEventListener('click', function() {
+        const body = this.nextElementSibling;
+        if (body) {
+            body.style.display = (body.style.display === 'block') ? 'none' : 'block';
+        }
+    });
+});`
+    };
+
+    // Fungsi Render Daftar Breakpoints Halaman
+    function renderPageBreakpointList() {
+        const listEl = document.getElementById('gm-resp-bp-list');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+
+        const bps = window.gmBreakpoints || [];
+        bps.forEach(bp => {
+            const item = document.createElement('div');
+            item.className = 'gm-bp-item' + (window.gmActiveBreakpoint === bp.id ? ' active' : '');
+            
+            let icon = 'fa-desktop';
+            if (bp.widthValue <= 480) icon = 'fa-mobile-alt';
+            else if (bp.widthValue <= 1024) icon = 'fa-tablet-alt';
+
+            const isDefault = bp.isDefault || bp.id === 'desktop';
+
+            item.innerHTML = `
+                <div class="gm-bp-item-info">
+                    <i class="fas ${icon}" style="color: #64748b; font-size: 0.9em;"></i>
+                    <span style="font-weight: 600;">${bp.name || 'Custom'}</span>
+                    <span style="color: #64748b; font-size: 0.85em;">(${bp.rule})</span>
+                </div>
+                <div class="gm-bp-item-actions">
+                    <button class="gm-bp-btn-sm switch" title="Aktifkan tampilan ini">Lihat</button>
+                    ${!isDefault ? `<button class="gm-bp-btn-sm del" title="Hapus breakpoint"><i class="fas fa-times"></i></button>` : ''}
+                </div>
+            `;
+
+            item.querySelector('.switch').addEventListener('click', () => {
+                if (typeof window.switchBreakpoint === 'function') {
+                    window.switchBreakpoint(bp.id);
+                    renderPageBreakpointList();
+                }
+            });
+
+            const delBtn = item.querySelector('.del');
+            if (delBtn) {
+                delBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    window.gmBreakpoints = window.gmBreakpoints.filter(b => b.id !== bp.id);
+                    if (window.gmActiveBreakpoint === bp.id && typeof window.switchBreakpoint === 'function') {
+                        window.switchBreakpoint('desktop');
+                    }
+                    if (typeof window.renderBreakpointUI === 'function') window.renderBreakpointUI();
+                    renderPageBreakpointList();
+                    saveBreakpointsToCurrentFrame(false);
+                });
+            }
+
+            listEl.appendChild(item);
+        });
+    }
+
+    // Fungsi Simpan Breakpoint ke Frame Aktif
+    function saveBreakpointsToCurrentFrame(applyToAll = false) {
+        if (!currentFrameId) {
+            const activeCore = document.querySelector('.gm-object-core.actived');
+            if (activeCore) currentFrameId = parseInt(activeCore.dataset.frame) || 0;
+        }
+
+        const bpJson = JSON.stringify(window.gmBreakpoints || []);
+
+        // Update DOM dataset
+        const activeCore = document.getElementById(`object-core-${currentFrameId}`);
+        if (activeCore) {
+            activeCore.dataset.customBreakpoints = bpJson;
+        }
+
+        if (applyToAll) {
+            document.querySelectorAll('.gm-object-core').forEach(c => {
+                c.dataset.customBreakpoints = bpJson;
+            });
+        }
+
+        // Simpan ke database via AJAX
+        fetch('index.php?action=save_frame_script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                frame_id: currentFrameId,
+                project_id: projId,
+                scope: 'frame',
+                custom_breakpoints: bpJson,
+                apply_to_all: applyToAll ? 1 : 0
+            })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                const btn = applyToAll ? document.getElementById('gm-resp-btn-apply-all-bp') : document.getElementById('gm-resp-btn-save-bp');
+                if (btn) {
+                    const orig = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Tersimpan!';
+                    setTimeout(() => btn.innerHTML = orig, 1500);
+                }
+            }
+        })
+        .catch(console.error);
+    }
+
+    // Load Script Frame dari Server / DOM
+    function loadScriptsForCurrentFrame(frameId) {
+        currentFrameId = frameId;
+        const activeCore = document.getElementById(`object-core-${frameId}`);
+        const pageNameEl = document.getElementById('gm-resp-page-name');
+        
+        if (activeCore) {
+            const thumbName = document.querySelector(`.gm-frame-thumbnail[data-frame="${frameId}"] .gm-frame-name`);
+            if (pageNameEl) pageNameEl.textContent = thumbName ? thumbName.textContent : `Frame #${frameId}`;
+
+            // Breakpoints per frame
+            if (activeCore.dataset.customBreakpoints) {
+                try {
+                    const parsed = JSON.parse(activeCore.dataset.customBreakpoints);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        window.gmBreakpoints = parsed;
+                        if (typeof window.renderBreakpointUI === 'function') window.renderBreakpointUI();
+                    }
+                } catch(e) {}
+            }
+
+            // Custom JS per frame
+            frameJsStore[frameId] = activeCore.dataset.customJs || '';
+        }
+
+        renderPageBreakpointList();
+        updateEditorContent();
+    }
+
+    function updateEditorContent() {
+        const textarea = document.getElementById('gm-custom-js-input');
+        if (!textarea) return;
+        if (currentScope === 'frame') {
+            textarea.value = frameJsStore[currentFrameId] || '';
+            textarea.placeholder = `// JavaScript khusus untuk halaman ini (Frame #${currentFrameId})...\n// Script otomatis dijalankan saat pengunjung membuka halaman ini.`;
+        } else {
+            textarea.value = projectJsStore || '';
+            textarea.placeholder = `// JavaScript Global untuk SELURUH halaman proyek...\n// Script ini dieksekusi di setiap halaman proyek Anda.`;
+        }
+    }
+
+    // Jalankan script di canvas dengan aman
+    function executeScriptInCanvas(scriptCode) {
+        if (!scriptCode || !scriptCode.trim()) return;
+        try {
+            const activeCore = document.getElementById(`object-core-${currentFrameId}`) || document.querySelector('.gm-object-core.actived');
+            const runFn = new Function('core', 'document', 'window', `
+                try {
+                    ${scriptCode}
+                } catch(err) {
+                    console.warn('[Greymist Custom JS Runtime Error]', err);
+                }
+            `);
+            runFn(activeCore, document, window);
+        } catch(e) {
+            console.warn('[Greymist Custom JS Syntax Error]', e);
+        }
+    }
+
+    // Inisialisasi Event Handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        // Switch Scope: Page vs Project
+        const pageBtn = document.getElementById('gm-js-scope-page');
+        const projBtn = document.getElementById('gm-js-scope-proj');
+        const textarea = document.getElementById('gm-custom-js-input');
+
+        if (pageBtn && projBtn) {
+            pageBtn.addEventListener('click', () => {
+                currentScope = 'frame';
+                pageBtn.classList.add('active');
+                projBtn.classList.remove('active');
+                updateEditorContent();
+            });
+            projBtn.addEventListener('click', () => {
+                currentScope = 'project';
+                projBtn.classList.add('active');
+                pageBtn.classList.remove('active');
+                updateEditorContent();
+            });
+        }
+
+        if (textarea) {
+            textarea.addEventListener('input', () => {
+                if (currentScope === 'frame') {
+                    frameJsStore[currentFrameId] = textarea.value;
+                    const core = document.getElementById(`object-core-${currentFrameId}`);
+                    if (core) core.dataset.customJs = textarea.value;
+                } else {
+                    projectJsStore = textarea.value;
+                }
+            });
+        }
+
+        // Template Pills
+        document.querySelectorAll('.gm-js-tpl-pill').forEach(pill => {
+            pill.addEventListener('click', function() {
+                const tplKey = this.dataset.tpl;
+                const snippet = jsTemplates[tplKey];
+                if (snippet && textarea) {
+                    if (textarea.value.trim() !== '') {
+                        textarea.value += '\n\n' + snippet;
+                    } else {
+                        textarea.value = snippet;
+                    }
+                    textarea.dispatchEvent(new Event('input'));
+                }
+            });
+        });
+
+        // Jalankan Script
+        const runBtn = document.getElementById('gm-btn-run-js');
+        if (runBtn) {
+            runBtn.addEventListener('click', () => {
+                const code = textarea ? textarea.value : '';
+                executeScriptInCanvas(code);
+                const orig = runBtn.innerHTML;
+                runBtn.innerHTML = '<i class="fas fa-check" style="color: #10b981;"></i> Berjalan!';
+                setTimeout(() => runBtn.innerHTML = orig, 1200);
+            });
+        }
+
+        // Bersihkan Script
+        const clearBtn = document.getElementById('gm-btn-clear-js');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                if (confirm('Kosongkan editor script ini?')) {
+                    if (textarea) {
+                        textarea.value = '';
+                        textarea.dispatchEvent(new Event('input'));
+                    }
+                }
+            });
+        }
+
+        // Simpan Script ke Database
+        const saveJsBtn = document.getElementById('gm-btn-save-js');
+        if (saveJsBtn) {
+            saveJsBtn.addEventListener('click', () => {
+                const code = textarea ? textarea.value : '';
+                saveJsBtn.disabled = true;
+                saveJsBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+                fetch('index.php?action=save_frame_script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        frame_id: currentFrameId,
+                        project_id: projId,
+                        scope: currentScope,
+                        custom_js: code
+                    })
+                })
+                .then(r => r.json())
+                .then(res => {
+                    saveJsBtn.disabled = false;
+                    if (res.success) {
+                        saveJsBtn.innerHTML = '<i class="fas fa-check"></i> Tersimpan!';
+                        executeScriptInCanvas(code);
+                        setTimeout(() => {
+                            saveJsBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Script';
+                        }, 1500);
+                    } else {
+                        saveJsBtn.innerHTML = '<i class="fas fa-times"></i> Gagal';
+                        setTimeout(() => {
+                            saveJsBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Script';
+                        }, 1500);
+                    }
+                })
+                .catch(err => {
+                    saveJsBtn.disabled = false;
+                    saveJsBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Script';
+                    console.error(err);
+                });
+            });
+        }
+
+        // Tambah Breakpoint Baru untuk Halaman Ini
+        const addBpBtn = document.getElementById('gm-resp-btn-add-bp');
+        if (addBpBtn) {
+            addBpBtn.addEventListener('click', () => {
+                const type = document.getElementById('gm-resp-add-type').value;
+                const pxVal = parseInt(document.getElementById('gm-resp-add-px').value);
+                if (!pxVal || pxVal < 240) {
+                    alert('Masukkan ukuran pixel yang valid (minimal 240px).');
+                    return;
+                }
+
+                const newBp = {
+                    id: 'custom-' + Date.now(),
+                    name: pxVal <= 480 ? 'Mobile' : (pxVal <= 1024 ? 'Tablet' : 'Desktop Custom'),
+                    rule: type === 'max' ? `max-width: ${pxVal}px` : `min-width: ${pxVal}px`,
+                    widthValue: pxVal,
+                    type: type
+                };
+
+                window.gmBreakpoints = window.gmBreakpoints || [];
+                window.gmBreakpoints.push(newBp);
+                if (typeof window.renderBreakpointUI === 'function') window.renderBreakpointUI();
+                renderPageBreakpointList();
+                saveBreakpointsToCurrentFrame(false);
+                document.getElementById('gm-resp-add-px').value = '';
+            });
+        }
+
+        // Simpan Breakpoint
+        const saveBpBtn = document.getElementById('gm-resp-btn-save-bp');
+        if (saveBpBtn) {
+            saveBpBtn.addEventListener('click', () => saveBreakpointsToCurrentFrame(false));
+        }
+
+        // Terapkan Breakpoint ke Semua Halaman
+        const applyAllBpBtn = document.getElementById('gm-resp-btn-apply-all-bp');
+        if (applyAllBpBtn) {
+            applyAllBpBtn.addEventListener('click', () => {
+                if (confirm('Terapkan breakpoint halaman ini ke seluruh halaman proyek?')) {
+                    saveBreakpointsToCurrentFrame(true);
+                }
+            });
+        }
+
+        // Generator Navbar Responsif Lengkap
+        const createNavBtn = document.getElementById('gm-btn-create-resp-nav');
+        if (createNavBtn) {
+            createNavBtn.addEventListener('click', () => {
+                const activeCore = document.getElementById(`object-core-${currentFrameId}`) || document.querySelector('.gm-object-core.actived');
+                if (!activeCore) return;
+
+                // Pastikan ada breakpoint mobile 768px di halaman
+                const hasMobileBp = (window.gmBreakpoints || []).some(b => b.widthValue <= 768 && b.type === 'max');
+                if (!hasMobileBp) {
+                    window.gmBreakpoints.push({
+                        id: 'mobile-768',
+                        name: 'Mobile / Tablet',
+                        rule: 'max-width: 768px',
+                        widthValue: 768,
+                        type: 'max'
+                    });
+                    if (typeof window.renderBreakpointUI === 'function') window.renderBreakpointUI();
+                    renderPageBreakpointList();
+                    saveBreakpointsToCurrentFrame(false);
+                }
+
+                // Buat elemen navbar responsif
+                const navHtml = `
+<nav class="gm-object gm-navbar" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; background: #ffffff; border-bottom: 1px solid #e2e8f0; position: relative; box-sizing: border-box; z-index: 100;">
+    <div class="gm-object gm-nav-brand" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.25em; color: #0f172a;">
+        <i class="fas fa-layer-group" style="color: #0284c7;"></i> Brand Logo
+    </div>
+    
+    <!-- Link Desktop (Otomatis sembunyi di tablet/mobile) -->
+    <div class="gm-object gm-nav-links" style="display: flex; align-items: center; gap: 20px;">
+        <a class="gm-object" href="#" style="text-decoration: none; color: #475569; font-weight: 500; font-size: 0.95em;">Beranda</a>
+        <a class="gm-object" href="#" style="text-decoration: none; color: #475569; font-weight: 500; font-size: 0.95em;">Fitur</a>
+        <a class="gm-object" href="#" style="text-decoration: none; color: #475569; font-weight: 500; font-size: 0.95em;">Harga</a>
+        <a class="gm-object" href="#" style="text-decoration: none; color: #475569; font-weight: 500; font-size: 0.95em;">Kontak</a>
+    </div>
+
+    <!-- Tombol Hamburger (Tampil di tablet/mobile) -->
+    <button class="gm-object gm-hamburger-btn" style="display: none; align-items: center; justify-content: center; width: 40px; height: 40px; min-height: 40px; max-height: 40px; padding: 0px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; color: #1e293b; font-size: 18px;" aria-label="Toggle Menu">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Mobile Drawer (Dropdown menu saat hamburger diklik) -->
+    <div class="gm-object gm-mobile-drawer" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: #ffffff; border-bottom: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); flex-direction: column; padding: 16px 24px; gap: 12px; box-sizing: border-box;">
+        <a class="gm-object" href="#" style="text-decoration: none; color: #1e293b; font-weight: 500; padding: 6px 0;">Beranda</a>
+        <a class="gm-object" href="#" style="text-decoration: none; color: #1e293b; font-weight: 500; padding: 6px 0;">Fitur</a>
+        <a class="gm-object" href="#" style="text-decoration: none; color: #1e293b; font-weight: 500; padding: 6px 0;">Harga</a>
+        <a class="gm-object" href="#" style="text-decoration: none; color: #1e293b; font-weight: 500; padding: 6px 0;">Kontak</a>
+    </div>
+</nav>`.trim();
+
+                const temp = document.createElement('div');
+                temp.innerHTML = navHtml;
+                const newNav = temp.firstElementChild;
+                activeCore.prepend(newNav);
+
+                if (typeof window.initLoadedObjects === 'function') {
+                    window.initLoadedObjects(newNav);
+                }
+
+                // Pasang CSS responsif
+                let styleTag = document.getElementById('gm-hamburger-style');
+                if (!styleTag) {
+                    styleTag = document.createElement('style');
+                    styleTag.id = 'gm-hamburger-style';
+                    styleTag.textContent = `
+@media (max-width: 768px) {
+    .gm-navbar .gm-nav-links { display: none !important; }
+    .gm-navbar .gm-hamburger-btn { display: flex !important; align-items: center; justify-content: center; }
+}
+                    `;
+                    document.head.appendChild(styleTag);
+                }
+
+                // Otomatis pasang script toggle
+                const snippet = jsTemplates.hamburger;
+                if (textarea && !textarea.value.includes('.gm-hamburger-btn')) {
+                    textarea.value = (textarea.value.trim() ? textarea.value + '\n\n' : '') + snippet;
+                    textarea.dispatchEvent(new Event('input'));
+                    executeScriptInCanvas(textarea.value);
+                }
+
+                alert('Navbar responsif berhasil ditambahkan di bagian atas halaman!');
+            });
+        }
+
+        // Pasang Hamburger pada Elemen Terpilih
+        const convertBtn = document.getElementById('gm-btn-convert-hamburger');
+        if (convertBtn) {
+            convertBtn.addEventListener('click', () => {
+                const selected = document.querySelector('.gm-object.selected, .gm-object.actived');
+                if (!selected) {
+                    alert('Silakan klik dan pilih elemen Navbar atau Header terlebih dahulu di canvas!');
+                    return;
+                }
+
+                if (!selected.querySelector('.gm-hamburger-btn')) {
+                    const btn = document.createElement('button');
+                    btn.className = 'gm-object gm-hamburger-btn';
+                    btn.setAttribute('style', 'display: none; align-items: center; justify-content: center; width: 40px; height: 40px; min-height: 40px; max-height: 40px; padding: 0px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; color: #1e293b; font-size: 18px;');
+                    btn.innerHTML = '<i class="fas fa-bars"></i>';
+                    selected.appendChild(btn);
+
+                    if (typeof window.initLoadedObjects === 'function') {
+                        window.initLoadedObjects(btn);
+                    }
+                    alert('Tombol hamburger berhasil disisipkan ke elemen terpilih!');
+                } else {
+                    alert('Elemen ini sudah memiliki tombol hamburger.');
+                }
+            });
+        }
+
+        // Pasang Script Toggle JS
+        const insertNavScriptBtn = document.getElementById('gm-btn-insert-nav-script');
+        if (insertNavScriptBtn) {
+            insertNavScriptBtn.addEventListener('click', () => {
+                if (textarea) {
+                    const snippet = jsTemplates.hamburger;
+                    if (!textarea.value.includes('.gm-hamburger-btn')) {
+                        textarea.value = (textarea.value.trim() ? textarea.value + '\n\n' : '') + snippet;
+                        textarea.dispatchEvent(new Event('input'));
+                    }
+                    executeScriptInCanvas(textarea.value);
+                    alert('Script interaksi Hamburger Toggle berhasil dipasang dan diaktifkan!');
+                }
+            });
+        }
+    });
+
+    // Tangkap Event Pergantian Frame
+    document.addEventListener('gm-frame-switched', function(e) {
+        const fid = e.detail && e.detail.frameId ? e.detail.frameId : 0;
+        if (fid > 0) {
+            loadScriptsForCurrentFrame(fid);
+            // Jalankan script halaman jika ada
+            const core = document.getElementById(`object-core-${fid}`);
+            if (core && core.dataset.customJs) {
+                executeScriptInCanvas(core.dataset.customJs);
+            }
+        }
+    });
+
+    // Ekspos method ke global untuk interaksi AI atau plugin
+    const syncNavAllBtn = document.getElementById("gm-btn-sync-navbar-all");
+    if (syncNavAllBtn) {
+        syncNavAllBtn.addEventListener("click", () => {
+            if (window.gmSyncNavbarEngine) window.gmSyncNavbarEngine.openModal();
+        });
+    }
+
+    window.gmLoadFrameScripts = loadScriptsForCurrentFrame;
+    window.gmExecuteCustomScript = executeScriptInCanvas;
+})();
+</script>
+

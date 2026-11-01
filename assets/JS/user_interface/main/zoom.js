@@ -1,5 +1,5 @@
 $(document).ready(function() {
-    let scale = 0.8;
+    let scale = 0.95;
     const zoomStep = 0.05;
     const minScale = 0.2;
     const maxScale = 5;
@@ -25,7 +25,7 @@ $(document).ready(function() {
         const originalWidth = parseFloat(computedStyle.width) || 1200;
         const originalHeight = parseFloat(computedStyle.height) || 800;
 
-        scale = 0.8;
+        scale = 0.95;
 
         const containerOffset = container.offset() || { left: 0, top: 0 };
         const containerWidth = container.innerWidth() || window.innerWidth;

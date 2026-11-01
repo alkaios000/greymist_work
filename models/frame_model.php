@@ -11,7 +11,7 @@ if (!function_exists('get_project_frames')) {
     function get_project_frames(PDO $pdo, int $project_id): array
     {
         $stmt = $pdo->prepare("
-            SELECT frame_id, frame_name, core_content, thumbnail, sort_order, created_at
+            SELECT frame_id, frame_name, core_content, thumbnail, sort_order, custom_breakpoints, custom_js, created_at
             FROM gm_frames
             WHERE project_id = ?
             ORDER BY sort_order ASC, frame_id ASC
@@ -197,4 +197,103 @@ if (!function_exists('sync_project_frames')) {
         }
     }
 }
+
+if (!function_exists('save_frame_custom_script')) {
+    /**
+     * Menyimpan custom breakpoints dan/atau custom JS untuk frame tertentu.
+     */
+    function save_frame_custom_script(PDO $pdo, int $frame_id, int $user_id, ?string $custom_breakpoints = null, ?string $custom_js = null): bool
+    {
+        $frame = get_frame_with_owner($pdo, $frame_id, $user_id);
+        if (!$frame) {
+            return false;
+        }
+
+        $updates = [];
+        $params  = [];
+        if ($custom_breakpoints !== null) {
+            $updates[] = "custom_breakpoints = ?";
+            $params[]  = $custom_breakpoints;
+        }
+        if ($custom_js !== null) {
+            $updates[] = "custom_js = ?";
+            $params[]  = $custom_js;
+        }
+        if (empty($updates)) {
+            return true;
+        }
+
+        $params[] = $frame_id;
+        $sql = "UPDATE gm_frames SET " . implode(', ', $updates) . " WHERE frame_id = ?";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute($params);
+    }
+}
+
+if (!function_exists('apply_script_to_all_project_frames')) {
+    /**
+     * Menerapkan custom breakpoints atau custom JS ke seluruh frame dalam suatu proyek.
+     */
+    function apply_script_to_all_project_frames(PDO $pdo, int $project_id, int $user_id, ?string $custom_breakpoints = null, ?string $custom_js = null): bool
+    {
+        $stmt = $pdo->prepare("SELECT project_id FROM gm_projects WHERE project_id = ? AND user_id = ? LIMIT 1");
+        $stmt->execute([$project_id, $user_id]);
+        if (!$stmt->fetch()) {
+            return false;
+        }
+
+        $updates = [];
+        $params  = [];
+        if ($custom_breakpoints !== null) {
+            $updates[] = "custom_breakpoints = ?";
+            $params[]  = $custom_breakpoints;
+        }
+        if ($custom_js !== null) {
+            $updates[] = "custom_js = ?";
+            $params[]  = $custom_js;
+        }
+        if (empty($updates)) {
+            return true;
+        }
+
+        $params[] = $project_id;
+        $sql = "UPDATE gm_frames SET " . implode(', ', $updates) . " WHERE project_id = ?";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute($params);
+    }
+}
+
+if (!function_exists('save_project_custom_script')) {
+    /**
+     * Menyimpan custom breakpoints dan/atau custom JS global pada tabel gm_projects.
+     */
+    function save_project_custom_script(PDO $pdo, int $project_id, int $user_id, ?string $custom_breakpoints = null, ?string $custom_js = null): bool
+    {
+        $stmt = $pdo->prepare("SELECT project_id FROM gm_projects WHERE project_id = ? AND user_id = ? LIMIT 1");
+        $stmt->execute([$project_id, $user_id]);
+        if (!$stmt->fetch()) {
+            return false;
+        }
+
+        $updates = [];
+        $params  = [];
+        if ($custom_breakpoints !== null) {
+            $updates[] = "custom_breakpoints = ?";
+            $params[]  = $custom_breakpoints;
+        }
+        if ($custom_js !== null) {
+            $updates[] = "custom_js = ?";
+            $params[]  = $custom_js;
+        }
+        if (empty($updates)) {
+            return true;
+        }
+
+        $params[] = $project_id;
+        $sql = "UPDATE gm_projects SET " . implode(', ', $updates) . " WHERE project_id = ?";
+        $stmt = $pdo->prepare($sql);
+        return $stmt->execute($params);
+    }
+}
+
 

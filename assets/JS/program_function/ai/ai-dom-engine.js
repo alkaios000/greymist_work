@@ -1000,8 +1000,18 @@
             }
         });
 
-        if (addedCount > 0 && typeof window.renderBreakpointUI === "function") {
-            window.renderBreakpointUI();
+        if (addedCount > 0) {
+            const activeCore = document.querySelector('.gm-object-core.actived');
+            if (activeCore) {
+                activeCore.dataset.customBreakpoints = JSON.stringify(window.gmBreakpoints);
+            }
+            if (typeof window.renderBreakpointUI === "function") {
+                window.renderBreakpointUI();
+            }
+            const bpList = document.getElementById('gm-resp-bp-list');
+            if (bpList && typeof window.gmLoadFrameScripts === "function" && activeCore) {
+                window.gmLoadFrameScripts(parseInt(activeCore.dataset.frame) || 0);
+            }
             if (statusEl) {
                 showStatus(statusEl, "info", `📱 Breakpoint baru (${addedNames.join(', ')}) ditambahkan ke toolbar.`);
             }

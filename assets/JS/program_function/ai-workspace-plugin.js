@@ -131,13 +131,13 @@
             }
             #gm-ai-floating-panel {
                 position: fixed;
-                top: 145px;
+                top: 135px;
                 left: 58px;
-                width: 295px;
+                width: 236px;
                 background: #ffffff;
                 border: 1px solid #dcdcdc;
-                border-radius: 8px;
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+                border-radius: 6px;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
                 z-index: 9500;
                 font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
                 color: #222222;
@@ -145,6 +145,7 @@
                 flex-direction: column;
                 overflow: hidden;
                 box-sizing: border-box;
+                font-size: 10px;
             }
             #gm-ai-floating-panel.minimized .gm-ai-body {
                 display: none !important;
@@ -153,7 +154,7 @@
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
-                padding: 7px 10px;
+                padding: 5px 8px;
                 background: #f7f8fa;
                 border-bottom: 1px solid #ebebeb;
                 cursor: grab;
@@ -162,14 +163,14 @@
             .gm-ai-header-title {
                 display: flex;
                 align-items: center;
-                gap: 6px;
-                font-size: 11.5px;
+                gap: 5px;
+                font-size: 10.5px;
                 font-weight: 600;
                 color: #333333;
             }
             .gm-ai-header-title i {
                 color: #0078ff;
-                font-size: 12px;
+                font-size: 11px;
             }
             .gm-ai-header-actions {
                 display: flex;
@@ -177,17 +178,17 @@
                 gap: 2px;
             }
             .gm-ai-icon-btn {
-                width: 22px;
-                height: 22px;
+                width: 19px;
+                height: 19px;
                 border: none;
                 background: transparent;
                 color: #666666;
-                border-radius: 4px;
+                border-radius: 3px;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 11px;
+                font-size: 10px;
                 padding: 0;
             }
             .gm-ai-icon-btn:hover {
@@ -195,23 +196,23 @@
                 color: #111111;
             }
             .gm-ai-body {
-                padding: 10px;
+                padding: 6px 8px;
                 display: flex;
                 flex-direction: column;
-                gap: 8px;
+                gap: 5px;
             }
             .gm-ai-chip-list {
                 display: flex;
                 flex-wrap: wrap;
-                gap: 4px;
+                gap: 3px;
             }
             .gm-ai-chip {
                 background: #f3f4f6;
                 color: #4b5563;
                 border: 1px solid #e5e7eb;
-                border-radius: 4px;
-                padding: 3px 7px;
-                font-size: 10.5px;
+                border-radius: 3px;
+                padding: 2px 5px;
+                font-size: 9px;
                 font-weight: 500;
                 cursor: pointer;
                 transition: all 0.12s ease;
@@ -227,9 +228,9 @@
                 background: #fafafa;
                 color: #222222;
                 border: 1px solid #dcdcdc;
-                border-radius: 5px;
-                padding: 6px 8px;
-                font-size: 11.5px;
+                border-radius: 4px;
+                padding: 3px 6px;
+                font-size: 9.5px;
                 outline: none;
                 font-family: inherit;
             }
@@ -240,21 +241,21 @@
             .gm-ai-row {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 6px;
+                gap: 4px;
             }
             .gm-ai-btn-primary {
                 background: #0078ff;
                 color: #ffffff;
                 border: none;
-                border-radius: 5px;
-                padding: 7px 10px;
-                font-size: 11.5px;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 10px;
                 font-weight: 600;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 5px;
+                gap: 4px;
                 transition: background 0.15s ease;
             }
             .gm-ai-btn-primary:hover {
@@ -268,15 +269,15 @@
                 background: #f3f4f6;
                 color: #374151;
                 border: 1px solid #dcdcdc;
-                border-radius: 5px;
-                padding: 5px 8px;
-                font-size: 10.5px;
+                border-radius: 4px;
+                padding: 3px 6px;
+                font-size: 9px;
                 font-weight: 500;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                gap: 4px;
+                gap: 3px;
             }
             .gm-ai-btn-secondary:hover {
                 background: #e5e7eb;
@@ -284,18 +285,18 @@
             .gm-ai-frame-box {
                 background: #f8fafc;
                 border: 1px solid #e2e8f0;
-                border-radius: 6px;
-                padding: 6px 8px;
-                display: flex;
-                flex-direction: column;
-                gap: 5px;
-            }
-            .gm-ai-frame-items {
-                max-height: 95px;
-                overflow-y: auto;
+                border-radius: 5px;
+                padding: 4px 6px;
                 display: flex;
                 flex-direction: column;
                 gap: 3px;
+            }
+            .gm-ai-frame-items {
+                max-height: 80px;
+                overflow-y: auto;
+                display: flex;
+                flex-direction: column;
+                gap: 2px;
             }
             .gm-ai-frame-item {
                 display: flex;
@@ -303,9 +304,9 @@
                 justify-content: space-between;
                 background: #ffffff;
                 border: 1px solid #e5e7eb;
-                border-radius: 4px;
-                padding: 4px 7px;
-                font-size: 10.5px;
+                border-radius: 3px;
+                padding: 2px 5px;
+                font-size: 9px;
                 color: #334155;
             }
             .gm-ai-frame-item-label {
@@ -319,13 +320,13 @@
                 color: #0078ff;
             }
             .gm-ai-memory-pill {
-                font-size: 10px;
+                font-size: 8.5px;
                 font-weight: 600;
                 color: #0369a1;
                 background: #e0f2fe;
                 border: 1px solid #bae6fd;
-                border-radius: 4px;
-                padding: 2px 6px;
+                border-radius: 3px;
+                padding: 1px 4px;
                 cursor: help;
                 white-space: nowrap;
             }
@@ -337,10 +338,10 @@
             }
             .gm-ai-mic-btn {
                 position: absolute;
-                right: 6px;
-                bottom: 8px;
-                width: 26px;
-                height: 26px;
+                right: 4px;
+                bottom: 5px;
+                width: 19px;
+                height: 19px;
                 border-radius: 50%;
                 border: 1px solid #cbd5e1;
                 background: #ffffff;
@@ -349,36 +350,36 @@
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 11.5px;
+                font-size: 9.5px;
                 transition: all 0.2s ease;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.06);
                 z-index: 2;
             }
             .gm-ai-mic-btn:hover {
                 background: #eff6ff;
                 color: #0078ff;
                 border-color: #93c5fd;
-                transform: scale(1.08);
+                transform: scale(1.05);
             }
             .gm-ai-mic-btn.gm-ai-listening {
                 background: #ef4444 !important;
                 color: #ffffff !important;
                 border-color: #dc2626 !important;
                 animation: gm-mic-pulse 1.2s infinite ease-in-out;
-                box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+                box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
             }
             .gm-ai-sound-btn {
                 background: #f1f5f9;
                 color: #334155;
                 border: 1px solid #cbd5e1;
-                border-radius: 4px;
-                padding: 4px 8px;
-                font-size: 11px;
+                border-radius: 3px;
+                padding: 3px 6px;
+                font-size: 9.5px;
                 font-weight: 500;
                 cursor: pointer;
                 display: inline-flex;
                 align-items: center;
-                gap: 5px;
+                gap: 4px;
                 transition: all 0.15s ease;
             }
             .gm-ai-sound-btn:hover {
@@ -394,7 +395,7 @@
             }
             @keyframes gm-mic-pulse {
                 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-                50% { transform: scale(1.08); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0.15); }
+                50% { transform: scale(1.05); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15); }
                 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
             }
 
@@ -623,12 +624,12 @@
 
         panel.innerHTML = `
             <div class="gm-ai-header" id="gm-ai-drag-handle" title="Geser untuk memindahkan panel">
-                <div class="gm-ai-header-title" style="display:flex;align-items:center;gap:6px;">
+                <div class="gm-ai-header-title" style="display:flex;align-items:center;gap:5px;">
                     <span style="font-weight:700;">Greymist AI</span>
-                    <span id="gm-ai-header-loading" style="display:none;align-items:center;margin-left:4px;" title="AI sedang memproses...">
-                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size:11px;color:#0078ff;"></i>
+                    <span id="gm-ai-header-loading" style="display:none;align-items:center;margin-left:3px;" title="AI sedang memproses...">
+                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size:10px;color:#0078ff;"></i>
                     </span>
-                    <span id="gm-ai-active-provider-pill" class="gm-ai-provider-pill" style="font-size:9.5px;padding:2px 7px;border-radius:10px;background:#fef3c7;color:#d97706;font-weight:700;cursor:pointer;" title="Klik untuk membuka Pengaturan Provider AI">Groq 70B</span>
+                    <span id="gm-ai-active-provider-pill" class="gm-ai-provider-pill" style="font-size:8.5px;padding:1px 6px;border-radius:8px;background:#fef3c7;color:#d97706;font-weight:700;cursor:pointer;" title="Klik untuk membuka Pengaturan Provider AI">Groq 70B</span>
                 </div>
                 <div class="gm-ai-header-actions">
                     <button type="button" class="gm-ai-icon-btn" id="gm-ai-toggle-settings-btn" title="Pengaturan Provider AI">
@@ -648,16 +649,16 @@
                 <span id="gm-ai-memory-badge" style="display:none;"></span>
 
                 <!-- Panel Pengaturan Provider AI (Expandable Modal) -->
-                <div id="gm-ai-settings-panel" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:7px;padding:9px;margin-bottom:8px;box-shadow:0 3px 10px rgba(0,0,0,0.06);">
-                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid #e2e8f0;">
-                        <span style="font-size:11px;font-weight:700;color:#1e293b;">Pengaturan Provider AI</span>
-                        <button type="button" id="gm-ai-close-settings-btn" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:12px;"><i class="fas fa-xmark"></i></button>
+                <div id="gm-ai-settings-panel" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;padding:7px;margin-bottom:6px;box-shadow:0 3px 8px rgba(0,0,0,0.06);">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid #e2e8f0;">
+                        <span style="font-size:10px;font-weight:700;color:#1e293b;">Pengaturan Provider AI</span>
+                        <button type="button" id="gm-ai-close-settings-btn" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:11px;"><i class="fas fa-xmark"></i></button>
                     </div>
 
                     <!-- Pilihan Provider (Tanpa Emoticon) -->
-                    <div style="margin-bottom:7px;">
-                        <label style="display:block;font-size:10px;font-weight:700;color:#475569;margin-bottom:3px;">PILIH MESIN AI:</label>
-                        <select id="gm-ai-provider-select" class="gm-ai-field" style="width:100%;font-size:11px;padding:4px 6px;font-weight:600;background:#ffffff;border:1px solid #94a3b8;">
+                    <div style="margin-bottom:5px;">
+                        <label style="display:block;font-size:9px;font-weight:700;color:#475569;margin-bottom:2px;">PILIH MESIN AI:</label>
+                        <select id="gm-ai-provider-select" class="gm-ai-field" style="width:100%;font-size:10px;padding:3px 5px;font-weight:600;background:#ffffff;border:1px solid #94a3b8;">
                             <option value="groq">Groq Cloud (Cepat ~300 t/s)</option>
                             <option value="antigravity">Antigravity Cloud Bridge</option>
                             <option value="openrouter">OpenRouter Cloud</option>
@@ -667,44 +668,44 @@
                     </div>
 
                     <!-- Banner Info / Panduan Provider -->
-                    <div id="gm-ai-provider-info-box" style="font-size:10px;color:#334155;background:#f1f5f9;border-left:3px solid #0078ff;padding:5px 8px;border-radius:3px;margin-bottom:7px;line-height:1.4;">
+                    <div id="gm-ai-provider-info-box" style="font-size:9px;color:#334155;background:#f1f5f9;border-left:3px solid #0078ff;padding:4px 6px;border-radius:3px;margin-bottom:5px;line-height:1.35;">
                     </div>
 
                     <!-- Input API Key -->
                     <form autocomplete="off" onsubmit="return false;" style="margin:0;padding:0;">
                         <!-- Hidden username field to satisfy accessibility & Chromium form guidelines -->
                         <input type="text" name="username" autocomplete="username" style="display:none;" aria-hidden="true" tabindex="-1">
-                        <div id="gm-ai-key-input-row" style="margin-bottom:7px;">
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-                                <label id="gm-ai-key-label" style="font-size:10px;font-weight:700;color:#475569;">API KEY:</label>
-                                <span id="gm-ai-key-status" style="font-size:9.5px;color:#16a34a;font-weight:600;"></span>
+                        <div id="gm-ai-key-input-row" style="margin-bottom:5px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
+                                <label id="gm-ai-key-label" style="font-size:9px;font-weight:700;color:#475569;">API KEY:</label>
+                                <span id="gm-ai-key-status" style="font-size:8.5px;color:#16a34a;font-weight:600;"></span>
                             </div>
-                            <div style="display:flex;gap:4px;">
-                                <input type="password" id="gm-ai-api-key-input" name="gm-ai-api-key" autocomplete="new-password" class="gm-ai-field" placeholder="Masukkan API Key..." style="flex:1;padding:4px 7px;font-size:11px;background:#ffffff;">
-                                <button type="button" id="gm-ai-toggle-show-key-btn" class="gm-ai-btn-secondary" style="padding:0 7px;background:#ffffff;" title="Lihat/Sembunyikan"><i class="fas fa-eye"></i></button>
+                            <div style="display:flex;gap:3px;">
+                                <input type="password" id="gm-ai-api-key-input" name="gm-ai-api-key" autocomplete="new-password" class="gm-ai-field" placeholder="Masukkan API Key..." style="flex:1;padding:3px 5px;font-size:10px;background:#ffffff;">
+                                <button type="button" id="gm-ai-toggle-show-key-btn" class="gm-ai-btn-secondary" style="padding:0 5px;background:#ffffff;" title="Lihat/Sembunyikan"><i class="fas fa-eye"></i></button>
                             </div>
                         </div>
                     </form>
 
                     <!-- Pilihan Model -->
-                    <div id="gm-ai-settings-model-row" style="margin-bottom:7px;">
-                        <label style="display:block;font-size:10px;font-weight:700;color:#475569;margin-bottom:3px;">PILIH MODEL:</label>
-                        <select id="gm-ai-settings-model-select" class="gm-ai-field" style="width:100%;font-size:11px;padding:4px 6px;background:#ffffff;">
+                    <div id="gm-ai-settings-model-row" style="margin-bottom:5px;">
+                        <label style="display:block;font-size:9px;font-weight:700;color:#475569;margin-bottom:2px;">PILIH MODEL:</label>
+                        <select id="gm-ai-settings-model-select" class="gm-ai-field" style="width:100%;font-size:10px;padding:3px 5px;background:#ffffff;">
                         </select>
                     </div>
 
                     <!-- Tombol Aksi Settings -->
-                    <div style="display:flex;gap:5px;margin-top:7px;">
-                        <button type="button" id="gm-ai-test-conn-btn" class="gm-ai-btn-secondary" style="flex:1;font-size:10.5px;padding:5px 6px;" title="Cek respon server cloud">
+                    <div style="display:flex;gap:4px;margin-top:5px;">
+                        <button type="button" id="gm-ai-test-conn-btn" class="gm-ai-btn-secondary" style="flex:1;font-size:9.5px;padding:4px 5px;" title="Cek respon server cloud">
                             <span>Tes Koneksi</span>
                         </button>
-                        <button type="button" id="gm-ai-save-settings-btn" class="gm-ai-btn-primary" style="flex:1;font-size:10.5px;padding:5px 6px;">
+                        <button type="button" id="gm-ai-save-settings-btn" class="gm-ai-btn-primary" style="flex:1;font-size:9.5px;padding:4px 5px;">
                             <span>Simpan</span>
                         </button>
                     </div>
 
                     <!-- Hasil Tes Koneksi -->
-                    <div id="gm-ai-test-result" style="display:none;margin-top:6px;font-size:10px;padding:5px 7px;border-radius:4px;line-height:1.35;"></div>
+                    <div id="gm-ai-test-result" style="display:none;margin-top:5px;font-size:9px;padding:4px 6px;border-radius:3px;line-height:1.3;"></div>
                 </div>
 
                 <!-- Preset Cepat (Minimalis tanpa emoticon) -->
@@ -713,11 +714,20 @@
                 </div>
 
                 <!-- Container Tanda Aset Terpilih (Badge Token Ringkas) -->
-                <div id="gm-ai-chosen-assets" class="gm-ai-chosen-assets" style="display:none;flex-wrap:wrap;gap:5px;margin-bottom:6px;"></div>
+                <div id="gm-ai-chosen-assets" class="gm-ai-chosen-assets" style="display:none;flex-wrap:wrap;gap:4px;margin-bottom:4px;"></div>
 
-                <!-- Prompt Field dengan Drag-and-Drop & Mic -->
+                <!-- Container Preview Foto / Screenshot Referensi (Paste dari Clipboard / Drag-Drop) -->
+                <div id="gm-ai-ref-images-preview" class="gm-ai-img-preview" style="display:none;margin-bottom:4px;">
+                    <div class="gm-ai-preview-header">
+                        <span><i class="fa-solid fa-camera" style="color:#0078ff;"></i> Foto Referensi (<span id="gm-ai-ref-img-count">0</span>)</span>
+                        <button type="button" id="gm-ai-clear-ref-images-btn" class="gm-ai-clear-all-btn">Hapus Semua</button>
+                    </div>
+                    <div id="gm-ai-ref-images-list" class="gm-ai-preview-list"></div>
+                </div>
+
+                <!-- Prompt Field dengan Drag-and-Drop, Paste & Mic -->
                 <div class="gm-ai-prompt-wrap">
-                    <textarea id="gm-ai-prompt-input" class="gm-ai-field" rows="2" placeholder="Ketik instruksi desain, atau drag & drop aset gambar ke sini..." style="width:100%;box-sizing:border-box;padding-right:36px;resize:vertical;line-height:1.4;"></textarea>
+                    <textarea id="gm-ai-prompt-input" class="gm-ai-field" rows="2" placeholder="Ketik instruksi, atau paste foto / screenshot..." style="width:100%;box-sizing:border-box;padding-right:26px;resize:vertical;line-height:1.35;font-size:10px;"></textarea>
                     <button type="button" id="gm-ai-prompt-mic-btn" class="gm-ai-mic-btn" title="Sound to Design">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
@@ -725,10 +735,10 @@
 
                 <!-- Model & Target (Bersih tanpa emoticon) -->
                 <div class="gm-ai-row">
-                    <select id="gm-ai-model-select" class="gm-ai-field" title="Pilih Model Aktif">
+                    <select id="gm-ai-model-select" class="gm-ai-field" title="Pilih Model Aktif" style="font-size:9.5px;padding:3px 5px;">
                         <option value="openai/gpt-oss-120b">GPT OSS 120B (Groq LPU)</option>
                     </select>
-                    <select id="gm-ai-target-mode" class="gm-ai-field" title="Target Injeksi">
+                    <select id="gm-ai-target-mode" class="gm-ai-field" title="Target Injeksi" style="font-size:9.5px;padding:3px 5px;">
                         <option value="core">Ke Frame Aktif</option>
                         <option value="new_frame">Ke Frame Baru</option>
                         <option value="selected">Ke Objek Terpilih</option>
@@ -736,28 +746,28 @@
                 </div>
 
                 <!-- Opsi Simpan ke Pustaka Komponen -->
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
-                    <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555555;cursor:pointer;white-space:nowrap;">
-                        <input type="checkbox" id="gm-ai-save-library" checked style="accent-color:#0078ff;margin:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:9.5px;color:#555555;cursor:pointer;white-space:nowrap;">
+                        <input type="checkbox" id="gm-ai-save-library" checked style="accent-color:#0078ff;margin:0;width:12px;height:12px;">
                         <span>Simpan Komponen</span>
                     </label>
-                    <input type="text" id="gm-ai-comp-name" class="gm-ai-field" placeholder="Nama komponen" style="padding:4px 7px;font-size:11px;max-width:135px;">
+                    <input type="text" id="gm-ai-comp-name" class="gm-ai-field" placeholder="Nama komponen" style="padding:3px 5px;font-size:9.5px;max-width:110px;">
                 </div>
 
                 <!-- Opsi Memori Konteks Proyek (Default: OFF / Mode Kilat) -->
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;background:#f8fafc;padding:5px 8px;border-radius:5px;border:1px solid #e2e8f0;margin-top:4px;">
-                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#334155;cursor:pointer;user-select:none;margin:0;">
-                        <input type="checkbox" id="gm-ai-read-memory" style="accent-color:#0078ff;margin:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;background:#f8fafc;padding:4px 6px;border-radius:4px;border:1px solid #e2e8f0;margin-top:2px;">
+                    <label style="display:flex;align-items:center;gap:4px;font-size:9.5px;color:#334155;cursor:pointer;user-select:none;margin:0;">
+                        <input type="checkbox" id="gm-ai-read-memory" style="accent-color:#0078ff;margin:0;width:12px;height:12px;">
                         <span id="gm-ai-speed-indicator" style="font-weight:600;color:#0284c7;">Mode Kilat (Memori Off)</span>
                     </label>
-                    <span style="font-size:9.5px;color:#64748b;cursor:help;" title="Mode Kilat: Respons cepat ~3-7s tanpa membaca memori proyek. Centang jika butuh AI membaca konteks seluruh halaman.">Bantuan <i class="fa-solid fa-circle-question"></i></span>
+                    <span style="font-size:8.5px;color:#64748b;cursor:help;" title="Mode Kilat: Respons cepat ~3-7s tanpa membaca memori proyek. Centang jika butuh AI membaca konteks seluruh halaman.">Bantuan <i class="fa-solid fa-circle-question"></i></span>
                 </div>
 
                 <!-- Status Ringkas -->
-                <div id="gm-ai-status-msg" style="display:none;padding:5px 8px;border:1px solid transparent;border-radius:5px;font-size:10.5px;line-height:1.35;max-height:85px;overflow-y:auto;"></div>
+                <div id="gm-ai-status-msg" style="display:none;padding:4px 6px;border:1px solid transparent;border-radius:4px;font-size:9.5px;line-height:1.3;max-height:75px;overflow-y:auto;"></div>
 
                 <!-- Tombol Aksi (Minimalis & Ringkas) -->
-                <div style="display:flex;gap:5px;">
+                <div style="display:flex;gap:4px;">
                     <button type="button" id="gm-ai-generate-btn" class="gm-ai-btn-primary" style="flex:1;">
                         <span>Jalankan AI</span>
                     </button>
@@ -825,6 +835,169 @@
             });
         }
 
+        // Pengelolaan Foto Referensi Multimodal (Paste Clipboard & Drag-Drop Foto)
+        const refImagesPreviewEl = document.getElementById("gm-ai-ref-images-preview");
+        const refImagesListEl = document.getElementById("gm-ai-ref-images-list");
+        const refImgCountEl = document.getElementById("gm-ai-ref-img-count");
+        const clearRefImagesBtn = document.getElementById("gm-ai-clear-ref-images-btn");
+
+        const renderReferenceImagesList = () => {
+            if (!refImagesPreviewEl || !refImagesListEl) return;
+            const images = window.attachedReferenceImages || [];
+            if (images.length === 0) {
+                refImagesPreviewEl.style.display = "none";
+                refImagesListEl.innerHTML = "";
+                if (refImgCountEl) refImgCountEl.textContent = "0";
+                return;
+            }
+
+            refImagesPreviewEl.style.display = "flex";
+            if (refImgCountEl) refImgCountEl.textContent = String(images.length);
+
+            refImagesListEl.innerHTML = images.map((item, idx) => `
+                <div class="gm-ai-preview-item" data-id="${item.id || idx}">
+                    <img src="${item.dataUrl || ('data:' + item.mime_type + ';base64,' + item.data)}" alt="${item.name || 'Referensi'}">
+                    <div class="gm-ai-preview-info">
+                        <span class="gm-ai-preview-name" title="${item.name}">${item.name}</span>
+                        <span class="gm-ai-preview-size">${item.sizeStr || ''}</span>
+                    </div>
+                    <button type="button" class="gm-ai-remove-img-btn" data-idx="${idx}" title="Hapus foto referensi ini">&times;</button>
+                </div>
+            `).join("");
+        };
+
+        const addReferenceImageFile = async (file, customName) => {
+            if (!file) return false;
+            if (!file.type || !file.type.startsWith("image/")) {
+                showStatus(statusEl, "error", "File yang di-paste bukan file gambar.");
+                return false;
+            }
+
+            const name = customName || file.name || `Screenshot-${new Date().toLocaleTimeString().replace(/:/g, '')}.png`;
+            showStatus(statusEl, "info", `Memproses foto referensi "${name}"...`);
+
+            try {
+                let compressed;
+                if (typeof Utils !== "undefined" && typeof Utils.compressImageFile === "function") {
+                    compressed = await Utils.compressImageFile(file, 1600, 1600, 0.85);
+                } else {
+                    compressed = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            const dataUrl = e.target.result;
+                            const parts = dataUrl.split(",");
+                            resolve({
+                                data: parts[1] || "",
+                                mime_type: file.type || "image/png",
+                                name: name,
+                                sizeStr: (file.size / 1024).toFixed(1) + " KB",
+                                dataUrl: dataUrl
+                            });
+                        };
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                }
+
+                if (!compressed || !compressed.data) {
+                    throw new Error("Gagal membaca biner data gambar.");
+                }
+
+                if (!Array.isArray(window.attachedReferenceImages)) {
+                    window.attachedReferenceImages = [];
+                }
+
+                const refObj = {
+                    id: "ref-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4),
+                    data: compressed.data,
+                    mime_type: compressed.mime_type || file.type || "image/png",
+                    name: name,
+                    sizeStr: compressed.sizeStr || ((file.size / 1024).toFixed(1) + " KB"),
+                    dataUrl: compressed.dataUrl || ("data:" + (compressed.mime_type || "image/png") + ";base64," + compressed.data)
+                };
+
+                window.attachedReferenceImages.push(refObj);
+                renderReferenceImagesList();
+                showStatus(statusEl, "info", `📸 Foto referensi "${name}" dilampirkan.`);
+                return true;
+            } catch (err) {
+                console.error("Gagal menambahkan referensi gambar:", err);
+                showStatus(statusEl, "error", "Gagal memproses gambar: " + err.message);
+                return false;
+            }
+        };
+
+        const removeReferenceImage = (idx) => {
+            if (Array.isArray(window.attachedReferenceImages) && idx >= 0 && idx < window.attachedReferenceImages.length) {
+                window.attachedReferenceImages.splice(idx, 1);
+                renderReferenceImagesList();
+            }
+        };
+
+        const clearAllReferenceImages = () => {
+            window.attachedReferenceImages = [];
+            renderReferenceImagesList();
+            showStatus(statusEl, "info", "Semua foto referensi dihapus.");
+        };
+
+        if (clearRefImagesBtn) {
+            clearRefImagesBtn.addEventListener("click", clearAllReferenceImages);
+        }
+
+        if (refImagesListEl) {
+            refImagesListEl.addEventListener("click", (e) => {
+                const btn = e.target.closest(".gm-ai-remove-img-btn");
+                if (btn) {
+                    const idx = parseInt(btn.dataset.idx, 10);
+                    removeReferenceImage(idx);
+                }
+            });
+        }
+
+        // Handler Clipboard Paste (Mendukung Screenshot Win+Shift+S, Copy Image dari browser/explorer)
+        const handleClipboardPaste = async (e) => {
+            const clipboardData = e.clipboardData || window.clipboardData;
+            if (!clipboardData) return;
+
+            let imageFound = false;
+
+            // 1. Cek clipboardData.items (standar browser modern untuk screenshot)
+            if (clipboardData.items && clipboardData.items.length > 0) {
+                for (let i = 0; i < clipboardData.items.length; i++) {
+                    const item = clipboardData.items[i];
+                    if (item.type && item.type.startsWith("image/")) {
+                        const file = item.getAsFile();
+                        if (file) {
+                            imageFound = true;
+                            await addReferenceImageFile(file, `Screenshot-${Date.now().toString().slice(-4)}.png`);
+                        }
+                    }
+                }
+            }
+
+            // 2. Fallback cek clipboardData.files
+            if (!imageFound && clipboardData.files && clipboardData.files.length > 0) {
+                for (let i = 0; i < clipboardData.files.length; i++) {
+                    const file = clipboardData.files[i];
+                    if (file.type && file.type.startsWith("image/")) {
+                        imageFound = true;
+                        await addReferenceImageFile(file);
+                    }
+                }
+            }
+
+            // Jika ada gambar yang dipaste, prevent default agar tidak menempelkan teks/string biner liar
+            if (imageFound) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        if (promptInputEl) {
+            promptInputEl.addEventListener("paste", handleClipboardPaste);
+        }
+        panel.addEventListener("paste", handleClipboardPaste);
+
         // Helper pembersih path URL aset (meringkas ke format uploads/assets/...)
         const cleanGreymistAssetUrl = (rawUrl) => {
             if (!rawUrl) return "";
@@ -886,18 +1059,17 @@
                 return;
             }
 
-            // 3. File dari explorer komputer (ditambahkan sebagai token tanda aset)
+            // 3. File dari explorer komputer (ditambahkan sebagai foto referensi multimodal & token aset)
             const files = e.dataTransfer?.files;
             if (files && files.length > 0) {
+                let addedAny = false;
                 for (const file of files) {
                     if (file.type && file.type.startsWith("image/")) {
-                        addChosenAssetToken({
-                            name: file.name,
-                            url: URL.createObjectURL(file),
-                            file: file
-                        });
+                        addedAny = true;
+                        await addReferenceImageFile(file);
                     }
                 }
+                if (addedAny) return;
             }
         };
 
@@ -1201,10 +1373,23 @@
                         chosenAssetTokens = [];
                         renderChosenAssetTokens();
                     }
+                    if (Array.isArray(window.attachedReferenceImages) && window.attachedReferenceImages.length > 0) {
+                        window.attachedReferenceImages = [];
+                        renderReferenceImagesList();
+                    }
 
                     // 0. Penerapan otomatis breakpoint responsif jika diarahkan oleh AI
                     if (Array.isArray(res.breakpoints_to_add) && res.breakpoints_to_add.length > 0) {
-                        applyAiBreakpoints(res.breakpoints_to_add, statusEl);
+                        if (typeof window.saveFrameBreakpoints === "function") {
+                            const _ac = (typeof getActiveObjectCore === "function" ? getActiveObjectCore() : null) || document.querySelector(".gm-object-core.actived") || document.querySelector(".gm-object-core");
+                            const _fid = _ac ? parseInt(_ac.dataset.frame) || 0 : 0;
+                            if (_fid > 0) window.saveFrameBreakpoints(_fid, res.breakpoints_to_add, false);
+                            else { window.gmBreakpoints = res.breakpoints_to_add; if (typeof window.renderBreakpointUI === "function") window.renderBreakpointUI(); }
+                        } else {
+                            window.gmBreakpoints = res.breakpoints_to_add;
+                            if (typeof window.renderBreakpointUI === "function") window.renderBreakpointUI();
+                        }
+                        if (window.gmResponsiveTranslator) window.gmResponsiveTranslator.translate();
                     }
 
                     // 0b. Sinkronisasi resiprokal pada frame yang sudah ada sebelumnya (misal navbar Home diberi link ke About)
@@ -1242,6 +1427,21 @@
                         }
                         if (window.GREYMIST && window.GREYMIST.project) {
                             window.GREYMIST.project.project_name = res.renamed_project.new_name;
+                        }
+                    }
+
+                    // 0e. Eksekusi Custom JavaScript jika dihasilkan oleh AI
+                    if (res.custom_js && typeof res.custom_js === "string" && res.custom_js.trim() !== "") {
+                        const activeCore = getActiveObjectCore();
+                        if (activeCore) {
+                            activeCore.dataset.customJs = res.custom_js;
+                        }
+                        const jsInput = document.getElementById("gm-custom-js-input");
+                        if (jsInput) {
+                            jsInput.value = res.custom_js;
+                        }
+                        if (typeof window.gmExecuteCustomScript === "function") {
+                            window.gmExecuteCustomScript(res.custom_js);
                         }
                     }
 

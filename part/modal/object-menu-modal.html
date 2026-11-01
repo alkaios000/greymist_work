@@ -19,6 +19,24 @@
    <li class="gm-menu-item gm-active-menu gm-save-component" id="gmSaveComponentMenuItem" onclick="if(window.GMComponentManager) window.GMComponentManager.openSaveModal();">
       <i class="fa-solid fa-cube" style="color: #3182ce; margin-right: 6px; font-size: 13px;"></i> Save as Component
    </li>
+   <li class="gm-menu-item gm-active-menu gm-make-include-item" id="gmMakeIncludeMenuItem">
+      <i class="fa-solid fa-link" style="color: #0284c7; margin-right: 6px; font-size: 13px;"></i> Jadikan Include Component (PHP Include)...
+   </li>
+   <li class="gm-menu-item gm-active-menu gm-insert-include-item has-submenu" id="gmInsertIncludeMenuItem">
+      <i class="fa-solid fa-paperclip" style="color: #10b981; margin-right: 6px; font-size: 13px;"></i> Sisipkan Include Component &raquo;
+      <ul class="gm-submenu" id="gmIncludeSubmenuList">
+         <li class="gm-menu-item" style="color: #94a3b8; font-size: 11px; padding: 6px 10px;">(Belum ada include di proyek)</li>
+      </ul>
+   </li>
+   <li class="gm-menu-item gm-active-menu gm-sync-include-item" id="gmSyncIncludeMenuItem" style="display: none;">
+      <i class="fa-solid fa-rotate" style="color: #3b82f6; margin-right: 6px; font-size: 13px;"></i> Sebarkan Update Include ke Semua Frame
+   </li>
+   <li class="gm-menu-item gm-active-menu gm-unlink-include-item" id="gmUnlinkIncludeMenuItem" style="display: none;">
+      <i class="fa-solid fa-unlink" style="color: #ef4444; margin-right: 6px; font-size: 13px;"></i> Lepas Kaitan Include (Unlink)
+   </li>
+   <li class="gm-menu-item gm-active-menu gm-sync-navbar-item" id="gmSyncNavbarMenuItem" style="display: none;">
+      <i class="fa-solid fa-link" style="color: #0284c7; margin-right: 6px; font-size: 13px;"></i> Hubungkan Navbar ke Pages...
+   </li>
    <script>
       document.addEventListener('click', function(e) {
          if (e.target.closest('.gm-save-component')) {

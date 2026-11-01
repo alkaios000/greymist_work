@@ -18,7 +18,7 @@
   justify-content: center;
   overflow: hidden;
   /* background: #f0f0f0; */
-  transform: scale(0.8);
+  transform: scale(0.95);
   transform-origin: 0 0;
 }
 
@@ -243,4 +243,139 @@ body.gm-fullscreen-preview #gm-exit-fullscreen {
 /* Kanvas desain terisolasi pada standar web */
 .gm-object-core {
   font-size: 16px;
+}
+
+
+/* Responsive Navbar & Hamburger Engine */
+.gm-navbar {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.gm-hamburger-btn {
+  display: none;
+  cursor: pointer;
+  user-select: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  box-sizing: border-box !important;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.gm-hamburger-btn:active {
+  transform: scale(0.95);
+}
+
+.gm-mobile-drawer {
+  transition: transform 0.25s ease-in-out, opacity 0.2s ease;
+}
+
+/* 1. MEDIA QUERY (Untuk file hasil Export & Layar HP/Tablet Asli) */
+@media (max-width: 768px) {
+  .gm-navbar .gm-nav-links:not(.gm-menu-open) {
+    display: none !important;
+  }
+  .gm-navbar .gm-hamburger-btn {
+    display: flex !important;
+  }
+  .gm-hamburger-btn {
+    display: flex !important;
+  }
+  .gm-mobile-drawer:not(.gm-menu-open) {
+    display: none !important;
+  }
+  .gm-mobile-drawer.gm-menu-open {
+    display: flex !important;
+  }
+
+  /* Responsive Dashboard & Sidebar */
+  aside.gm-mobile-drawer:not(.gm-menu-open),
+  .gm-sidebar:not(.gm-menu-open) {
+    transform: translateX(-100%) !important;
+    box-shadow: none !important;
+  }
+  aside.gm-mobile-drawer.gm-menu-open,
+  .gm-sidebar.gm-menu-open {
+    transform: translateX(0) !important;
+    display: flex !important;
+    z-index: 9999 !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.2) !important;
+  }
+  #main-content-area {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* 2. SIMULASI WORKSPACE EDITOR: Ketika pengguna mengklik breakpoint Tablet atau Mobile di toolbar */
+.gm-breakpoint-tablet .gm-navbar .gm-nav-links:not(.gm-menu-open),
+.gm-breakpoint-mobile .gm-navbar .gm-nav-links:not(.gm-menu-open),
+.gm-object-core[data-breakpoint="tablet"] .gm-navbar .gm-nav-links:not(.gm-menu-open),
+.gm-object-core[data-breakpoint="mobile"] .gm-navbar .gm-nav-links:not(.gm-menu-open) {
+  display: none !important;
+}
+
+.gm-breakpoint-tablet .gm-hamburger-btn,
+.gm-breakpoint-mobile .gm-hamburger-btn,
+.gm-object-core[data-breakpoint="tablet"] .gm-hamburger-btn,
+.gm-object-core[data-breakpoint="mobile"] .gm-hamburger-btn {
+  display: flex !important;
+  width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  max-height: 40px !important;
+  padding: 0 !important;
+}
+
+.gm-breakpoint-tablet aside.gm-mobile-drawer:not(.gm-menu-open),
+.gm-breakpoint-mobile aside.gm-mobile-drawer:not(.gm-menu-open),
+.gm-object-core[data-breakpoint="tablet"] aside.gm-mobile-drawer:not(.gm-menu-open),
+.gm-object-core[data-breakpoint="mobile"] aside.gm-mobile-drawer:not(.gm-menu-open) {
+  transform: translateX(-100%) !important;
+  box-shadow: none !important;
+}
+
+.gm-breakpoint-tablet aside.gm-mobile-drawer.gm-menu-open,
+.gm-breakpoint-mobile aside.gm-mobile-drawer.gm-menu-open,
+.gm-object-core[data-breakpoint="tablet"] aside.gm-mobile-drawer.gm-menu-open,
+.gm-object-core[data-breakpoint="mobile"] aside.gm-mobile-drawer.gm-menu-open {
+  transform: translateX(0) !important;
+  display: flex !important;
+  z-index: 9999 !important;
+  box-shadow: 4px 0 24px rgba(0,0,0,0.2) !important;
+}
+
+.gm-breakpoint-tablet #main-content-area,
+.gm-breakpoint-mobile #main-content-area,
+.gm-object-core[data-breakpoint="tablet"] #main-content-area,
+.gm-object-core[data-breakpoint="mobile"] #main-content-area {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+/* 3. SIMULASI WORKSPACE EDITOR: Ketika mode Desktop aktif */
+.gm-breakpoint-desktop .gm-hamburger-btn,
+.gm-object-core[data-breakpoint="desktop"] .gm-hamburger-btn,
+.gm-object-core:not([data-breakpoint="tablet"]):not([data-breakpoint="mobile"]) .gm-hamburger-btn {
+  display: none !important;
+}
+
+.gm-breakpoint-desktop aside.gm-mobile-drawer,
+.gm-object-core[data-breakpoint="desktop"] aside.gm-mobile-drawer,
+.gm-object-core:not([data-breakpoint="tablet"]):not([data-breakpoint="mobile"]) aside.gm-mobile-drawer {
+  transform: none !important;
+  display: flex !important;
+}
+
+.gm-breakpoint-desktop #main-content-area,
+.gm-object-core[data-breakpoint="desktop"] #main-content-area,
+.gm-object-core:not([data-breakpoint="tablet"]):not([data-breakpoint="mobile"]) #main-content-area {
+  margin-left: 260px !important;
 }

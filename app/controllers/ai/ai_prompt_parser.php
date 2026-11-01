@@ -21,8 +21,9 @@ if (!function_exists('get_greymist_system_instruction')) {
                 . "   - DILARANG KERAS membuat UI seadanya/minimalis atau memotong kode. Jika diminta halaman atau section, buat seluruh elemen secara mendalam: teks judul menarik, paragraf deskripsi jelas, tombol CTA, kartu-kartu (minimal 3 kartu fitur/layanan/pricing dengan data realistis), form input lengkap, dan footer/header jika relevan.\n"
                 . "2. SETIAP elemen HTML wajib memiliki class 'gm-object'.\n"
                 . "3. WAJIB IKON FONT AWESOME: gunakan <i class=\"fa-solid fa-...\"></i> atau <i class=\"fas fa-...\"></i>. DILARANG KERAS MENGGUNAKAN KARAKTER EMOJI/EMOTIKON APAPUN!\n"
+                . "   - POSISI IKON MENU/SIDEBAR: Pada link menu, sidebar, atau navigasi, jika menggunakan ikon maka ikon WAJIB diletakkan di sebelah KIRI teks (<i class=\"fa-solid ...\"></i> <span>Label Menu</span>) dengan gap 8px-12px, ATAU TANPA IKON SAMA SEKALI (desain bersih minimalis). DILARANG KERAS menaruh ikon fitur di sebelah kanan teks menu!\n"
                 . "4. SPACING PROPORSIONAL: section padding 36px 20px - 48px 32px, card 16px 20px - 24px 28px, button 8px 18px - 12px 24px, gap 12px - 24px. DILARANG padding/margin raksasa (100px+).\n"
-                . "5. RESPONSIVE: flex-wrap, max-width 100%, box-sizing: border-box.\n"
+                . "5. 100% AUTO-RESPONSIVE BY DEFAULT (DESKTOP, TABLET, MOBILE SIAP PAKAI):\n"                . "   - DILARANG KERAS membuat layout dengan lebar pixel kaku tanpa batas (misal: width: 1200px kaku). Selalu gunakan width: 100%; max-width: 1200px; margin-inline: auto; box-sizing: border-box;\n"                . "   - GRID KARTU OTOMATIS: Gunakan CSS Grid auto-fit: display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 20px; width: 100%; box-sizing: border-box; agar kartu otomatis rapi 3-4 kolom di desktop, 2 di tablet, dan 1 kolom penuh di ponsel.\n"                . "   - FLEX 2-KOLOM / HERO: Gunakan display: flex; flex-wrap: wrap; gap: 28px; align-items: center; dengan kolom anak flex: 1 1 300px; min-width: min(100%, 280px); box-sizing: border-box;\n"                . "   - TIPOGRAFI FLUIDA: Gunakan font-size dinamis dengan clamp() pada heading utama (misal font-size: clamp(1.6rem, 3.5vw, 2.75rem); line-height: 1.2;) agar terbaca sempurna tanpa teks kepotong di layar kecil.\n"                . "   - GAMBAR & MEDIA: Selalu max-width: 100%; height: auto; object-fit: cover;\n"
                 . "6. ATURAN SEMANTIK TABEL VS DIV (WAJIB AKURAT & TEPAT):\n"
                 . "   - KAPAN WAJIB <TABLE>: Jika prompt, teks referensi yang dipaste, atau FOTO/GAMBAR yang diunggah memuat DATA TABULAR, JADWAL (SCHEDULE), MATRIKS PERBANDINGAN FITUR/HARGA, INVOICE, LOG TRANSAKSI, atau LAPORAN BERKOLOM-BARIS:\n"
                 . "     * DILARANG KERAS mensimulasikan data tabel menggunakan tumpukan <div> flexbox/grid!\n"
@@ -104,9 +105,10 @@ if (!function_exists('get_greymist_system_instruction')) {
             . "   - Hasilkan konten UI yang UTUH, LENGKAP, dan SIAP PAKAI secara penuh.\n"
             . "   - DILARANG KERAS memotong kode, menggunakan komentar placeholder (seperti '<!-- isi konten disini -->', '...', 'TODO'), atau teks contoh seadanya.\n"
             . "   - Bangun seluruh komponen secara detail: teks judul yang menggugah, deskripsi/paragraf kaya informasi, tombol CTA, kartu-kartu fitur dengan data realistis, testimoni, form input dengan label dan placeholder yang rapi, dan footer lengkap.\n\n"
-            . "2. ATURAN WAJIB IKON FONT AWESOME (ANTI-EMOTIKON & TIDAK BERLEBIHAN):\n"
+            . "2. ATURAN WAJIB IKON FONT AWESOME (ANTI-EMOTIKON, POSISI IKON & TIDAK BERLEBIHAN):\n"
             . "   - WAJIB gunakan ikon Font Awesome resmi: <i class=\"fa-solid fa-...\"></i> atau <i class=\"fas fa-...\"></i> (contoh: fa-house, fa-user, fa-envelope, fa-arrow-right, fa-shield-halved, fa-star, fa-phone, fa-check, fa-gear, fa-chart-line, fa-magnifying-glass).\n"
             . "   - DILARANG KERAS MENGGUNAKAN KARAKTER EMOJI / EMOTIKON APAPUN (seperti 🚀, 💡, 🔥, ✨, 📱, 👍, 💼, 📞, 🌟, dll.). SEMUA IKON HARUS MENGGUNAKAN TAG <i> FONT AWESOME!\n"
+            . "   - POSISI IKON MENU SIDEBAR & NAV: Pada link menu sidebar dan navigasi, jika menggunakan ikon maka ikon WAJIB berada di sebelah KIRI teks (<i class=\"fa-solid ...\"></i> <span>Label Menu</span>) dengan gap 8px-12px, ATAU TANPA IKON SAMA SEKALI (desain minimalis clean typography). DILARANG KERAS meletakkan ikon fitur di sebelah kanan teks menu!\n"
             . "   - Gunakan ikon secara proporsional dan elegan: maksimal 1 ikon relevan pada tombol, kartu fitur, atau link menu. DILARANG menaruh ikon berlebihan di setiap kata atau judul.\n\n"
             . "3. ATURAN PADDING & MARGIN PROPORSIONAL (DILARANG JARAK RAKSASA/BERLEBIHAN):\n"
             . "   - DILARANG KERAS menggunakan padding atau margin yang raksasa/berlebihan (hindari padding 100px-200px atau margin 80px-150px yang menyisakan ruang kosong menganga).\n"
@@ -127,13 +129,79 @@ if (!function_exists('get_greymist_system_instruction')) {
             . "   - Saat membuat halaman baru atau multi-page, SEMUA link navbar/footer WAJIB memiliki data-action-type=\"goto\" dan data-action-target=\"NamaHalaman\" (contoh: data-action-target=\"Home\", data-action-target=\"About\", data-action-target=\"Contact\").\n"
             . "   - Setiap Navbar pada halaman baru WAJIB memuat tautan ke seluruh halaman dalam proyek (baik halaman lama maupun baru).\n"
             . "   - Sistem backend Greymist secara otomatis akan memperbarui seluruh Navbar di halaman lama (seperti Home) untuk menyematkan tautan ke halaman baru ini, sehingga navigasi antar halaman terhubung dua arah secara instan.\n"
-            . "   - Link untuk halaman yang sedang aktif WAJIB diberi styling aktif (misal: color: #3b82f6; font-weight: 700;).\n\n"
-            . "7. INTEGRASI ENGINE BREAKPOINTS & RESPONSIVE DESIGN:\n"
-            . "   - Greymist memiliki sistem breakpoint: Desktop (1920 base), Tablet (max-width: 768px), Mobile (max-width: 480px).\n"
-            . "   - Seluruh komponen HTML yang Anda buat WAJIB menggunakan tata letak responsif modern: flex-wrap: wrap, gap, max-width: 100%, box-sizing: border-box, dan grid auto-fit minmax(260px, 1fr) untuk card.\n"
-            . "   - Jika pengguna meminta responsif atau menambah breakpoint, sertakan blok penanda breakpoint:\n"
-            . "     <!--GM_BREAKPOINTS-->\n"
-            . "     [{\"id\":\"tablet\",\"name\":\"Tablet\",\"rule\":\"max-width: 768px\",\"widthValue\":768,\"type\":\"max\"},{\"id\":\"mobile\",\"name\":\"Mobile\",\"rule\":\"max-width: 480px\",\"widthValue\":480,\"type\":\"max\"}]\n\n"
+            . "   - Link untuk halaman yang sedang aktif WAJIB diberi styling aktif (misal: color: #3b82f6; font-weight: 700;).\n". "   - INCLUDE COMPONENT / NAVBAR BERSAMA (PHP-LIKE INCLUDE): Jika Navbar, Sidebar, atau Footer digunakan bersama di beberapa frame, pasang atribut data-gm-include='include-navbar' (atau nama include), data-gm-include-name='Navbar Utama', data-sync-group='include-navbar', dan class 'gm-include-component gm-synced-navbar'. Komponen ini bertindak seperti include PHP: dipanggil ke lokasi yang ditentukan di tiap frame dan saling terhubung secara live. Navigasi link antar frame wajib menyertakan data-action-type='goto' dan data-action-frame-id='<id_numerik>' agar kebal terhadap perubahan nama frame sewaktu-waktu.\n\n"
+                        . '7. INTEGRASI ENGINE BREAKPOINTS INDEPENDEN PER FRAME, NAVBAR RESPONSIVE & CUSTOM JAVASCRIPT:
+'
+            . '   - Greymist menerapkan BREAKPOINT INDEPENDEN untuk setiap frame (halaman) secara mandiri:
+'
+            . '     * Desktop Base (1920 base)
+'
+            . '     * Tablet (max-width: 768px)
+'
+            . '     * Mobile (max-width: 480px)
+'
+            . '   - NAVBAR & SIDEBAR OTOMATIS RESPONSIVE DENGAN HAMBURGER:
+'
+            . '     Setiap kali membuat Navbar, Header, atau Dashboard Sidebar, WAJIB menyediakan mekanisme responsif:
+'
+            . '     * Tombol Hamburger: <button class="gm-object gm-hamburger-btn" style="display: none; align-items: center; justify-content: center; width: 40px; height: 40px; min-height: 40px; max-height: 40px; padding: 0; background: transparent; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; color: inherit; font-size: 18px;" aria-label="Toggle Menu"><i class="fa-solid fa-bars"></i></button>
+'
+            . '     * Menu Links (.gm-nav-links): di desktop tampil flex horizontal; di tablet/mobile (<= 768px) disembunyikan dan muncul lewat drawer atau saat class .gm-menu-open aktif.
+'
+            . '     * Sidebar/Drawer: Di desktop tetap pada tempatnya (misal width 260px), di tablet/mobile disembunyikan ke kiri (transform: translateX(-100%)) dan muncul saat tombol hamburger ditekan.
+'
+            . '   - OTOMATIS SERTAKAN CUSTOM JAVASCRIPT TOGGLE:
+'
+            . '     Saat membuat Navbar atau Sidebar, WAJIB sertakan blok skrip di akhir output:
+'
+            . '     <!--GM_CUSTOM_JS-->
+'
+            . '     document.addEventListener(\'click\', function(e) {
+'
+            . '         const btn = e.target.closest(\'.gm-hamburger-btn\');
+'
+            . '         if (btn) {
+'
+            . '             const nav = btn.closest(\'.gm-navbar\') || document;
+'
+            . '             const drawer = nav.querySelector(\'.gm-mobile-drawer, .gm-nav-links, aside.gm-sidebar\');
+'
+            . '             if (drawer) {
+'
+            . '                 drawer.classList.toggle(\'gm-menu-open\');
+'
+            . '                 if (drawer.classList.contains(\'gm-menu-open\')) {
+'
+            . '                     drawer.style.setProperty(\'display\', \'flex\', \'important\');
+'
+            . '                     drawer.style.setProperty(\'transform\', \'translateX(0)\', \'important\');
+'
+            . '                 } else {
+'
+            . '                     drawer.style.removeProperty(\'display\');
+'
+            . '                     drawer.style.removeProperty(\'transform\');
+'
+            . '                 }
+'
+            . '             }
+'
+            . '         }
+'
+            . '     });
+'
+            . '     <!--GM_END_CUSTOM_JS-->
+'
+            . '   - BREAKPOINTS INDEPENDEN SPESIFIK:
+'
+            . '     Setiap kali membuat halaman atau frame baru, sertakan penanda konfigurasi breakpoint frame:
+'
+            . '     <!--GM_BREAKPOINTS-->
+'
+            . '     [{"id":"desktop","name":"Desktop","rule":"base","widthValue":1920,"type":"base","isDefault":true},{"id":"tablet","name":"Tablet","rule":"max-width: 768px","widthValue":768,"type":"max"},{"id":"mobile","name":"Mobile","rule":"max-width: 480px","widthValue":480,"type":"max"}]
+'
+            . "
+"
             . "8. INTERVENSI SELURUH HALAMAN (BATCH PROJECT-WIDE STYLING):\n"
             . "   - Jika tidak ada komponen aktif dan pengguna meminta perubahan pada SEMUA halaman (misal: 'konsistenkan semua card', 'ubah warna tema di semua pages', 'ganti font semua halaman', 'samakan navbar'):\n"
             . "     Gunakan operasi: <!--GM_OP:BATCH_UPDATE_FRAMES-->\n"
@@ -451,6 +519,11 @@ if (!function_exists('parse_greymist_ai_output')) {
 
         // Cek apakah ada arahan penambahan breakpoint responsif: <!--GM_BREAKPOINTS--> [...]
         $breakpoints_to_add = [];
+        $custom_js_to_add   = null;
+        if (preg_match('/<!--\s*GM_CUSTOM_JS\s*-->\s*(.*?)(?:<!--\s*GM_END_CUSTOM_JS\s*-->|$)/is', $trimmed_out, $js_match)) {
+            $custom_js_to_add = trim($js_match[1]);
+            $trimmed_out = str_replace($js_match[0], '', $trimmed_out);
+        }
         if (preg_match('/<!--\s*GM_BREAKPOINTS\s*-->\s*(\[.*?\])/is', $trimmed_out, $bp_match)) {
             $parsed_bp = json_decode($bp_match[1], true);
             if (is_array($parsed_bp)) {
@@ -485,6 +558,7 @@ if (!function_exists('parse_greymist_ai_output')) {
                     'operation'          => 'batch_update_frames',
                     'frames_updates'     => $frames_updates,
                     'breakpoints_to_add' => $breakpoints_to_add,
+            'custom_js'          => $custom_js_to_add,
                     'html'               => '',
                 ];
             }
@@ -556,6 +630,7 @@ if (!function_exists('parse_greymist_ai_output')) {
                     'operation'          => 'create_frames',
                     'frames_specs'       => $frames_specs,
                     'breakpoints_to_add' => $breakpoints_to_add,
+            'custom_js'          => $custom_js_to_add,
                     'html'               => '',
                 ];
             }
@@ -589,6 +664,7 @@ if (!function_exists('parse_greymist_ai_output')) {
                     'renamed_project'    => $renamed_project,
                     'summary'            => $patch_data['summary'] ?? 'Atribut elemen berhasil diperbarui.',
                     'breakpoints_to_add' => $breakpoints_to_add,
+            'custom_js'          => $custom_js_to_add,
                     'html'               => '',
                 ];
             }
@@ -602,6 +678,7 @@ if (!function_exists('parse_greymist_ai_output')) {
                 'renamed_project'    => $renamed_project,
                 'summary'            => $trimmed_out,
                 'breakpoints_to_add' => $breakpoints_to_add,
+            'custom_js'          => $custom_js_to_add,
                 'html'               => $current_frame_html,
             ];
         } elseif (str_contains($trimmed_out, '<!--GM_OP:REPLACE_SELECTED-->')) {
@@ -652,6 +729,7 @@ if (!function_exists('parse_greymist_ai_output')) {
             'renamed_project'    => $renamed_project,
             'summary'            => $summary_text,
             'breakpoints_to_add' => $breakpoints_to_add,
+            'custom_js'          => $custom_js_to_add,
             'html'               => $trimmed_out !== '' ? ensure_gm_object_class($trimmed_out) : '',
         ];
     }

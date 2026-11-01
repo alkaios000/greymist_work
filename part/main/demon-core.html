@@ -50,7 +50,245 @@
     <!-- gm-object-core akan di-inject lewat JS -->
 </div>
 
-<!-- Modal Add Breakpoint -->
+<!-- Modal Setting Breakpoint Profesional (Compact dengan Sidebar Frame & Tanpa Icon) -->
+<div id="gm-bp-pro-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 100000; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <div style="background: #ffffff; width: 780px; max-width: 95vw; height: 500px; max-height: 85vh; border-radius: 10px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #cbd5e1;">
+        
+        <!-- Header Modal (Compact, Tanpa Icon) -->
+        <div style="padding: 10px 16px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+            <div>
+                <h3 style="margin: 0; font-size: 13.5px; font-weight: 700; color: #0f172a;">Pengaturan Breakpoint Halaman</h3>
+                <div style="font-size: 11px; color: #64748b; margin-top: 1px;">
+                    Pilih halaman di sidebar untuk mengatur breakpoint responsif
+                </div>
+            </div>
+            <button id="gm-pro-bp-close" style="background: transparent; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 2px 6px; border-radius: 4px; line-height: 1;">&times;</button>
+        </div>
+
+        <!-- Body Modal: 2 Kolom (Sidebar Kiri Daftar Frame + Konten Kanan Breakpoints) -->
+        <div style="display: flex; flex: 1; overflow: hidden;">
+            
+            <!-- Sidebar Kiri: Daftar Frame / Halaman -->
+            <div style="width: 205px; min-width: 205px; background: #f8fafc; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column;">
+                <div style="padding: 10px 12px 6px; font-size: 10.5px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #edf2f7;">
+                    Daftar Halaman
+                </div>
+                <div id="gm-pro-frame-list" style="flex: 1; overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 3px;">
+                    <!-- Di-inject dinamis lewat JS -->
+                </div>
+                <div style="padding: 8px 10px; border-top: 1px solid #edf2f7; background: #f1f5f9; display: flex; flex-direction: column; gap: 4px;">
+                    <button type="button" id="gm-pro-quick-nav-sync-btn" style="width: 100%; padding: 5px 8px; font-size: 11px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 4px; color: #0284c7; cursor: pointer; font-weight: 600; text-align: center;">
+                        Hubungkan Navbar Pages
+                    </button>
+                </div>
+            </div>
+
+            <!-- Konten Kanan: Pengaturan Breakpoint Halaman Terpilih -->
+            <div style="flex: 1; padding: 12px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #ffffff;">
+                
+                <!-- Info Frame Terpilih & Scope -->
+                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 6px;">
+                    <div>
+                        <span style="font-size: 11px; color: #64748b;">Halaman: </span>
+                        <strong id="gm-pro-selected-frame-name" style="font-size: 13px; color: #0284c7;">Beranda</strong>
+                        <span id="gm-pro-selected-frame-id" style="font-size: 11px; color: #94a3b8; margin-left: 4px;">(#0)</span>
+                    </div>
+                    <label style="font-size: 11px; color: #475569; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                        <input type="checkbox" id="gm-pro-scope-all">
+                        <span>Terapkan ke seluruh halaman proyek</span>
+                    </label>
+                </div>
+
+                <!-- Presets 1-Klik (Compact, Tanpa Icon / Emoji) -->
+                <div>
+                    <div style="font-size: 10.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px;">
+                        Preset Cepat
+                    </div>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button type="button" class="gm-pro-preset-btn" data-preset="standard" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: #1e293b; font-weight: 500;">
+                            Standar Web (1920, 768, 480)
+                        </button>
+                        <button type="button" class="gm-pro-preset-btn" data-preset="multidevice" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: #1e293b; font-weight: 500;">
+                            Multi-Device (1920, 1280, 1024, 768, 420)
+                        </button>
+                        <button type="button" class="gm-pro-preset-btn" data-preset="mobilefirst" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: #1e293b; font-weight: 500;">
+                            Mobile-First (375, 768, 1200)
+                        </button>
+                        <button type="button" class="gm-pro-preset-btn" data-preset="desktoponly" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer; color: #1e293b; font-weight: 500;">
+                            Desktop Saja (1920)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tabel Breakpoint (Clean, Tanpa Kolom Icon) -->
+                <div style="border: 1px solid #e2e8f0; border-radius: 6px; overflow: hidden; background: #ffffff;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 11.5px; text-align: left;">
+                        <thead>
+                            <tr style="background: #f1f5f9; color: #475569; font-size: 10.5px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">
+                                <th style="padding: 6px 10px;">Label / Nama</th>
+                                <th style="padding: 6px 10px; width: 140px;">Tipe Aturan</th>
+                                <th style="padding: 6px 10px; width: 110px;">Lebar (px)</th>
+                                <th style="padding: 6px 10px; width: 60px; text-align: center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gm-pro-bp-table-body">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Tambah Breakpoint Baru (Inline Compact, Tanpa Icon) -->
+                <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 8px 10px;">
+                    <div style="font-size: 10.5px; font-weight: 700; color: #475569; margin-bottom: 5px;">
+                        + Tambah Breakpoint Kustom
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="gm-pro-new-name" placeholder="Nama (mis: iPad Mini)" style="flex: 1.2; min-width: 120px; padding: 4px 7px; font-size: 11.5px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none;">
+                        <select id="gm-pro-new-type" style="flex: 1; min-width: 110px; padding: 4px 7px; font-size: 11.5px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none; background: #fff;">
+                            <option value="max">Max-Width (≤)</option>
+                            <option value="min">Min-Width (≥)</option>
+                        </select>
+                        <input type="number" id="gm-pro-new-px" placeholder="820" min="240" max="3840" style="width: 80px; padding: 4px 7px; font-size: 11.5px; border: 1px solid #cbd5e1; border-radius: 4px; outline: none;">
+                        <button type="button" id="gm-pro-btn-add-row" style="background: #0284c7; color: #fff; border: none; border-radius: 4px; padding: 4px 10px; font-size: 11.5px; font-weight: 600; cursor: pointer;">
+                            Tambah
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Opsi Responsif Tambahan -->
+                <div style="border-top: 1px solid #f1f5f9; padding-top: 6px; display: flex; flex-direction: column; gap: 5px; font-size: 11px; color: #475569;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="checkbox" id="gm-pro-opt-live-translate" checked>
+                        <span>Otomatis terjemahkan tombol hamburger & sidebar saat beralih breakpoint / fullscreen</span>
+                    </label>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer Modal (Compact, Tanpa Icon) -->
+        <div style="padding: 10px 16px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+            <button type="button" id="gm-pro-btn-reset-default" style="background: transparent; border: 1px solid #cbd5e1; color: #475569; padding: 5px 10px; border-radius: 4px; font-size: 11.5px; cursor: pointer;">
+                Reset Default
+            </button>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" id="gm-pro-btn-cancel" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 5px 12px; border-radius: 4px; font-size: 11.5px; cursor: pointer;">
+                    Batal
+                </button>
+                <button type="button" id="gm-pro-btn-save-apply" style="background: #0284c7; border: none; color: #ffffff; padding: 5px 16px; border-radius: 4px; font-size: 11.5px; cursor: pointer; font-weight: 600;">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal Include Component Lintas Halaman (PHP-like Include / Shared Component) -->
+<div id="gm-sync-navbar-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 100001; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <div style="background: #ffffff; width: 680px; max-width: 95vw; max-height: 88vh; border-radius: 10px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #cbd5e1;">
+        
+        <!-- Header -->
+        <div style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+            <div>
+                <h3 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-link" style="color: #0284c7;"></i> Include Component (PHP-like Include)
+                </h3>
+                <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                    1 Komponen (Navbar, Sidebar, Footer, dll.) dipanggil ke frame mana pun di lokasi yang Anda tetapkan dan saling terhubung otomatis.
+                </div>
+            </div>
+            <button id="gm-sync-nav-close" style="background: transparent; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 2px 6px; line-height: 1;">&times;</button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 14px 18px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px;">
+            
+            <!-- Nama Include & Info Banner -->
+            <div style="display: flex; gap: 10px; align-items: center; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 8px 12px;">
+                <label style="font-size: 11.5px; font-weight: 700; color: #1e40af; white-space: nowrap;">Nama Include:</label>
+                <input type="text" id="gm-include-name-input" placeholder="Misal: Navbar Utama, Sidebar, Footer" style="flex: 1; padding: 5px 8px; font-size: 12px; font-weight: 600; color: #0f172a; border: 1px solid #93c5fd; border-radius: 4px; outline: none; background: #fff;">
+                <span id="gm-sync-nav-source-info" style="font-size: 10.5px; color: #3b82f6; white-space: nowrap;">(Frame Aktif)</span>
+            </div>
+
+            <!-- Lokasi Penempatan di Frame Tujuan -->
+            <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 9px 12px; background: #ffffff;">
+                <div style="font-size: 11px; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                    Lokasi Penempatan Include di Halaman Tujuan:
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; font-size: 11.5px; color: #334155;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="gm_include_placement" value="top" checked>
+                        <span>Paling Atas Frame (Top / Header)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="gm_include_placement" value="main_area">
+                        <span>Di Dalam #main-content-area (Dashboard)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="gm_include_placement" value="selected">
+                        <span>Di Dalam Kontainer Aktif / Terpilih</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                        <input type="radio" name="gm_include_placement" value="bottom">
+                        <span>Paling Bawah Frame (Footer / Bottom)</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Link Wiring Section (Dynamic Link Resolver to Frames) -->
+            <div id="gm-sync-wiring-section" style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 9px 12px; background: #f8fafc;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Hubungkan Link Menu ke Frame / Halaman Tujuan:
+                    </div>
+                    <span style="font-size: 10.5px; color: #0284c7; font-weight: 500;">Kebal Rename Frame</span>
+                </div>
+                <div style="font-size: 10.5px; color: #64748b; margin-bottom: 6px;">
+                    ID target frame disimpan permanen pada elemen link sehingga navigasi tidak akan putus jika nama frame diubah.
+                </div>
+                <div id="gm-sync-nav-link-wiring-list" style="display: flex; flex-direction: column; gap: 5px; max-height: 120px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 4px; padding: 6px;">
+                    <!-- Di-render dinamis oleh JS -->
+                </div>
+            </div>
+
+            <!-- Frame Mapping Checklist & Active Link Selector -->
+            <div>
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Pilih Frame yang Meng-include Komponen Ini & Atur Menu Aktif:
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" id="gm-sync-nav-check-all" style="background: none; border: none; color: #0284c7; font-size: 11px; cursor: pointer; text-decoration: underline;">Pilih Semua</button>
+                        <button type="button" id="gm-sync-nav-uncheck-all" style="background: none; border: none; color: #64748b; font-size: 11px; cursor: pointer; text-decoration: underline;">Hapus Pilihan</button>
+                    </div>
+                </div>
+
+                <div id="gm-sync-nav-frame-list" style="border: 1px solid #e2e8f0; border-radius: 6px; max-height: 180px; overflow-y: auto; background: #ffffff;">
+                    <!-- Di-inject dinamis lewat JS -->
+                </div>
+            </div>
+
+            <!-- Explanation Note -->
+            <div style="font-size: 11px; color: #64748b; background: #f8fafc; padding: 7px 12px; border-radius: 6px; border: 1px solid #e2e8f0; line-height: 1.4;">
+                <strong>Cara Kerja PHP-like Include:</strong> Komponen ini akan dipanggil ke frame terpilih di lokasi yang ditentukan. Perubahan pada teks, logo, style, atau link di salah satu halaman akan otomatis tersinkronisasi ke seluruh halaman yang meng-include-nya secara real-time.
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 10px 18px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: flex-end; gap: 8px; background: #f8fafc;">
+            <button type="button" id="gm-sync-nav-cancel" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 5px 14px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                Batal
+            </button>
+            <button type="button" id="gm-sync-nav-apply" style="background: #0284c7; border: none; color: #ffffff; padding: 6px 18px; border-radius: 4px; font-size: 12px; cursor: pointer; font-weight: 600;">
+                <i class="fa-solid fa-link" style="margin-right: 5px;"></i> Panggil & Hubungkan Include ke Frame
+            </button>
+        </div>
+
+    </div>
+</div>
+<!-- Modal Add Breakpoint Cepat -->
 <div id="gm-bp-modal"
     style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 99999; align-items: center; justify-content: center; font-family: sans-serif;">
     <div
@@ -77,31 +315,365 @@
         </div>
     </div>
 </div>
-
 <!-- Breakpoint Manager & Kalibrasi skala demon-core -->
 <script>
-    // 1. Inisialisasi Breakpoints
+        // 1. Inisialisasi Breakpoints & Independent Per-Frame Engine
     window.gmBreakpoints = [
-        { id: "desktop", name: "Desktop", rule: "base", widthValue: 1920, type: "base", isDefault: true }
+        { id: "desktop", name: "Desktop", rule: "base", widthValue: 1920, type: "base", isDefault: true },
+        { id: "tablet", name: "Tablet", rule: "max-width: 768px", widthValue: 768, type: "max" },
+        { id: "mobile", name: "Mobile", rule: "max-width: 480px", widthValue: 480, type: "max" }
     ];
     window.gmActiveBreakpoint = "desktop";
 
-    // Load custom breakpoints dari localStorage
     const projParams = new URLSearchParams(location.search);
-    const projId = projParams.get("project_id");
-    const savedBpKey = `gm_custom_breakpoints_${projId}`;
+    const projId = projParams.get("project_id") || "0";
 
-    // Fungsi Render UI (Otomatis urut)
+    // Dapatkan ID Frame yang sedang aktif di canvas
+    function getActiveFrameId() {
+        const actCore = document.querySelector('.gm-object-core.actived') || document.querySelector('.gm-object-core');
+        return actCore ? parseInt(actCore.dataset.frame) || 0 : 0;
+    }
+
+    // Dapatkan Nama Frame yang sedang aktif
+    function getActiveFrameName(frameId = null) {
+        const fid = frameId !== null ? frameId : getActiveFrameId();
+        const thumb = document.querySelector(`.gm-frame-thumbnail[data-frame="${fid}"] .gm-frame-name`);
+        return thumb ? thumb.textContent.trim() : `Frame #${fid}`;
+    }
+
+    // Dapatkan daftar seluruh frame proyek
+    function getAllProjectFrames() {
+        const frames = [];
+        document.querySelectorAll('.gm-frame-thumbnail').forEach(th => {
+            const fid = parseInt(th.dataset.frame);
+            const nameEl = th.querySelector('.gm-frame-name');
+            const fname = nameEl ? nameEl.textContent.trim() : `Frame #${fid}`;
+            if (fid) frames.push({ id: fid, name: fname });
+        });
+        if (frames.length === 0) {
+            document.querySelectorAll('.gm-object-core').forEach(c => {
+                const fid = parseInt(c.dataset.frame);
+                if (fid) frames.push({ id: fid, name: `Frame #${fid}` });
+            });
+        }
+        return frames;
+    }
+
+    // Mesin Penerjemah Responsif Otomatis (Live Translation di Editor & Fullscreen)
+    window.gmResponsiveTranslator = {
+        translate: function(customWidth = null) {
+            const activeCore = document.querySelector('.gm-object-core.actived') || document.querySelector('.gm-object-core');
+            if (!activeCore) return;
+
+            const isFullscreen = document.body.classList.contains('gm-fullscreen-preview');
+            let currentWidth = 1920;
+
+            if (customWidth !== null && customWidth > 0) {
+                currentWidth = customWidth;
+            } else if (isFullscreen) {
+                currentWidth = window.innerWidth;
+            } else if (window.gmActiveBreakpoint && window.gmActiveBreakpoint !== 'desktop') {
+                const bp = (window.gmBreakpoints || []).find(b => b.id === window.gmActiveBreakpoint);
+                if (bp && bp.widthValue) currentWidth = bp.widthValue;
+            }
+
+            const isStrictMobile = (window.gmActiveBreakpoint === 'tablet' || window.gmActiveBreakpoint === 'mobile' || currentWidth <= 1024);
+
+            // 1. TERJEMAHKAN TOMBOL HAMBURGER
+            activeCore.querySelectorAll('.gm-hamburger-btn, [data-action-type="toggle-sidebar"], [data-action-type="toggle-menu"]').forEach(btn => {
+                if (isStrictMobile) {
+                    btn.style.setProperty('display', 'flex', 'important');
+                    btn.style.setProperty('align-items', 'center', 'important');
+                    btn.style.setProperty('justify-content', 'center', 'important');
+                    btn.style.setProperty('width', '40px', 'important');
+                    btn.style.setProperty('height', '40px', 'important');
+                    btn.style.setProperty('min-height', '40px', 'important');
+                    btn.style.setProperty('max-height', '40px', 'important');
+                    btn.style.setProperty('padding', '0', 'important');
+                    btn.style.setProperty('cursor', 'pointer', 'important');
+                    btn.style.setProperty('flex-shrink', '0', 'important');
+                } else {
+                    btn.style.setProperty('display', 'none', 'important');
+                }
+            });
+
+            // 2. TERJEMAHKAN NAVBAR TOP LINKS
+            activeCore.querySelectorAll('.gm-navbar .gm-nav-links, .gm-synced-navbar .gm-nav-links').forEach(navLinks => {
+                if (navLinks.closest('aside, .gm-sidebar, .sidebar-section')) return; // Abaikan jika di dalam sidebar vertikal
+                if (isStrictMobile) {
+                    if (!navLinks.classList.contains('gm-menu-open')) {
+                        navLinks.style.setProperty('display', 'none', 'important');
+                    } else {
+                        navLinks.style.setProperty('display', 'flex', 'important');
+                        navLinks.style.setProperty('flex-direction', 'column', 'important');
+                        navLinks.style.setProperty('position', 'absolute', 'important');
+                        navLinks.style.setProperty('top', '100%', 'important');
+                        navLinks.style.setProperty('left', '0', 'important');
+                        navLinks.style.setProperty('width', '100%', 'important');
+                        navLinks.style.setProperty('background', '#ffffff', 'important');
+                        navLinks.style.setProperty('box-shadow', '0 10px 25px -5px rgba(0,0,0,0.1)', 'important');
+                        navLinks.style.setProperty('z-index', '9999', 'important');
+                        navLinks.style.setProperty('padding', '16px', 'important');
+                    }
+                } else {
+                    navLinks.style.setProperty('display', 'flex', 'important');
+                    navLinks.style.removeProperty('flex-direction');
+                    navLinks.style.removeProperty('position');
+                    navLinks.style.removeProperty('top');
+                    navLinks.style.removeProperty('left');
+                    navLinks.style.removeProperty('width');
+                    navLinks.style.removeProperty('box-shadow');
+                    navLinks.style.removeProperty('z-index');
+                    navLinks.style.removeProperty('padding');
+                }
+            });
+
+            // 3. TERJEMAHKAN SIDEBAR & DASHBOARD DRAWER
+            const sidebar = activeCore.querySelector('aside.gm-mobile-drawer, aside.gm-sidebar, .gm-sidebar, aside.sidebar-section, aside.gm-object');
+            const mainArea = activeCore.querySelector('#main-content-area, .main-content-area');
+
+            if (sidebar) {
+                if (isStrictMobile) {
+                    sidebar.style.setProperty('position', 'fixed', 'important');
+                    sidebar.style.setProperty('top', '0', 'important');
+                    sidebar.style.setProperty('bottom', '0', 'important');
+                    sidebar.style.setProperty('left', '0', 'important');
+                    sidebar.style.setProperty('width', '260px', 'important');
+                    sidebar.style.setProperty('z-index', '99999', 'important');
+                    sidebar.style.setProperty('transition', 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 'important');
+
+                    if (!sidebar.classList.contains('gm-menu-open')) {
+                        sidebar.style.setProperty('transform', 'translateX(-100%)', 'important');
+                        sidebar.style.setProperty('box-shadow', 'none', 'important');
+                    } else {
+                        sidebar.style.setProperty('transform', 'translateX(0)', 'important');
+                        sidebar.style.setProperty('box-shadow', '4px 0 25px rgba(0,0,0,0.25)', 'important');
+                    }
+                    if (mainArea) {
+                        mainArea.style.setProperty('margin-left', '0', 'important');
+                        mainArea.style.setProperty('width', '100%', 'important');
+                    }
+                } else {
+                    sidebar.classList.remove('gm-menu-open');
+                    sidebar.style.setProperty('transform', 'none', 'important');
+                    sidebar.style.setProperty('display', 'flex', 'important');
+                    sidebar.style.removeProperty('box-shadow');
+                    sidebar.style.removeProperty('z-index');
+                    if (mainArea) {
+                        mainArea.style.setProperty('margin-left', '260px', 'important');
+                        mainArea.style.removeProperty('width');
+                    }
+                }
+            }
+        },
+
+        init: function() {
+            window.addEventListener('resize', () => {
+                if (document.body.classList.contains('gm-fullscreen-preview')) {
+                    window.gmResponsiveTranslator.translate();
+                }
+            });
+        }
+    };
+    window.gmResponsiveTranslator.init();
+
+    // Global Event Handler untuk Toggle Hamburger Drawer di Editor & Fullscreen
+    document.addEventListener('click', (e) => {
+        const toggleBtn = e.target.closest('.gm-hamburger-btn, [data-action-type="toggle-sidebar"], [data-action-type="toggle-menu"]');
+        if (toggleBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const activeCore = document.querySelector('.gm-object-core.actived') || document.querySelector('.gm-object-core') || document.body;
+            const sidebar = activeCore.querySelector('aside.gm-mobile-drawer, aside.gm-sidebar, .gm-sidebar, aside.sidebar-section, aside.gm-object');
+            const navLinks = activeCore.querySelector('.gm-navbar .gm-nav-links, .gm-synced-navbar .gm-nav-links');
+
+            let drawerEl = sidebar || navLinks;
+            if (drawerEl) {
+                const isOpen = drawerEl.classList.toggle('gm-menu-open');
+                
+                // Kelola Backdrop / Overlay Drawer
+                let backdrop = activeCore.querySelector('.gm-drawer-backdrop');
+                if (isOpen) {
+                    if (!backdrop) {
+                        backdrop = document.createElement('div');
+                        backdrop.className = 'gm-drawer-backdrop';
+                        backdrop.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(2px); z-index: 99998; transition: opacity 0.3s;';
+                        backdrop.addEventListener('click', () => {
+                            drawerEl.classList.remove('gm-menu-open');
+                            backdrop.remove();
+                            window.gmResponsiveTranslator.translate();
+                        });
+                        activeCore.appendChild(backdrop);
+                    }
+                } else if (backdrop) {
+                    backdrop.remove();
+                }
+
+                window.gmResponsiveTranslator.translate();
+            }
+            return;
+        }
+
+        // Tombol Close Drawer di dalam Sidebar
+        const closeBtn = e.target.closest('#sidebar-close-btn, .gm-close-drawer-btn, [data-action-type="close-drawer"]');
+        if (closeBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            const activeCore = document.querySelector('.gm-object-core.actived') || document.querySelector('.gm-object-core') || document.body;
+            const sidebar = activeCore.querySelector('aside.gm-mobile-drawer, aside.gm-sidebar, .gm-sidebar, aside.sidebar-section, aside.gm-object');
+            if (sidebar) {
+                sidebar.classList.remove('gm-menu-open');
+                const backdrop = activeCore.querySelector('.gm-drawer-backdrop');
+                if (backdrop) backdrop.remove();
+                window.gmResponsiveTranslator.translate();
+            }
+        }
+    }, true);
+
+    // Muat breakpoint independen khusus untuk frame tertentu
+    window.loadFrameBreakpoints = function(frameId) {
+        if (!frameId) frameId = getActiveFrameId();
+        if (!frameId) return;
+
+        const core = document.getElementById(`object-core-${frameId}`);
+        let loadedBp = null;
+
+        // 1. Baca dari dataset DOM core frame
+        if (core && core.dataset.customBreakpoints) {
+            try {
+                loadedBp = JSON.parse(core.dataset.customBreakpoints);
+            } catch (err) {}
+        }
+
+        // 2. Baca dari localStorage independen frame ini
+        if (!loadedBp || !Array.isArray(loadedBp) || loadedBp.length === 0) {
+            try {
+                const stored = localStorage.getItem(`gm_frame_bp_${frameId}`);
+                if (stored) loadedBp = JSON.parse(stored);
+            } catch (err) {}
+        }
+
+        // 3. Jika frame baru belum memiliki breakpoint, buat default independen
+        if (!loadedBp || !Array.isArray(loadedBp) || loadedBp.length === 0) {
+            loadedBp = [
+                { id: "desktop", name: "Desktop", rule: "base", widthValue: 1920, type: "base", isDefault: true },
+                { id: "tablet", name: "Tablet", rule: "max-width: 768px", widthValue: 768, type: "max" },
+                { id: "mobile", name: "Mobile", rule: "max-width: 480px", widthValue: 480, type: "max" }
+            ];
+            if (core) core.dataset.customBreakpoints = JSON.stringify(loadedBp);
+        }
+
+        window.gmBreakpoints = loadedBp;
+        window.renderBreakpointUI();
+
+        // Terapkan ke dimensi core
+        if (typeof fitAllCores === 'function') fitAllCores();
+        window.gmResponsiveTranslator.translate();
+    };
+
+    // Ambil breakpoint suatu frame tanpa mengubah toolbar kanvas saat ini
+    function getBreakpointsForFrame(frameId) {
+        const core = document.getElementById(`object-core-${frameId}`);
+        let loadedBp = null;
+        if (core && core.dataset.customBreakpoints) {
+            try { loadedBp = JSON.parse(core.dataset.customBreakpoints); } catch (e) {}
+        }
+        if (!loadedBp || !Array.isArray(loadedBp) || loadedBp.length === 0) {
+            try {
+                const stored = localStorage.getItem(`gm_frame_bp_${frameId}`);
+                if (stored) loadedBp = JSON.parse(stored);
+            } catch (e) {}
+        }
+        if (!loadedBp || !Array.isArray(loadedBp) || loadedBp.length === 0) {
+            loadedBp = [
+                { id: "desktop", name: "Desktop", rule: "base", widthValue: 1920, type: "base", isDefault: true },
+                { id: "tablet", name: "Tablet", rule: "max-width: 768px", widthValue: 768, type: "max" },
+                { id: "mobile", name: "Mobile", rule: "max-width: 480px", widthValue: 480, type: "max" }
+            ];
+        }
+        return loadedBp;
+    }
+
+    // Simpan breakpoint independen ke frame
+    window.saveFrameBreakpoints = function(frameId, bpList, applyToAll = false) {
+        if (!frameId) frameId = getActiveFrameId();
+        if (!frameId) return;
+
+        const bpJson = JSON.stringify(bpList);
+        const core = document.getElementById(`object-core-${frameId}`);
+        if (core) core.dataset.customBreakpoints = bpJson;
+        localStorage.setItem(`gm_frame_bp_${frameId}`, bpJson);
+
+        if (applyToAll) {
+            document.querySelectorAll('.gm-object-core').forEach(c => {
+                c.dataset.customBreakpoints = bpJson;
+                const fid = c.dataset.frame;
+                if (fid) localStorage.setItem(`gm_frame_bp_${fid}`, bpJson);
+            });
+        }
+
+        fetch('index.php?action=save_frame_script', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                frame_id: frameId,
+                project_id: projId,
+                scope: 'frame',
+                custom_breakpoints: bpJson,
+                apply_to_all: applyToAll ? 1 : 0
+            })
+        }).catch(console.error);
+
+        // Jika yang disimpan adalah frame aktif saat ini, perbarui toolbar
+        if (frameId === getActiveFrameId()) {
+            window.gmBreakpoints = bpList;
+            window.renderBreakpointUI();
+            if (typeof fitAllCores === 'function') fitAllCores();
+            window.gmResponsiveTranslator.translate();
+        }
+    };
+
+    // Fungsi Render UI Toolbar Atas (Dengan Icon Roda Gigi & Hubungkan Navbar)
     window.renderBreakpointUI = function () {
         const toolbar = document.getElementById('gm-breakpoint-toolbar');
         if (!toolbar) return;
 
         toolbar.innerHTML = "";
 
+        // 1. Icon Roda Gigi Setting Profesional di paling kiri
+        const settingsBtn = document.createElement("button");
+        settingsBtn.className = "gm-bp-btn";
+        settingsBtn.id = "gm-bp-settings-btn";
+        settingsBtn.title = "Pengaturan Breakpoint Halaman (Independen)";
+        settingsBtn.innerHTML = `<i class="fas fa-cog"></i>`;
+        settingsBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openBreakpointProModal();
+        });
+        toolbar.appendChild(settingsBtn);
+
+        // 2. Tombol Hubungkan Navbar Bersama (Shared Nav)
+        const navSyncBtn = document.createElement("button");
+        navSyncBtn.className = "gm-bp-btn";
+        navSyncBtn.id = "gm-navbar-sync-btn";
+        navSyncBtn.title = "Hubungkan Navbar ke Pages Lain (Shared / Synced)";
+        navSyncBtn.innerHTML = `<i class="fas fa-link"></i>`;
+        navSyncBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (window.gmSyncNavbarEngine) window.gmSyncNavbarEngine.openModal();
+        });
+        toolbar.appendChild(navSyncBtn);
+
+        // Divider
+        const divider = document.createElement("div");
+        divider.style.cssText = "width: 1px; height: 16px; background: #cbd5e1; margin: 5px 2px; flex-shrink: 0;";
+        toolbar.appendChild(divider);
+
         // Sort: min-width (ascending) -> base -> max-width (descending)
-        const minBp = window.gmBreakpoints.filter(b => b.type === 'min').sort((a, b) => a.widthValue - b.widthValue);
-        const baseBp = window.gmBreakpoints.filter(b => b.type === 'base');
-        const maxBp = window.gmBreakpoints.filter(b => b.type === 'max').sort((a, b) => b.widthValue - a.widthValue);
+        const minBp = (window.gmBreakpoints || []).filter(b => b.type === 'min').sort((a, b) => a.widthValue - b.widthValue);
+        const baseBp = (window.gmBreakpoints || []).filter(b => b.type === 'base');
+        const maxBp = (window.gmBreakpoints || []).filter(b => b.type === 'max').sort((a, b) => b.widthValue - a.widthValue);
 
         const sorted = [...minBp, ...baseBp, ...maxBp];
 
@@ -118,40 +690,29 @@
             let iconClass = 'fa-desktop';
             if (bp.widthValue <= 480) iconClass = 'fa-mobile-alt';
             else if (bp.widthValue <= 1024 && bp.type === 'max') iconClass = 'fa-tablet-alt';
+            else if (bp.widthValue <= 1440 && bp.type === 'max') iconClass = 'fa-laptop';
 
             btn.innerHTML = `<i class="fas ${iconClass}"></i>`;
             toolbar.appendChild(btn);
         });
 
-        // Add button
+        // Add button di paling kanan
         const addBtn = document.createElement("button");
         addBtn.className = "gm-bp-btn";
         addBtn.id = "gm-bp-add";
-        addBtn.title = "Add Custom Breakpoint";
+        addBtn.title = "Tambah Breakpoint Cepat";
         addBtn.innerHTML = `<i class="fas fa-plus"></i>`;
         toolbar.appendChild(addBtn);
     };
 
-    try {
-        const savedBp = localStorage.getItem(savedBpKey);
-        if (savedBp) {
-            const parsed = JSON.parse(savedBp);
-            // Upgrade format lama jika ada
-            const upgraded = parsed.map(p => {
-                if (!p.type) {
-                    const wVal = parseInt(p.width);
-                    return { id: p.id, name: p.name, rule: `max-width: ${p.width}`, widthValue: wVal, type: "max" };
-                }
-                return p;
-            });
-            window.gmBreakpoints.push(...upgraded);
-        }
-    } catch (e) { }
-
     // Render awal
-    setTimeout(window.renderBreakpointUI, 50);
+    setTimeout(() => {
+        const fid = getActiveFrameId();
+        if (fid > 0) window.loadFrameBreakpoints(fid);
+        else window.renderBreakpointUI();
+    }, 60);
 
-    // Fungsi bantu untuk men-sinkronisasi inline style ke memori
+    // Fungsi bantu untuk sinkronisasi inline style
     window.syncCurrentBreakpoint = function () {
         const bp = window.gmActiveBreakpoint;
         document.querySelectorAll('.gm-object').forEach(el => {
@@ -161,87 +722,69 @@
             if (bp === "desktop") {
                 el.dataset.bpDesktop = el.style.cssText;
             } else {
-                el.setAttribute(`data-bp-${bp}`, el.style.cssText);
+                if (el.style.cssText && el.style.cssText !== (el.dataset.bpDesktop || "")) {
+                    el.setAttribute(`data-bp-${bp}`, el.style.cssText);
+                }
             }
         });
     };
 
-    // Fungsi untuk membangun Global Stylesheet berdasarkan rule terurut
-    window.generateResponsiveCSS = function () {
-        let css = "/* Auto-generated Responsive CSS */\n";
-
-        const objectMap = new Map();
-        document.querySelectorAll('.gm-object').forEach(el => {
-            if (el.dataset.gmId) objectMap.set(el.dataset.gmId, el);
-        });
-
-        // Base styles (Desktop)
-        objectMap.forEach((el, id) => {
-            const desktopStyle = el.dataset.bpDesktop;
-            if (desktopStyle) css += `[data-gm-id="${id}"] { ${desktopStyle} }\n`;
-        });
-
-        // Min-width media queries (Ascending)
-        const minBp = [...window.gmBreakpoints].filter(b => b.type === 'min').sort((a, b) => a.widthValue - b.widthValue);
-        minBp.forEach(bp => {
-            css += `\n@media (${bp.rule}) {\n`;
-            objectMap.forEach((el, id) => {
-                const bpStyle = el.getAttribute(`data-bp-${bp.id}`);
-                if (bpStyle) css += `  [data-gm-id="${id}"] { ${bpStyle} }\n`;
-            });
-            css += `}\n`;
-        });
-
-        // Max-width media queries (Descending)
-        const maxBp = [...window.gmBreakpoints].filter(b => b.type === 'max').sort((a, b) => b.widthValue - a.widthValue);
-        maxBp.forEach(bp => {
-            css += `\n@media (${bp.rule}) {\n`;
-            objectMap.forEach((el, id) => {
-                const bpStyle = el.getAttribute(`data-bp-${bp.id}`);
-                if (bpStyle) css += `  [data-gm-id="${id}"] { ${bpStyle} }\n`;
-            });
-            css += `}\n`;
-        });
-
-        let styleTag = document.getElementById("gm-responsive-css");
-        if (!styleTag) {
-            styleTag = document.createElement("style");
-            styleTag.id = "gm-responsive-css";
-            document.head.appendChild(styleTag);
-        }
-        styleTag.textContent = css;
-    };
-
+    // Fungsi switch breakpoint aktif
     window.switchBreakpoint = function (bpId) {
         if (window.gmActiveBreakpoint === bpId) return;
         window.syncCurrentBreakpoint();
-        window.generateResponsiveCSS();
         window.gmActiveBreakpoint = bpId;
 
+        document.querySelectorAll('.gm-object-core').forEach(core => {
+            core.setAttribute('data-breakpoint', bpId);
+            core.classList.remove('gm-breakpoint-desktop', 'gm-breakpoint-tablet', 'gm-breakpoint-mobile');
+            core.classList.add('gm-breakpoint-' + bpId);
+        });
+        document.body.classList.remove('gm-breakpoint-desktop', 'gm-breakpoint-tablet', 'gm-breakpoint-mobile');
+        document.body.classList.add('gm-breakpoint-' + bpId);
+
         document.querySelectorAll('.gm-object').forEach(el => {
-            let newStyle = "";
-            if (bpId === 'desktop') {
-                newStyle = el.dataset.bpDesktop || "";
-            } else {
-                newStyle = el.getAttribute(`data-bp-${bpId}`) || "";
+            if (!el.dataset.bpDesktop) {
+                el.dataset.bpDesktop = el.style.cssText;
             }
-            el.style.cssText = newStyle;
+
+            if (bpId === 'desktop') {
+                el.style.cssText = el.dataset.bpDesktop || "";
+            } else {
+                const override = el.getAttribute(`data-bp-${bpId}`);
+                if (override && override.trim() !== "") {
+                    el.style.cssText = override;
+                } else {
+                    el.style.cssText = el.dataset.bpDesktop || el.style.cssText;
+                }
+            }
         });
 
-        // Update UI Button active states
         document.querySelectorAll('.gm-bp-btn').forEach(btn => {
-            if (btn.id !== 'gm-bp-add') {
+            if (btn.id !== 'gm-bp-add' && btn.id !== 'gm-bp-settings-btn' && btn.id !== 'gm-navbar-sync-btn') {
                 btn.classList.toggle('active', btn.dataset.bp === bpId);
             }
         });
 
         if (typeof fitAllCores === 'function') fitAllCores();
+        window.gmResponsiveTranslator.translate();
         document.dispatchEvent(new Event("gm-selection-change"));
     };
 
+    // Click delegation pada toolbar breakpoint
     document.addEventListener("click", e => {
         const btn = e.target.closest('.gm-bp-btn');
         if (!btn) return;
+
+        if (btn.id === 'gm-bp-settings-btn') {
+            openBreakpointProModal();
+            return;
+        }
+
+        if (btn.id === 'gm-navbar-sync-btn') {
+            if (window.gmSyncNavbarEngine) window.gmSyncNavbarEngine.openModal();
+            return;
+        }
 
         if (btn.id === 'gm-bp-add') {
             document.getElementById('gm-bp-modal').style.display = 'flex';
@@ -253,7 +796,7 @@
         if (bpId) window.switchBreakpoint(bpId);
     });
 
-    // Modal Events
+    // Modal Cepat Events
     document.getElementById('gm-bp-cancel').addEventListener('click', () => {
         document.getElementById('gm-bp-modal').style.display = 'none';
     });
@@ -272,23 +815,909 @@
         const id = "custom-" + Date.now();
         const newBp = {
             id,
-            name: "Custom",
+            name: w <= 480 ? "Mobile" : (w <= 1024 ? "Tablet" : "Desktop Custom"),
             rule: rule,
             widthValue: w,
             type: type
         };
-        window.gmBreakpoints.push(newBp);
 
-        try {
-            const existing = JSON.parse(localStorage.getItem(savedBpKey) || "[]");
-            existing.push(newBp);
-            localStorage.setItem(savedBpKey, JSON.stringify(existing));
-        } catch (e) { }
+        const currentList = [...(window.gmBreakpoints || []), newBp];
+        const fid = getActiveFrameId();
+        window.saveFrameBreakpoints(fid, currentList, false);
 
-        window.renderBreakpointUI();
         document.getElementById('gm-bp-modal').style.display = 'none';
         document.getElementById('gm-bp-val').value = '';
     });
+
+    // Tangani pergantian frame untuk memuat breakpoint spesifik independen milik frame tersebut
+    document.addEventListener("gm-frame-switched", function (e) {
+        const frameId = e.detail && e.detail.frameId;
+        if (frameId) {
+            window.loadFrameBreakpoints(frameId);
+        }
+    });
+
+    // ==============================================================
+    // LOGIKA MODAL BREAKPOINT COMPACT (DENGAN SIDEBAR DAFTAR FRAME)
+    // ==============================================================
+    let modalTargetFrameId = null;
+    let modalBpWorkingList = [];
+
+    function openBreakpointProModal() {
+        const modal = document.getElementById('gm-bp-pro-modal');
+        if (!modal) return;
+
+        // Dapatkan frame aktif kanvas saat ini sebagai default terpilih
+        modalTargetFrameId = getActiveFrameId();
+        renderProModalFrameSidebar();
+        loadModalFrameData(modalTargetFrameId);
+
+        modal.style.display = 'flex';
+    }
+
+    // Render daftar halaman di sidebar kiri modal
+    function renderProModalFrameSidebar() {
+        const listEl = document.getElementById('gm-pro-frame-list');
+        if (!listEl) return;
+        listEl.innerHTML = '';
+
+        const allFrames = getAllProjectFrames();
+        allFrames.forEach(f => {
+            const isSelected = f.id === modalTargetFrameId;
+            const item = document.createElement('div');
+            item.className = `gm-pro-frame-item ${isSelected ? 'active' : ''}`;
+            item.style.cssText = `
+                padding: 8px 10px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 11.5px;
+                color: ${isSelected ? '#0284c7' : '#334155'};
+                background: ${isSelected ? '#e0f2fe' : 'transparent'};
+                font-weight: ${isSelected ? '600' : '400'};
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                transition: background 0.15s;
+                margin-bottom: 2px;
+            `;
+            item.innerHTML = `
+                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${f.name}</span>
+                <span style="font-size: 10px; color: ${isSelected ? '#0284c7' : '#94a3b8'};">#${f.id}</span>
+            `;
+            item.addEventListener('click', () => {
+                modalTargetFrameId = f.id;
+                renderProModalFrameSidebar();
+                loadModalFrameData(f.id);
+            });
+            listEl.appendChild(item);
+        });
+    }
+
+    // Muat data breakpoint ke tabel modal
+    function loadModalFrameData(frameId) {
+        const nameEl = document.getElementById('gm-pro-current-frame-name');
+        const idEl = document.getElementById('gm-pro-current-frame-id');
+        const fname = getActiveFrameName(frameId);
+
+        if (nameEl) nameEl.textContent = fname;
+        if (idEl) idEl.textContent = `(#${frameId})`;
+
+        // Muat breakpoint khusus frame ini
+        modalBpWorkingList = JSON.parse(JSON.stringify(getBreakpointsForFrame(frameId)));
+        renderProModalTable();
+    }
+
+    // Render tabel breakpoint (Clean & Compact, TANPA KOLOM ICON)
+    function renderProModalTable() {
+        const tbody = document.getElementById('gm-pro-bp-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        modalBpWorkingList.forEach((bp, index) => {
+            const isBase = bp.id === 'desktop' || bp.type === 'base';
+
+            const tr = document.createElement('tr');
+            tr.style.cssText = "border-bottom: 1px solid #f1f5f9; transition: background 0.1s;";
+            tr.innerHTML = `
+                <td style="padding: 6px 10px;">
+                    <input type="text" class="gm-pro-row-name" data-index="${index}" value="${bp.name || ''}" ${isBase ? 'readonly' : ''} style="width: 100%; padding: 4px 6px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 4px; ${isBase ? 'background: #f8fafc; font-weight: 600;' : ''}">
+                </td>
+                <td style="padding: 6px 10px;">
+                    ${isBase ? '<span style="color: #64748b; font-size: 11px; font-weight: 600;">Base (Desktop)</span>' : `
+                        <select class="gm-pro-row-type" data-index="${index}" style="width: 100%; padding: 4px 6px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff;">
+                            <option value="max" ${bp.type === 'max' ? 'selected' : ''}>Max-Width (≤)</option>
+                            <option value="min" ${bp.type === 'min' ? 'selected' : ''}>Min-Width (≥)</option>
+                        </select>
+                    `}
+                </td>
+                <td style="padding: 6px 10px;">
+                    <input type="number" class="gm-pro-row-px" data-index="${index}" value="${bp.widthValue || 1920}" min="240" max="3840" ${isBase ? 'readonly' : ''} style="width: 100%; padding: 4px 6px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 4px; ${isBase ? 'background: #f8fafc;' : ''}">
+                </td>
+                <td style="padding: 6px 10px; text-align: center;">
+                    ${isBase ? '<span style="color: #94a3b8; font-size: 11px;">Base</span>' : `
+                        <button type="button" class="gm-pro-row-del" data-index="${index}" style="background: transparent; border: 1px solid #fecaca; color: #ef4444; cursor: pointer; padding: 2px 6px; border-radius: 4px; font-size: 10.5px;" title="Hapus">
+                            Hapus
+                        </button>
+                    `}
+                </td>
+            `;
+
+            // Live edit updates in working array
+            const nameInput = tr.querySelector('.gm-pro-row-name');
+            if (nameInput) {
+                nameInput.addEventListener('input', () => {
+                    modalBpWorkingList[index].name = nameInput.value;
+                });
+            }
+
+            const typeSelect = tr.querySelector('.gm-pro-row-type');
+            if (typeSelect) {
+                typeSelect.addEventListener('change', () => {
+                    modalBpWorkingList[index].type = typeSelect.value;
+                    const w = modalBpWorkingList[index].widthValue;
+                    modalBpWorkingList[index].rule = typeSelect.value === 'max' ? `max-width: ${w}px` : `min-width: ${w}px`;
+                });
+            }
+
+            const pxInput = tr.querySelector('.gm-pro-row-px');
+            if (pxInput) {
+                pxInput.addEventListener('input', () => {
+                    const w = parseInt(pxInput.value) || 768;
+                    modalBpWorkingList[index].widthValue = w;
+                    if (modalBpWorkingList[index].type !== 'base') {
+                        modalBpWorkingList[index].rule = modalBpWorkingList[index].type === 'max' ? `max-width: ${w}px` : `min-width: ${w}px`;
+                    }
+                });
+            }
+
+            const delBtn = tr.querySelector('.gm-pro-row-del');
+            if (delBtn) {
+                delBtn.addEventListener('click', () => {
+                    modalBpWorkingList.splice(index, 1);
+                    renderProModalTable();
+                });
+            }
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Modal Preset Buttons
+    document.querySelectorAll('.gm-pro-preset-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const preset = this.dataset.preset;
+            if (preset === 'standard') {
+                modalBpWorkingList = [
+                    { id: "desktop", name: "Desktop", rule: "base", widthValue: 1920, type: "base", isDefault: true },
+                    { id: "tablet", name: "Tablet", rule: "max-width: 768px", widthValue: 768, type: "max" },
+                    { id: "mobile", name: "Mobile", rule: "max-width: 480px", widthValue: 480, type: "max" }
+                ];
+            } else if (preset === 'multidevice') {
+                modalBpWorkingList = [
+                    { id: "desktop", name: "Desktop", rule: "base", widthValue: 1920, type: "base", isDefault: true },
+                    { id: "laptop", name: "Laptop", rule: "max-width: 1280px", widthValue: 1280, type: "max" },
+                    { id: "tablet-land", name: "Tablet Landscape", rule: "max-width: 1024px", widthValue: 1024, type: "max" },
+                    { id: "tablet", name: "Tablet Portrait", rule: "max-width: 768px", widthValue: 768, type: "max" },
+                    { id: "mobile", name: "Mobile Large", rule: "max-width: 420px", widthValue: 420, type: "max" },
+                    { id: "mobile-sm", name: "Mobile Small", rule: "max-width: 360px", widthValue: 360, type: "max" }
+                ];
+            } else if (preset === 'mobilefirst') {
+                modalBpWorkingList = [
+                    { id: "desktop", name: "Desktop Wide", rule: "min-width: 1200px", widthValue: 1200, type: "min" },
+                    { id: "tablet", name: "Tablet", rule: "min-width: 768px", widthValue: 768, type: "min" },
+                    { id: "mobile", name: "Mobile Base", rule: "base", widthValue: 375, type: "base", isDefault: true }
+                ];
+            } else if (preset === 'desktoponly') {
+                modalBpWorkingList = [
+                    { id: "desktop", name: "Desktop", rule: "base", widthValue: 1920, type: "base", isDefault: true }
+                ];
+            }
+            renderProModalTable();
+        });
+    });
+
+    // Add row form
+    const proAddBtn = document.getElementById('gm-pro-btn-add-row');
+    if (proAddBtn) {
+        proAddBtn.addEventListener('click', () => {
+            const nameEl = document.getElementById('gm-pro-new-name');
+            const typeEl = document.getElementById('gm-pro-new-type');
+            const pxEl = document.getElementById('gm-pro-new-px');
+
+            const name = (nameEl.value || '').trim() || 'Custom';
+            const type = typeEl.value || 'max';
+            const px = parseInt(pxEl.value);
+
+            if (!px || px < 240) {
+                alert('Masukkan ukuran pixel yang valid (minimal 240px).');
+                return;
+            }
+
+            const rule = type === 'max' ? `max-width: ${px}px` : `min-width: ${px}px`;
+            modalBpWorkingList.push({
+                id: 'custom-' + Date.now(),
+                name: name,
+                rule: rule,
+                widthValue: px,
+                type: type
+            });
+
+            renderProModalTable();
+            nameEl.value = '';
+            pxEl.value = '';
+        });
+    }
+
+    // Modal Close & Cancel
+    const proCloseBtn = document.getElementById('gm-pro-bp-close');
+    const proCancelBtn = document.getElementById('gm-pro-btn-cancel');
+    if (proCloseBtn) proCloseBtn.addEventListener('click', () => document.getElementById('gm-bp-pro-modal').style.display = 'none');
+    if (proCancelBtn) proCancelBtn.addEventListener('click', () => document.getElementById('gm-bp-pro-modal').style.display = 'none');
+
+    // Reset default
+    const proResetBtn = document.getElementById('gm-pro-btn-reset-default');
+    if (proResetBtn) {
+        proResetBtn.addEventListener('click', () => {
+            if (confirm('Kembalikan breakpoint ke setelan bawaan?')) {
+                modalBpWorkingList = [
+                    { id: "desktop", name: "Desktop", rule: "base", widthValue: 1920, type: "base", isDefault: true },
+                    { id: "tablet", name: "Tablet", rule: "max-width: 768px", widthValue: 768, type: "max" },
+                    { id: "mobile", name: "Mobile", rule: "max-width: 480px", widthValue: 480, type: "max" }
+                ];
+                renderProModalTable();
+            }
+        });
+    }
+
+    // Save & Apply
+    const proSaveBtn = document.getElementById('gm-pro-btn-save-apply');
+    if (proSaveBtn) {
+        proSaveBtn.addEventListener('click', () => {
+            const applyToAll = document.getElementById('gm-pro-scope-all')?.checked || false;
+            const fid = modalTargetFrameId || getActiveFrameId();
+
+            window.saveFrameBreakpoints(fid, modalBpWorkingList, applyToAll);
+
+            // Update UI list di tab Responsif & JS jika sedang terbuka
+            const respBpList = document.getElementById('gm-resp-bp-list');
+            if (respBpList && typeof window.gmLoadFrameScripts === 'function') {
+                window.gmLoadFrameScripts(fid);
+            }
+
+            document.getElementById('gm-bp-pro-modal').style.display = 'none';
+        });
+    }
+
+    // Tombol Cepat Buka Sync Navbar dari Sidebar Modal Breakpoint
+    const quickNavSyncBtn = document.getElementById('gm-pro-quick-nav-sync-btn');
+    if (quickNavSyncBtn) {
+        quickNavSyncBtn.addEventListener('click', () => {
+            document.getElementById('gm-bp-pro-modal').style.display = 'none';
+            if (window.gmSyncNavbarEngine) window.gmSyncNavbarEngine.openModal();
+        });
+    }
+
+    // ==============================================================
+    // MESIN INCLUDE COMPONENT (PHP-LIKE SHARED COMPONENT ENGINE)
+    // ==============================================================
+    window.gmIncludeEngine = {
+        activeSourceElement: null,
+        activeIncludeId: null,
+        includesRegistry: {},
+
+        init: function() {
+            this.loadRegistry();
+            this.bindCanvasChangeListeners();
+            this.bindModalEvents();
+            this.injectStyles();
+        },
+
+        injectStyles: function() {
+            if (document.getElementById('gm-include-engine-styles')) return;
+            const style = document.createElement('style');
+            style.id = 'gm-include-engine-styles';
+            style.textContent = `
+                .gm-include-component {
+                    position: relative;
+                }
+                .gm-include-component:hover {
+                    outline: 2px dashed #0284c7 !important;
+                    outline-offset: -2px;
+                }
+                .gm-include-badge {
+                    position: absolute;
+                    top: 2px;
+                    right: 4px;
+                    background: #0284c7;
+                    color: #ffffff;
+                    font-size: 10px;
+                    font-weight: 600;
+                    padding: 1px 6px;
+                    border-radius: 4px;
+                    pointer-events: none;
+                    z-index: 9999;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+                }
+            `;
+            document.head.appendChild(style);
+        },
+
+        loadRegistry: function() {
+            try {
+                const stored = localStorage.getItem(`gm_includes_${projId}`);
+                if (stored) {
+                    this.includesRegistry = JSON.parse(stored);
+                }
+            } catch (_) {}
+        },
+
+        saveRegistry: function() {
+            try {
+                localStorage.setItem(`gm_includes_${projId}`, JSON.stringify(this.includesRegistry));
+                document.dispatchEvent(new CustomEvent('gm-includes-updated'));
+            } catch (_) {}
+        },
+
+        getIncludes: function() {
+            this.loadRegistry();
+            return Object.values(this.includesRegistry || {});
+        },
+
+        findNavbar: function(scope = null) {
+            const root = scope || document.querySelector('.gm-object-core.actived') || document.querySelector('.gm-object-core') || document;
+            return root.querySelector('.gm-include-component, [data-gm-include], .gm-synced-navbar, [data-sync-group], .gm-navbar, nav.gm-object, aside.gm-object nav, header.gm-object nav, .gm-nav-links, nav');
+        },
+
+        autoWireLinks: function(navElement, linkTargetMap = null) {
+            if (!navElement) return;
+            const links = Array.from(navElement.querySelectorAll('.gm-nav-links a, .gm-nav-link, nav a, a.nav-link, a.gm-object'));
+            if (links.length === 0) return;
+
+            const allFrames = getAllProjectFrames();
+
+            links.forEach((link, idx) => {
+                const linkText = (link.textContent || '').trim();
+                let targetFid = null;
+
+                if (linkTargetMap && linkTargetMap[linkText] !== undefined) {
+                    targetFid = parseInt(linkTargetMap[linkText]);
+                }
+
+                if (!targetFid && link.dataset.actionFrameId) {
+                    const parsed = parseInt(link.dataset.actionFrameId);
+                    if (allFrames.some(f => f.id === parsed)) targetFid = parsed;
+                }
+
+                if (!targetFid && typeof window.gmResolveFrame === 'function') {
+                    const resolved = window.gmResolveFrame(linkText, link);
+                    if (resolved) targetFid = resolved.id;
+                }
+
+                if (!targetFid && idx < allFrames.length) {
+                    targetFid = allFrames[idx].id;
+                }
+
+                if (targetFid && targetFid > 0) {
+                    const targetFrame = allFrames.find(f => f.id === targetFid) || { id: targetFid, name: `Frame #${targetFid}` };
+                    link.dataset.actionType = 'goto';
+                    link.dataset.actionTarget = targetFid;
+                    link.dataset.actionFrameId = targetFid;
+                    link.dataset.actionFrameName = targetFrame.name;
+                    link.setAttribute('href', '#' + (targetFrame.name ? targetFrame.name.toLowerCase().replace(/[^a-z0-9]/g, '-') : ('frame-' + targetFid)));
+                    link.title = `Buka Halaman: ${targetFrame.name}`;
+                }
+            });
+        },
+
+        // Buka Modal Pembuatan / Pengaturan Include Component
+        openModal: function(element = null) {
+            let el = element;
+            if (!el) {
+                const activeObj = document.querySelector('.gm-object.gm-active');
+                if (activeObj) {
+                    el = activeObj.closest('[data-gm-include]') || activeObj.closest('.gm-navbar') || activeObj.closest('nav') || activeObj;
+                } else {
+                    el = this.findNavbar();
+                }
+            }
+
+            if (!el) {
+                alert('Pilih elemen atau komponen terlebih dahulu di kanvas untuk dijadikan Include.');
+                return;
+            }
+
+            this.activeSourceElement = el;
+            this.loadRegistry();
+
+            const existingIncludeId = el.dataset.gmInclude || el.dataset.syncGroup || null;
+            this.activeIncludeId = existingIncludeId;
+
+            let existingConfig = existingIncludeId ? this.includesRegistry[existingIncludeId] : null;
+
+            // Atur nama include
+            const nameInput = document.getElementById('gm-include-name-input');
+            if (nameInput) {
+                if (existingConfig && existingConfig.name) {
+                    nameInput.value = existingConfig.name;
+                } else if (el.dataset.gmIncludeName) {
+                    nameInput.value = el.dataset.gmIncludeName;
+                } else if (el.matches('header, .gm-navbar, nav')) {
+                    nameInput.value = 'Navbar Utama';
+                } else if (el.matches('aside, .gm-sidebar, .sidebar-section')) {
+                    nameInput.value = 'Sidebar Navigasi';
+                } else if (el.matches('footer')) {
+                    nameInput.value = 'Footer Bersama';
+                } else {
+                    nameInput.value = 'Include ' + (el.id || el.tagName.toLowerCase());
+                }
+            }
+
+            // Atur radio lokasi penempatan
+            const placementVal = (existingConfig && existingConfig.placement) ? existingConfig.placement : (el.matches('header, .gm-navbar') ? 'top' : (el.matches('footer') ? 'bottom' : (el.closest('#main-content-area') ? 'main_area' : 'top')));
+            const rad = document.querySelector(`input[name="gm_include_placement"][value="${placementVal}"]`);
+            if (rad) rad.checked = true;
+
+            const sourceInfo = document.getElementById('gm-sync-nav-source-info');
+            const activeFid = getActiveFrameId();
+            const activeFname = getActiveFrameName();
+            if (sourceInfo) {
+                sourceInfo.textContent = `(Sumber: "${activeFname}" #${activeFid})`;
+            }
+
+            // Ekstrak menu links jika elemen memiliki navigasi
+            const links = [];
+            el.querySelectorAll('.gm-nav-links a, .gm-nav-link, nav a, .gm-navbar a, a.nav-link').forEach(a => {
+                const txt = a.textContent.trim();
+                if (txt && !links.includes(txt)) links.push(txt);
+            });
+
+            const wiringSection = document.getElementById('gm-sync-wiring-section');
+            const wiringListEl = document.getElementById('gm-sync-nav-link-wiring-list');
+            const allFrames = getAllProjectFrames();
+            const savedLinkWiring = (existingConfig && existingConfig.linkWiring) ? existingConfig.linkWiring : {};
+
+            if (links.length > 0) {
+                if (wiringSection) wiringSection.style.display = 'block';
+                if (wiringListEl) {
+                    wiringListEl.innerHTML = '';
+                    links.forEach((linkTxt, lIdx) => {
+                        const row = document.createElement('div');
+                        row.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; border-bottom: 1px solid #f1f5f9; font-size: 11.5px;';
+
+                        let optionsHtml = '';
+                        let autoSelectedFid = savedLinkWiring[linkTxt] || null;
+
+                        if (!autoSelectedFid && typeof window.gmResolveFrame === 'function') {
+                            const res = window.gmResolveFrame(linkTxt);
+                            if (res) autoSelectedFid = res.id;
+                        }
+                        if (!autoSelectedFid && lIdx < allFrames.length) {
+                            autoSelectedFid = allFrames[lIdx].id;
+                        }
+
+                        allFrames.forEach(f => {
+                            const isSel = (autoSelectedFid === f.id);
+                            optionsHtml += `<option value="${f.id}" ${isSel ? 'selected' : ''}>${f.name} (#${f.id})</option>`;
+                        });
+                        optionsHtml += `<option value="0" ${autoSelectedFid === 0 ? 'selected' : ''}>Tanpa Aksi (Link Luar / Scroll)</option>`;
+
+                        row.innerHTML = `
+                            <span style="font-weight: 600; color: #1e293b; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                "${linkTxt}"
+                            </span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span style="color: #64748b; font-size: 11px;">Buka:</span>
+                                <select class="gm-sync-link-target-select" data-link-text="${encodeURIComponent(linkTxt)}" style="padding: 2px 6px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; max-width: 170px;">
+                                    ${optionsHtml}
+                                </select>
+                            </div>
+                        `;
+                        wiringListEl.appendChild(row);
+                    });
+                }
+            } else if (wiringSection) {
+                wiringSection.style.display = 'none';
+            }
+
+            // Render daftar seluruh frame
+            const frameListEl = document.getElementById('gm-sync-nav-frame-list');
+            if (frameListEl) {
+                frameListEl.innerHTML = '';
+                const currentGroupFrames = (existingConfig && Array.isArray(existingConfig.frames)) ? existingConfig.frames : [activeFid];
+                const currentActiveLinks = (existingConfig && existingConfig.activeLinks) ? existingConfig.activeLinks : {};
+
+                allFrames.forEach((f, idx) => {
+                    const isChecked = currentGroupFrames.includes(f.id) || (f.id === activeFid);
+                    const row = document.createElement('div');
+                    row.className = 'gm-sync-frame-row';
+                    row.style.cssText = `
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 8px 12px;
+                        border-bottom: 1px solid #f1f5f9;
+                        font-size: 12px;
+                        background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};
+                    `;
+
+                    let optionsHtml = `<option value="__auto__">Otomatis (Sesuai nama: ${f.name})</option>`;
+                    links.forEach(l => {
+                        const sel = (currentActiveLinks[f.id] === l) ? 'selected' : '';
+                        optionsHtml += `<option value="${l}" ${sel}>Menu: ${l}</option>`;
+                    });
+                    optionsHtml += `<option value="__none__">Tanpa menu aktif</option>`;
+
+                    row.innerHTML = `
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1;">
+                            <input type="checkbox" class="gm-sync-frame-check" data-frame="${f.id}" ${isChecked ? 'checked' : ''}>
+                            <span style="font-weight: 500; color: #1e293b;">${f.name}</span>
+                            <span style="font-size: 10.5px; color: #94a3b8;">(#${f.id})</span>
+                            ${f.id === activeFid ? '<span style="font-size: 10px; background: #e0f2fe; color: #0284c7; padding: 1px 5px; border-radius: 4px; font-weight: 600;">Sumber</span>' : ''}
+                        </label>
+                        ${links.length > 0 ? `
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 11px; color: #64748b;">Menu Aktif:</span>
+                            <select class="gm-sync-frame-active-select" data-frame="${f.id}" style="padding: 3px 6px; font-size: 11px; border: 1px solid #cbd5e1; border-radius: 4px; background: #fff; max-width: 170px;">
+                                ${optionsHtml}
+                            </select>
+                        </div>` : ''}
+                    `;
+                    frameListEl.appendChild(row);
+                });
+            }
+
+            const modal = document.getElementById('gm-sync-navbar-modal');
+            if (modal) modal.style.display = 'flex';
+        },
+
+        // Terapkan dan panggil include ke frame-frame terpilih
+        applyInclude: function() {
+            if (!this.activeSourceElement) {
+                this.activeSourceElement = this.findNavbar();
+            }
+            if (!this.activeSourceElement) return;
+
+            const sourceEl = this.activeSourceElement;
+            const sourceFid = getActiveFrameId();
+
+            const nameInput = document.getElementById('gm-include-name-input');
+            const incName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : 'Include Component';
+
+            const placementRad = document.querySelector('input[name="gm_include_placement"]:checked');
+            const placement = placementRad ? placementRad.value : 'top';
+
+            const selectedFrames = [];
+            const activeLinkMap = {};
+            const linkWiringMap = {};
+
+            document.querySelectorAll('.gm-sync-link-target-select').forEach(sel => {
+                const linkTxt = decodeURIComponent(sel.dataset.linkText || '');
+                const targetFid = parseInt(sel.value) || 0;
+                if (linkTxt) linkWiringMap[linkTxt] = targetFid;
+            });
+
+            document.querySelectorAll('.gm-sync-frame-check:checked').forEach(cb => {
+                const fid = parseInt(cb.dataset.frame);
+                if (fid) {
+                    selectedFrames.push(fid);
+                    const sel = document.querySelector(`.gm-sync-frame-active-select[data-frame="${fid}"]`);
+                    let val = sel ? sel.value : '__auto__';
+                    if (val === '__auto__') {
+                        const th = document.querySelector(`.gm-frame-thumbnail[data-frame="${fid}"] .gm-frame-name`);
+                        val = th ? th.textContent.trim() : '';
+                    }
+                    activeLinkMap[fid] = val;
+                }
+            });
+
+            if (selectedFrames.length === 0) {
+                alert('Pilih minimal satu halaman.');
+                return;
+            }
+
+            const includeId = sourceEl.dataset.gmInclude || sourceEl.dataset.syncGroup || ('inc-' + Date.now());
+            sourceEl.dataset.gmInclude = includeId;
+            sourceEl.dataset.gmIncludeName = incName;
+            sourceEl.dataset.syncGroup = includeId;
+            sourceEl.classList.add('gm-include-component');
+
+            // Wire menu links
+            this.autoWireLinks(sourceEl, linkWiringMap);
+
+            // Simpan konfigurasi ke Registry
+            this.includesRegistry[includeId] = {
+                id: includeId,
+                name: incName,
+                sourceFrameId: sourceFid,
+                frames: selectedFrames,
+                placement: placement,
+                activeLinks: activeLinkMap,
+                linkWiring: linkWiringMap
+            };
+            this.saveRegistry();
+
+            // Panggil & sinkronkan include ke seluruh frame terpilih
+            this.propagateToFrames(includeId, sourceEl);
+
+            if (typeof requestSave === 'function') requestSave();
+            else if (typeof scheduleSave === 'function') scheduleSave();
+
+            const modal = document.getElementById('gm-sync-navbar-modal');
+            if (modal) modal.style.display = 'none';
+
+            alert(`Include Component "${incName}" berhasil dipanggil ke ${selectedFrames.length} frame! Elemen ini sekarang saling terhubung seperti include PHP.`);
+        },
+
+        // Sebarkan include ke frame-frame yang ditentukan di lokasi yang ditetapkan
+        propagateToFrames: function(includeId, sourceEl) {
+            const config = this.includesRegistry[includeId];
+            if (!config || !Array.isArray(config.frames)) return;
+
+            const sourceCore = sourceEl.closest('.gm-object-core');
+            const sourceFid = sourceCore ? parseInt(sourceCore.dataset.frame) : getActiveFrameId();
+
+            config.frames.forEach(targetFid => {
+                if (targetFid === sourceFid) return; // Jangan timpa frame yang sedang diedit langsung
+
+                const targetCore = document.getElementById(`object-core-${targetFid}`) || document.querySelector(`.gm-object-core[data-frame="${targetFid}"]`);
+                if (!targetCore) return;
+
+                const cloned = sourceEl.cloneNode(true);
+                cloned.dataset.gmInclude = includeId;
+                cloned.dataset.gmIncludeName = config.name;
+                cloned.dataset.syncGroup = includeId;
+                cloned.classList.add('gm-include-component');
+
+                // Auto-wire links pada cloned
+                this.autoWireLinks(cloned, config.linkWiring || null);
+
+                // Set active link per target frame
+                const targetActiveLink = config.activeLinks ? (config.activeLinks[targetFid] || '') : '';
+                this.applyActiveLink(cloned, targetActiveLink, targetFid);
+
+                // 1. Cek apakah di target core sudah ada elemen include yang sama
+                const existingSameInclude = targetCore.querySelector(`[data-gm-include="${includeId}"], [data-sync-group="${includeId}"]`);
+                if (existingSameInclude) {
+                    existingSameInclude.replaceWith(cloned);
+                } else {
+                    // 2. Sisipkan di lokasi yang ditetapkan pengguna
+                    const placement = config.placement || 'top';
+                    if (placement === 'main_area') {
+                        const mainArea = targetCore.querySelector('#main-content-area, .main-content-area');
+                        if (mainArea) {
+                            mainArea.insertBefore(cloned, mainArea.firstChild);
+                        } else {
+                            targetCore.insertBefore(cloned, targetCore.firstChild);
+                        }
+                    } else if (placement === 'bottom') {
+                        targetCore.appendChild(cloned);
+                    } else if (placement === 'selected') {
+                        const activeInsideTarget = targetCore.querySelector('.gm-active');
+                        if (activeInsideTarget && activeInsideTarget !== targetCore) {
+                            activeInsideTarget.appendChild(cloned);
+                        } else {
+                            targetCore.insertBefore(cloned, targetCore.firstChild);
+                        }
+                    } else {
+                        // Default: Top / Header
+                        targetCore.insertBefore(cloned, targetCore.firstChild);
+                    }
+                }
+
+                if (typeof window.initLoadedObjects === 'function') {
+                    window.initLoadedObjects(cloned);
+                }
+
+                if (typeof updateThumbnail === 'function') {
+                    updateThumbnail(targetFid);
+                } else if (typeof window.updateThumbnail === 'function') {
+                    window.updateThumbnail(targetFid);
+                }
+            });
+        },
+
+        // Sisipkan include di target spesifik yang diklik kanan
+        insertIncludeAtTarget: function(includeId, targetEl) {
+            this.loadRegistry();
+            const config = this.includesRegistry[includeId];
+            if (!config) {
+                alert('Include tidak ditemukan.');
+                return;
+            }
+
+            // Cari template HTML sumber dari frame yang memilikinya
+            const anyExisting = document.querySelector(`[data-gm-include="${includeId}"]`);
+            if (!anyExisting) {
+                alert('Elemen sumber untuk include ini tidak ditemukan di kanvas.');
+                return;
+            }
+
+            const targetCore = targetEl.closest('.gm-object-core') || document.querySelector('.gm-object-core.actived') || document.querySelector('.gm-object-core');
+            const targetFid = targetCore ? parseInt(targetCore.dataset.frame) : 0;
+
+            const cloned = anyExisting.cloneNode(true);
+            cloned.dataset.gmInclude = includeId;
+            cloned.dataset.gmIncludeName = config.name;
+            cloned.dataset.syncGroup = includeId;
+            cloned.classList.add('gm-include-component');
+
+            this.autoWireLinks(cloned, config.linkWiring || null);
+
+            const targetActiveLink = config.activeLinks ? (config.activeLinks[targetFid] || '') : '';
+            this.applyActiveLink(cloned, targetActiveLink, targetFid);
+
+            // Sisipkan ke lokasi target: di dalam kontainer jika droppable, atau setelah elemen
+            if (targetEl && (targetEl.dataset.gmDroppable === 'true' || targetEl.matches('.gm-object-core, div, section, main, #main-content-area'))) {
+                targetEl.appendChild(cloned);
+            } else if (targetEl && targetEl.parentNode) {
+                targetEl.parentNode.insertBefore(cloned, targetEl.nextSibling);
+            } else if (targetCore) {
+                targetCore.appendChild(cloned);
+            }
+
+            if (!config.frames.includes(targetFid) && targetFid > 0) {
+                config.frames.push(targetFid);
+                this.saveRegistry();
+            }
+
+            if (typeof window.initLoadedObjects === 'function') {
+                window.initLoadedObjects(cloned);
+            }
+
+            if (targetFid > 0 && typeof updateThumbnail === 'function') {
+                updateThumbnail(targetFid);
+            }
+
+            alert(`Include Component "${config.name}" berhasil disisipkan di lokasi terpilih dan terhubung secara live!`);
+        },
+
+        // Sebarkan perubahan real-time dari satu elemen include ke semua frame lain
+        propagate: function(sourceEl = null) {
+            if (!sourceEl) {
+                sourceEl = document.querySelector('.gm-include-component, [data-gm-include], .gm-navbar[data-sync-group]');
+            }
+            if (!sourceEl) return;
+
+            const includeId = sourceEl.dataset.gmInclude || sourceEl.dataset.syncGroup;
+            if (!includeId) return;
+
+            this.loadRegistry();
+            const config = this.includesRegistry[includeId];
+            if (!config) {
+                // Buat config otomatis jika belum ada
+                const incName = sourceEl.dataset.gmIncludeName || 'Include Component';
+                this.includesRegistry[includeId] = {
+                    id: includeId,
+                    name: incName,
+                    frames: getAllProjectFrames().map(f => f.id),
+                    placement: 'top'
+                };
+                this.saveRegistry();
+            }
+
+            this.propagateToFrames(includeId, sourceEl);
+        },
+
+        // Lepas kaitan include pada satu elemen
+        unlink: function(el) {
+            if (!el) return;
+            const incId = el.dataset.gmInclude || el.dataset.syncGroup;
+            delete el.dataset.gmInclude;
+            delete el.dataset.gmIncludeName;
+            delete el.dataset.syncGroup;
+            el.classList.remove('gm-include-component', 'gm-synced-navbar');
+
+            const currentFid = getActiveFrameId();
+            if (incId && this.includesRegistry[incId]) {
+                const config = this.includesRegistry[incId];
+                config.frames = (config.frames || []).filter(f => f !== currentFid);
+                this.saveRegistry();
+            }
+            alert('Kaitan Include berhasil dilepas pada elemen ini di halaman ini.');
+        },
+
+        applyActiveLink: function(navElement, linkText, frameId) {
+            if (!navElement) return;
+
+            const links = navElement.querySelectorAll('.gm-nav-links a, .gm-nav-link, nav a, a.nav-link, a.gm-object');
+            if (links.length === 0) return;
+
+            let targetText = (linkText || '').toLowerCase().trim();
+            if (targetText === '__none__') {
+                links.forEach(l => {
+                    l.classList.remove('active', 'gm-nav-active');
+                    l.style.removeProperty('color');
+                    l.style.removeProperty('font-weight');
+                });
+                return;
+            }
+
+            if (!targetText || targetText === '__auto__') {
+                const th = document.querySelector(`.gm-frame-thumbnail[data-frame="${frameId}"] .gm-frame-name`);
+                if (th) targetText = th.textContent.toLowerCase().trim();
+            }
+
+            let matched = false;
+            links.forEach(l => {
+                const txt = l.textContent.toLowerCase().trim();
+                const fid = parseInt(l.dataset.actionFrameId || l.dataset.actionTarget) || 0;
+                const isFrameMatch = (fid > 0 && fid === frameId);
+                const isTextMatch = (targetText && (txt.includes(targetText) || targetText.includes(txt)));
+
+                if ((isFrameMatch || isTextMatch) && !matched) {
+                    l.classList.add('active', 'gm-nav-active');
+                    l.style.setProperty('color', '#0284c7', 'important');
+                    l.style.setProperty('font-weight', '700', 'important');
+                    matched = true;
+                } else {
+                    l.classList.remove('active', 'gm-nav-active');
+                    l.style.removeProperty('color');
+                    l.style.removeProperty('font-weight');
+                }
+            });
+        },
+
+        bindCanvasChangeListeners: function() {
+            let debounceTimer = null;
+            const triggerSync = (e) => {
+                const target = e.target;
+                if (!target) return;
+                const inc = target.closest('.gm-include-component, [data-gm-include], .gm-navbar[data-sync-group], .gm-synced-navbar');
+                if (inc) {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        window.gmIncludeEngine.propagate(inc);
+                    }, 350);
+                }
+            };
+
+            document.addEventListener('input', triggerSync, true);
+            document.addEventListener('blur', triggerSync, true);
+            document.addEventListener('gm-selection-change', () => {
+                const activeCore = document.querySelector('.gm-object-core.actived');
+                if (activeCore) {
+                    const inc = activeCore.querySelector('.gm-include-component, [data-gm-include], .gm-navbar[data-sync-group]');
+                    if (inc) {
+                        clearTimeout(debounceTimer);
+                        debounceTimer = setTimeout(() => {
+                            window.gmIncludeEngine.propagate(inc);
+                        }, 400);
+                    }
+                }
+            });
+        },
+
+        bindModalEvents: function() {
+            const closeBtn = document.getElementById('gm-sync-nav-close');
+            const cancelBtn = document.getElementById('gm-sync-nav-cancel');
+            const applyBtn = document.getElementById('gm-sync-nav-apply');
+            const checkAllBtn = document.getElementById('gm-sync-nav-check-all');
+            const uncheckAllBtn = document.getElementById('gm-sync-nav-uncheck-all');
+
+            if (closeBtn) closeBtn.addEventListener('click', () => document.getElementById('gm-sync-navbar-modal').style.display = 'none');
+            if (cancelBtn) cancelBtn.addEventListener('click', () => document.getElementById('gm-sync-navbar-modal').style.display = 'none');
+            if (applyBtn) applyBtn.addEventListener('click', () => this.applyInclude());
+
+            if (checkAllBtn) {
+                checkAllBtn.addEventListener('click', () => {
+                    document.querySelectorAll('.gm-sync-frame-check').forEach(cb => cb.checked = true);
+                });
+            }
+            if (uncheckAllBtn) {
+                uncheckAllBtn.addEventListener('click', () => {
+                    document.querySelectorAll('.gm-sync-frame-check').forEach(cb => cb.checked = false);
+                });
+            }
+        }
+    };
+
+    window.gmIncludeEngine.init();
+    // Backward compatibility alias
+    window.gmSyncNavbarEngine = window.gmIncludeEngine;
+    window.gmSyncNavbarEngine.applySync = function() { window.gmIncludeEngine.applyInclude(); };
 
     function getCoreContentBottom(core) {
         // Simpan transform dan transition asli
@@ -382,12 +1811,19 @@
         document.querySelectorAll('.gm-object-core').forEach(core => {
             if (core.style.display === 'none' && !core.classList.contains('actived')) return;
 
+            core.setAttribute('data-breakpoint', window.gmActiveBreakpoint || 'desktop');
+            core.classList.remove('gm-breakpoint-desktop', 'gm-breakpoint-tablet', 'gm-breakpoint-mobile');
+            core.classList.add('gm-breakpoint-' + (window.gmActiveBreakpoint || 'desktop'));
+
             if (isResponsive) {
                 core.style.width = targetWidth + 'px';
                 core.style.minWidth = targetWidth + 'px';
+                core.style.maxWidth = targetWidth + 'px';
+                core.style.boxSizing = 'border-box';
             } else {
                 core.style.width = '100vw';
                 core.style.minWidth = '100vw';
+                core.style.maxWidth = 'none';
             }
 
             if (isFullHeight) {

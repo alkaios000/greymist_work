@@ -618,6 +618,60 @@ if (!function_exists('process_local_frame_command')) {
             ];
         }
 
+        // 0b. Deteksi permintaan Hamburger Menu / Navbar Responsif / Custom JS
+        if (preg_match('/\b(hamburger|humburger|menu responsif|navbar responsif|drawer|toggle menu|custom js|script kustom)\b/i', $lower)) {
+            $bp_to_add = [
+                ['id' => 'tablet', 'name' => 'Tablet', 'rule' => 'max-width: 768px', 'widthValue' => 768, 'type' => 'max'],
+                ['id' => 'mobile', 'name' => 'Mobile', 'rule' => 'max-width: 480px', 'widthValue' => 480, 'type' => 'max'],
+            ];
+            $custom_js_code = "// Toggle Hamburger Menu Interaktif\n"
+                . "document.addEventListener('click', function(e) {\n"
+                . "    const btn = e.target.closest('.gm-hamburger-btn');\n"
+                . "    if (btn) {\n"
+                . "        const nav = btn.closest('.gm-navbar') || document.querySelector('.gm-navbar') || document;\n"
+                . "        const drawer = nav.querySelector('.gm-mobile-drawer, .gm-nav-links');\n"
+                . "        if (drawer) {\n"
+                . "            drawer.classList.toggle('gm-menu-open');\n"
+                . "            const isOpen = drawer.classList.contains('gm-menu-open');\n"
+                . "            drawer.style.display = isOpen ? 'flex' : 'none';\n"
+                . "        }\n"
+                . "    }\n"
+                . "});";
+
+            $modified_html = $current_frame_html;
+            if (str_contains($modified_html, 'gm-navbar') || str_contains($modified_html, '<nav')) {
+                if (!str_contains($modified_html, 'gm-hamburger-btn')) {
+                    $hamburger_btn = '<button class="gm-object gm-hamburger-btn" style="display: none; align-items: center; justify-content: center; width: 40px; height: 40px; min-height: 40px; max-height: 40px; padding: 0px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; color: #1e293b; font-size: 18px;" aria-label="Toggle Menu"><i class="fas fa-bars"></i></button>';
+                    $drawer_menu   = '<div class="gm-object gm-mobile-drawer" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: #ffffff; border-bottom: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); flex-direction: column; padding: 16px 24px; gap: 12px; box-sizing: border-box; z-index: 999;"><a class="gm-object" href="#" style="text-decoration: none; color: #1e293b; font-weight: 500;">Beranda</a><a class="gm-object" href="#" style="text-decoration: none; color: #1e293b; font-weight: 500;">Fitur</a><a class="gm-object" href="#" style="text-decoration: none; color: #1e293b; font-weight: 500;">Kontak</a></div>';
+                    if (preg_match('#(</nav>|</header>)#i', $modified_html)) {
+                        $modified_html = preg_replace('#(</nav>|</header>)#i', $hamburger_btn . $drawer_menu . '$1', $modified_html, 1);
+                    }
+                }
+                return [
+                    'operation'          => 'replace_frame',
+                    'html'               => $modified_html,
+                    'breakpoints_to_add' => $bp_to_add,
+                    'custom_js'          => $custom_js_code,
+                    'summary'            => 'Navbar responsif hamburger menu dan custom JavaScript toggle berhasil dipasang.',
+                ];
+            } else {
+                // Generate navbar responsif baru
+                $new_nav = '<nav class="gm-object gm-navbar" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 14px 28px; background: #ffffff; border-bottom: 1px solid #e2e8f0; position: relative; box-sizing: border-box; z-index: 100;">'
+                    . '<div class="gm-object gm-nav-brand" style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.25em; color: #0f172a;"><i class="fas fa-layer-group" style="color: #0284c7;"></i> Brand Logo</div>'
+                    . '<div class="gm-object gm-nav-links" style="display: flex; align-items: center; gap: 20px;"><a class="gm-object" href="#" style="text-decoration: none; color: #475569; font-weight: 500;">Beranda</a><a class="gm-object" href="#" style="text-decoration: none; color: #475569; font-weight: 500;">Fitur</a><a class="gm-object" href="#" style="text-decoration: none; color: #475569; font-weight: 500;">Harga</a><a class="gm-object" href="#" style="text-decoration: none; color: #475569; font-weight: 500;">Kontak</a></div>'
+                    . '<button class="gm-object gm-hamburger-btn" style="display: none; align-items: center; justify-content: center; width: 40px; height: 40px; min-height: 40px; max-height: 40px; padding: 0px; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px; cursor: pointer; color: #1e293b; font-size: 18px;"><i class="fas fa-bars"></i></button>'
+                    . '<div class="gm-object gm-mobile-drawer" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; background: #ffffff; border-bottom: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); flex-direction: column; padding: 16px 24px; gap: 12px; box-sizing: border-box;"><a class="gm-object" href="#">Beranda</a><a class="gm-object" href="#">Fitur</a><a class="gm-object" href="#">Kontak</a></div>'
+                    . '</nav>';
+                return [
+                    'operation'          => 'append',
+                    'html'               => $new_nav,
+                    'breakpoints_to_add' => $bp_to_add,
+                    'custom_js'          => $custom_js_code,
+                    'summary'            => 'Navbar responsif lengkap dengan tombol hamburger mobile dan script JavaScript toggle berhasil dibuat.',
+                ];
+            }
+        }
+
         // 1. Jika meminta membuat frame / halaman baru (atau multi-page) secara lokal
         if (preg_match('/\b(frame baru|tambah frame|halaman baru|buat halaman|page baru|multi[- ]?page|\d+\s*halaman)\b/i', $lower)) {
             // Gunakan navbar & footer yang sudah ada jika tersedia, jika tidak baru gunakan preset

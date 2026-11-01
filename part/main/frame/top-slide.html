@@ -101,8 +101,16 @@
     if (typeof window.initGmCharts === "function") {
       setTimeout(() => window.initGmCharts(core), 80);
     }
-    document.dispatchEvent(new CustomEvent("gm-frame-switched", { detail: { frameId: frameId } }));
+    document.dispatchEvent(new CustomEvent("gm-frame-switched", {
+      detail: {
+        frameId: frameId,
+        customBreakpoints: core.dataset.customBreakpoints || null,
+        customJs: core.dataset.customJs || null
+      }
+    }));
   }
+
+  window.activateFrame = activateFrame;
 
 
   /* ===============================
@@ -114,6 +122,14 @@
     core.className = "gm-object-core";
     core.id = `object-core-${frame.frame_id}`;
     core.dataset.frame = frame.frame_id;
+    if (frame.custom_breakpoints) {
+      core.dataset.customBreakpoints = typeof frame.custom_breakpoints === 'string'
+        ? frame.custom_breakpoints
+        : JSON.stringify(frame.custom_breakpoints);
+    }
+    if (frame.custom_js) {
+      core.dataset.customJs = frame.custom_js;
+    }
     core.innerHTML = frame.core_content || "";
     core.contentEditable = false;
 
@@ -335,6 +351,10 @@
         window.syncCurrentBreakpoint();
       }
 
+      if (window.gmSyncNavbarEngine && typeof window.gmSyncNavbarEngine.propagate === "function") {
+        try { window.gmSyncNavbarEngine.propagate(); } catch (_) {}
+      }
+
       const frames = [];
       const isNonDesktopView = window.gmActiveBreakpoint && window.gmActiveBreakpoint !== "desktop";
       const thumbnails = document.querySelectorAll(".gm-frame-thumbnail");
@@ -367,7 +387,9 @@
         frames.push({
           frame_id: frameId,
           frame_name: nameEl ? nameEl.textContent.trim() : "",
-          core_content: content
+          core_content: content,
+          custom_breakpoints: core.dataset.customBreakpoints || null,
+          custom_js: core.dataset.customJs || null
         });
       });
 
