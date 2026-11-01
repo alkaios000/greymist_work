@@ -26,9 +26,13 @@
 
             <div class="gm-color-dropdown" id="gmColorDropdown">
                 <!-- Header with Title & Tab Navigation -->
-                <div class="gm-bg-header">
+                <div class="gm-bg-header" id="gmBgDragHeader" title="Drag to move">
                     <div class="gm-bg-title-row">
-                        <span class="gm-bg-title-text"><i class="fa-solid fa-palette"></i> Background</span>
+                        <div class="gm-bg-title-left">
+                            <i class="fa-solid fa-grip-vertical gm-bg-drag-icon"></i>
+                            <span class="gm-bg-title-text"><i class="fa-solid fa-palette"></i> Background</span>
+                        </div>
+                        <span class="gm-bg-close-btn" id="closeBgDropdownBtn" title="Close">&times;</span>
                     </div>
                     <div class="gm-bg-tabs">
                         <button type="button" class="gm-bg-tab active" data-tab="solid">Solid & Variables</button>
