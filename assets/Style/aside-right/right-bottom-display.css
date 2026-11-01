@@ -6,7 +6,7 @@
   justify-content: space-between;
   gap: 6px;
   font-family: "Inter", sans-serif;
-  font-size: 13px;
+  font-size: 8.5px;
   /* background: #f6f7f9; */
   /* border: 1px solid #ddd; */
   /* border-radius: 8px; */
@@ -35,10 +35,10 @@
   border: 1px solid #ccc;
   border-radius: 6px;
   padding: 3px 26px 3px 8px;
-  font-size: 13px;
+  font-size: 8.5px;
   color: #333;
   line-height: 1.2;
-  height: 24px;
+  height: 20px;
   min-width: 90px;
   cursor: pointer;
   background-image: linear-gradient(45deg, transparent 50%, #888 50%),
@@ -196,7 +196,7 @@
   border-top: 1px solid #e5e7eb;
   padding: 8px 12px;
   font-family: monospace;
-  font-size: 13px;
+  font-size: 8.5px;
   color: #374151;
   width: 400px;
   border-radius: 5px;

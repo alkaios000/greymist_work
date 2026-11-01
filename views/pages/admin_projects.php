@@ -5,7 +5,7 @@
  */
 
 $page_title    = 'Semua Proyek';
-$page_subtitle = 'Pantau, publikasikan, jadikan template, atau hapus proyek di seluruh platform';
+$page_subtitle = '';
 $active_page   = 'admin_projects';
 $is_admin_view = true;
 
@@ -32,10 +32,7 @@ require ROOT_PATH . '/views/layouts/header.php';
             <option value="no" <?= ($template ?? '') === 'no' ? 'selected' : '' ?>>Bukan Template</option>
         </select>
 
-        <button type="submit" class="btn btn-soft-blue btn-sm">
-            <i class="fas fa-filter"></i>
-            <span>Filter</span>
-        </button>
+        <button type="submit" class="btn btn-soft-blue btn-sm">Filter</button>
     </div>
 </form>
 
@@ -49,7 +46,7 @@ require ROOT_PATH . '/views/layouts/header.php';
     <div class="projects-grid">
         <?php foreach ($all_projects as $proj): ?>
             <article class="project-card">
-                <div class="project-thumb">
+                <a href="<?= e(route_url('admin_preview_project', ['id' => $proj['project_id']])) ?>" class="project-thumb">
                     <div class="project-badges">
                         <?php if ($proj['project_status'] === 'published'): ?>
                             <span class="badge badge-published">Publik</span>
@@ -62,54 +59,76 @@ require ROOT_PATH . '/views/layouts/header.php';
                         <?php endif; ?>
                     </div>
                     <?php require ROOT_PATH . '/views/layouts/project_thumb_preview.php'; ?>
-                </div>
+                </a>
 
                 <div class="project-body">
-                    <h4 class="project-title" title="<?= e($proj['project_name']) ?>"><?= e($proj['project_name']) ?></h4>
-                    <div class="project-meta">
-                        <span><i class="fas fa-user"></i> @<?= e($proj['username'] ?? 'unknown') ?></span>
-                        <span><i class="fas fa-border-all"></i> <?= (int)($proj['frame_count'] ?? 0) ?> Frame</span>
+                    <div class="project-title-row">
+                        <a href="<?= e(route_url('admin_preview_project', ['id' => $proj['project_id']])) ?>" class="project-title-link">
+                            <h4 class="project-title" title="<?= e($proj['project_name']) ?>"><?= e($proj['project_name']) ?></h4>
+                        </a>
+
+                        <div class="project-card-menu">
+                            <button type="button" class="project-menu-btn" title="Opsi Proyek" onclick="toggleProjectMenu(event, this)" aria-label="Menu Opsi">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="project-menu-dropdown">
+                                <a href="<?= e(route_url('admin_preview_project', ['id' => $proj['project_id']])) ?>" class="dropdown-item">
+                                    <i class="fas fa-eye"></i>
+                                    <span>Pratinjau Proyek</span>
+                                </a>
+                                <a href="<?= e(route_url('workspace', ['project_id' => $proj['project_id']])) ?>" class="dropdown-item">
+                                    <i class="fas fa-edit"></i>
+                                    <span>Buka di Editor</span>
+                                </a>
+
+                                <!-- Toggle Status Publikasi -->
+                                <form method="POST" action="<?= e(action_url('admin_toggle_status')) ?>">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
+                                    <input type="hidden" name="return_page" value="admin_projects">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas <?= $proj['project_status'] === 'published' ? 'fa-eye-slash' : 'fa-globe' ?>"></i>
+                                        <span><?= $proj['project_status'] === 'published' ? 'Jadikan Draf' : 'Publikasikan' ?></span>
+                                    </button>
+                                </form>
+
+                                <!-- Toggle Template -->
+                                <form method="POST" action="<?= e(action_url('admin_toggle_template')) ?>">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
+                                    <input type="hidden" name="return_page" value="admin_projects">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-clone"></i>
+                                        <span><?= (int)$proj['is_template'] === 1 ? 'Batal Jadi Template' : 'Jadikan Template' ?></span>
+                                    </button>
+                                </form>
+
+                                <div class="dropdown-divider"></div>
+
+                                <!-- Hapus Permanen -->
+                                <form method="POST" action="<?= e(action_url('admin_delete_project')) ?>" onsubmit="return confirm('Hapus proyek ini secara permanen?');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
+                                    <input type="hidden" name="return_page" value="admin_projects">
+                                    <button type="submit" class="dropdown-item danger">
+                                        <i class="fas fa-trash"></i>
+                                        <span>Hapus Permanen</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="project-actions">
-                    <a href="<?= e(route_url('admin_preview_project', ['id' => $proj['project_id']])) ?>" class="btn btn-soft-blue btn-sm">
-                        <i class="fas fa-eye"></i>
-                        <span>Pratinjau</span>
-                    </a>
-
-                    <div class="project-actions-group">
-                        <form method="POST" action="<?= e(action_url('admin_toggle_status')) ?>" style="display:inline;">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
-                            <input type="hidden" name="return_page" value="admin_projects">
-                            <button type="submit" class="btn-icon" title="Ubah Status Publikasi">
-                                <i class="fas <?= $proj['project_status'] === 'published' ? 'fa-eye-slash' : 'fa-globe' ?>"></i>
-                            </button>
-                        </form>
-
-                        <form method="POST" action="<?= e(action_url('admin_toggle_template')) ?>" style="display:inline;">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
-                            <input type="hidden" name="return_page" value="admin_projects">
-                            <button type="submit" class="btn-icon" title="Toggle Status Template">
-                                <i class="fas fa-clone" style="<?= (int)$proj['is_template'] === 1 ? 'color: var(--btn-blue);' : '' ?>"></i>
-                            </button>
-                        </form>
-
-                        <form method="POST" action="<?= e(action_url('admin_delete_project')) ?>" style="display:inline;" onsubmit="return confirm('Hapus proyek ini secara permanen?');">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
-                            <input type="hidden" name="return_page" value="admin_projects">
-                            <button type="submit" class="btn-icon danger" title="Hapus Permanen">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </form>
+                    <div class="project-meta">
+                        <span>@<?= e($proj['username'] ?? 'unknown') ?></span>
+                        <span><?= e(format_date($proj['created_at'])) ?></span>
                     </div>
                 </div>
             </article>
         <?php endforeach; ?>
     </div>
+
+    <?= render_pagination($pagination ?? [], 'proyek') ?>
 <?php endif; ?>
 
 <?php require ROOT_PATH . '/views/layouts/footer.php'; ?>

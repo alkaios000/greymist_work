@@ -319,7 +319,7 @@
                 }
 
                 saveSettingsBtn.disabled = true;
-                saveSettingsBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Menyimpan...`;
+                saveSettingsBtn.innerHTML = `Menyimpan...`;
 
                 fetch("index.php?action=ai_save_provider_settings", {
                     method: "POST",
@@ -329,7 +329,7 @@
                     .then(r => r.json())
                     .then(res => {
                         saveSettingsBtn.disabled = false;
-                        saveSettingsBtn.innerHTML = `<i class="fas fa-floppy-disk"></i> <span>Simpan</span>`;
+                        saveSettingsBtn.innerHTML = `<span>Simpan</span>`;
                         if (res.status === "OK") {
                             currentActiveProvider = prov;
                             window.currentActiveProvider = prov;
@@ -338,7 +338,7 @@
                                 providerKeys[prov] = keyVal;
                             }
                             renderProviderUi(prov);
-                            showStatus(statusEl, "success", `✓ Provider AI disetel ke: ${AI_PROVIDER_CONFIG[prov]?.name || prov}`);
+                            showStatus(statusEl, "success", `Provider AI disetel ke: ${AI_PROVIDER_CONFIG[prov]?.name || prov}`);
                             setTimeout(() => {
                                 settingsPanel.style.display = "none";
                             }, 1200);
@@ -348,7 +348,7 @@
                     })
                     .catch(() => {
                         saveSettingsBtn.disabled = false;
-                        saveSettingsBtn.innerHTML = `<i class="fas fa-floppy-disk"></i> <span>Simpan</span>`;
+                        saveSettingsBtn.innerHTML = `<span>Simpan</span>`;
                         showStatus(statusEl, "error", "Gagal menghubungi server untuk menyimpan.");
                     });
             });
@@ -368,22 +368,22 @@
             const isChecked = readMemoryCheckbox ? readMemoryCheckbox.checked : false;
             if (speedIndicator) {
                 if (isChecked) {
-                    speedIndicator.innerHTML = `🧠 Mode Konteks Penuh (Memori On)`;
+                    speedIndicator.textContent = "Mode Konteks Penuh (Memori On)";
                     speedIndicator.style.color = "#7c3aed";
                 } else {
-                    speedIndicator.innerHTML = `⚡ Mode Kilat (Memori Off)`;
+                    speedIndicator.textContent = "Mode Kilat (Memori Off)";
                     speedIndicator.style.color = "#0284c7";
                 }
             }
             if (memoryBadge) {
                 if (isChecked) {
-                    memoryBadge.innerHTML = `🧠 Memori AI Aktif`;
+                    memoryBadge.textContent = "Memori AI Aktif";
                     memoryBadge.style.background = "#ede9fe";
                     memoryBadge.style.color = "#7c3aed";
                     memoryBadge.style.borderColor = "#c4b5fd";
                     memoryBadge.title = "Mode Konteks Penuh aktif: AI membaca riwayat dan seluruh frame proyek (Klik untuk mematikan / Mode Kilat)";
                 } else {
-                    memoryBadge.innerHTML = `⚡ Mode Kilat (Memori Off)`;
+                    memoryBadge.textContent = "Mode Kilat (Memori Off)";
                     memoryBadge.style.background = "#f0f9ff";
                     memoryBadge.style.color = "#0284c7";
                     memoryBadge.style.borderColor = "#bae6fd";

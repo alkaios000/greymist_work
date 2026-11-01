@@ -70,6 +70,18 @@ if (!function_exists('get_platform_stats')) {
      */
     function get_platform_stats(PDO $pdo): array
     {
+        $components = 0;
+        $colors = 0;
+        $assets = 0;
+        $trends = [];
+
+        try { $components = (int)$pdo->query("SELECT COUNT(*) FROM gm_components")->fetchColumn(); } catch (Exception $e) {}
+        try { $colors = (int)$pdo->query("SELECT COUNT(*) FROM gm_colors")->fetchColumn(); } catch (Exception $e) {}
+        try { $assets = (int)$pdo->query("SELECT COUNT(*) FROM gm_bg_images")->fetchColumn(); } catch (Exception $e) {}
+        try {
+            $trends = $pdo->query("SELECT DATE(created_at) as d, COUNT(*) as c FROM gm_projects GROUP BY DATE(created_at) ORDER BY d ASC LIMIT 14")->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {}
+
         return [
             'total_users'       => (int)$pdo->query("SELECT COUNT(*) FROM gm_users")->fetchColumn(),
             'total_admins'      => (int)$pdo->query("SELECT COUNT(*) FROM gm_users WHERE is_admin = 1")->fetchColumn(),
@@ -80,6 +92,10 @@ if (!function_exists('get_platform_stats')) {
             'total_frames'      => (int)$pdo->query("SELECT COUNT(*) FROM gm_frames")->fetchColumn(),
             'total_creators'    => (int)$pdo->query("SELECT COUNT(DISTINCT user_id) FROM gm_projects WHERE project_status = 'published'")->fetchColumn(),
             'template_creators' => (int)$pdo->query("SELECT COUNT(DISTINCT user_id) FROM gm_projects WHERE is_template = 1")->fetchColumn(),
+            'total_components'  => $components,
+            'total_colors'      => $colors,
+            'total_assets'      => $assets,
+            'velocity_trend'    => $trends,
         ];
     }
 }
@@ -108,10 +124,17 @@ if (!function_exists('get_recent_user_projects')) {
 
 if (!function_exists('get_user_projects_filtered')) {
     /**
-     * Mengambil daftar proyek aktif pengguna dengan filter pencarian, status, dan pengurutan.
+     * Mengambil daftar proyek aktif pengguna dengan filter pencarian, status, dan pengurutan (opsional paginasi).
      */
-    function get_user_projects_filtered(PDO $pdo, int $user_id, string $search = '', string $status = '', string $sort = 'newest'): array
-    {
+    function get_user_projects_filtered(
+        PDO $pdo,
+        int $user_id,
+        string $search = '',
+        string $status = '',
+        string $sort = 'newest',
+        int $page = 0,
+        int $per_page = 12
+    ): array {
         $where = ["p.user_id = ?", "p.is_deleted = 0"];
         $params = [$user_id];
 
@@ -119,9 +142,9 @@ if (!function_exists('get_user_projects_filtered')) {
             $where[] = "p.project_name LIKE ?";
             $params[] = "%{$search}%";
         }
-        if ($status === 'published' || $status === 'unpublished') {
+        if ($status === 'published' || $status === 'draft' || $status === 'unpublished') {
             $where[] = "p.project_status = ?";
-            $params[] = $status;
+            $params[] = ($status === 'draft' ? 'unpublished' : $status);
         }
 
         $order_sql = match ($sort) {
@@ -131,6 +154,34 @@ if (!function_exists('get_user_projects_filtered')) {
         };
 
         $where_sql = implode(' AND ', $where);
+
+        if ($page > 0) {
+            $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM gm_projects p WHERE {$where_sql}");
+            $count_stmt->execute($params);
+            $total_count = (int)$count_stmt->fetchColumn();
+
+            $pagination = paginate_data($total_count, $page, $per_page);
+            $limit      = (int)$pagination['per_page'];
+            $offset     = (int)$pagination['offset'];
+
+            $sql = "
+                SELECT p.*,
+                       (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,
+                       (SELECT f2.core_content FROM gm_frames f2 WHERE f2.project_id = p.project_id ORDER BY f2.sort_order ASC, f2.frame_id ASC LIMIT 1) AS first_frame_content
+                FROM gm_projects p
+                WHERE {$where_sql}
+                ORDER BY {$order_sql}
+                LIMIT {$limit} OFFSET {$offset}
+            ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+
+            return [
+                'items'      => $stmt->fetchAll(),
+                'pagination' => $pagination,
+            ];
+        }
+
         $sql = "
             SELECT p.*,
                    (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,
@@ -147,11 +198,16 @@ if (!function_exists('get_user_projects_filtered')) {
 
 if (!function_exists('get_published_projects_filtered')) {
     /**
-     * Mengambil daftar proyek publik (Explore) dengan filter pencarian dan urutan.
+     * Mengambil daftar proyek publik (Explore) dengan filter pencarian dan urutan (opsional paginasi).
      */
-    function get_published_projects_filtered(PDO $pdo, string $search = '', string $sort = 'newest'): array
-    {
-        $where = ["p.project_status = 'published'"];
+    function get_published_projects_filtered(
+        PDO $pdo,
+        string $search = '',
+        string $sort = 'newest',
+        int $page = 0,
+        int $per_page = 12
+    ): array {
+        $where = ["p.project_status = 'published'", "p.is_deleted = 0"];
         $params = [];
 
         if ($search !== '') {
@@ -167,6 +223,40 @@ if (!function_exists('get_published_projects_filtered')) {
         };
 
         $where_sql = implode(' AND ', $where);
+
+        if ($page > 0) {
+            $count_stmt = $pdo->prepare("
+                SELECT COUNT(*)
+                FROM gm_projects p
+                LEFT JOIN gm_users u ON p.user_id = u.user_id
+                WHERE {$where_sql}
+            ");
+            $count_stmt->execute($params);
+            $total_count = (int)$count_stmt->fetchColumn();
+
+            $pagination = paginate_data($total_count, $page, $per_page);
+            $limit      = (int)$pagination['per_page'];
+            $offset     = (int)$pagination['offset'];
+
+            $sql = "
+                SELECT p.*, u.username, u.nickname, u.profile AS author_avatar,
+                       (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,
+                       (SELECT f2.core_content FROM gm_frames f2 WHERE f2.project_id = p.project_id ORDER BY f2.sort_order ASC, f2.frame_id ASC LIMIT 1) AS first_frame_content
+                FROM gm_projects p
+                LEFT JOIN gm_users u ON p.user_id = u.user_id
+                WHERE {$where_sql}
+                ORDER BY {$order_sql}
+                LIMIT {$limit} OFFSET {$offset}
+            ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+
+            return [
+                'items'      => $stmt->fetchAll(),
+                'pagination' => $pagination,
+            ];
+        }
+
         $sql = "
             SELECT p.*, u.username, u.nickname, u.profile AS author_avatar,
                    (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,
@@ -184,11 +274,16 @@ if (!function_exists('get_published_projects_filtered')) {
 
 if (!function_exists('get_templates_filtered')) {
     /**
-     * Mengambil daftar proyek yang ditandai sebagai template (is_template = 1).
+     * Mengambil daftar proyek yang ditandai sebagai template (is_template = 1) (opsional paginasi).
      */
-    function get_templates_filtered(PDO $pdo, string $search = '', string $sort = 'newest'): array
-    {
-        $where = ["p.is_template = 1"];
+    function get_templates_filtered(
+        PDO $pdo,
+        string $search = '',
+        string $sort = 'newest',
+        int $page = 0,
+        int $per_page = 12
+    ): array {
+        $where = ["p.is_template = 1", "p.is_deleted = 0"];
         $params = [];
 
         if ($search !== '') {
@@ -204,6 +299,40 @@ if (!function_exists('get_templates_filtered')) {
         };
 
         $where_sql = implode(' AND ', $where);
+
+        if ($page > 0) {
+            $count_stmt = $pdo->prepare("
+                SELECT COUNT(*)
+                FROM gm_projects p
+                LEFT JOIN gm_users u ON p.user_id = u.user_id
+                WHERE {$where_sql}
+            ");
+            $count_stmt->execute($params);
+            $total_count = (int)$count_stmt->fetchColumn();
+
+            $pagination = paginate_data($total_count, $page, $per_page);
+            $limit      = (int)$pagination['per_page'];
+            $offset     = (int)$pagination['offset'];
+
+            $sql = "
+                SELECT p.*, u.username, u.nickname, u.email, u.profile AS author_avatar,
+                       (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,
+                       (SELECT f2.core_content FROM gm_frames f2 WHERE f2.project_id = p.project_id ORDER BY f2.sort_order ASC, f2.frame_id ASC LIMIT 1) AS first_frame_content
+                FROM gm_projects p
+                LEFT JOIN gm_users u ON p.user_id = u.user_id
+                WHERE {$where_sql}
+                ORDER BY {$order_sql}
+                LIMIT {$limit} OFFSET {$offset}
+            ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+
+            return [
+                'items'      => $stmt->fetchAll(),
+                'pagination' => $pagination,
+            ];
+        }
+
         $sql = "
             SELECT p.*, u.username, u.nickname, u.email, u.profile AS author_avatar,
                    (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,
@@ -221,10 +350,16 @@ if (!function_exists('get_templates_filtered')) {
 
 if (!function_exists('get_trashed_projects_filtered')) {
     /**
-     * Mengambil daftar proyek di tempat sampah (is_deleted = 1) milik pengguna.
+     * Mengambil daftar proyek di tempat sampah (is_deleted = 1) milik pengguna (opsional paginasi).
      */
-    function get_trashed_projects_filtered(PDO $pdo, int $user_id, string $search = '', string $sort = 'newest'): array
-    {
+    function get_trashed_projects_filtered(
+        PDO $pdo,
+        int $user_id,
+        string $search = '',
+        string $sort = 'newest',
+        int $page = 0,
+        int $per_page = 12
+    ): array {
         $where = ["p.user_id = ?", "p.is_deleted = 1"];
         $params = [$user_id];
 
@@ -240,6 +375,34 @@ if (!function_exists('get_trashed_projects_filtered')) {
         };
 
         $where_sql = implode(' AND ', $where);
+
+        if ($page > 0) {
+            $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM gm_projects p WHERE {$where_sql}");
+            $count_stmt->execute($params);
+            $total_count = (int)$count_stmt->fetchColumn();
+
+            $pagination = paginate_data($total_count, $page, $per_page);
+            $limit      = (int)$pagination['per_page'];
+            $offset     = (int)$pagination['offset'];
+
+            $sql = "
+                SELECT p.*,
+                       (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,
+                       (SELECT f2.core_content FROM gm_frames f2 WHERE f2.project_id = p.project_id ORDER BY f2.sort_order ASC, f2.frame_id ASC LIMIT 1) AS first_frame_content
+                FROM gm_projects p
+                WHERE {$where_sql}
+                ORDER BY {$order_sql}
+                LIMIT {$limit} OFFSET {$offset}
+            ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+
+            return [
+                'items'      => $stmt->fetchAll(),
+                'pagination' => $pagination,
+            ];
+        }
+
         $sql = "
             SELECT p.*,
                    (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,
@@ -536,11 +699,17 @@ if (!function_exists('save_project_bg_color_settings')) {
 
 if (!function_exists('get_all_projects_admin')) {
     /**
-     * Mengambil seluruh daftar proyek untuk panel Admin dengan filter pencarian, status, dan template.
+     * Mengambil seluruh daftar proyek untuk panel Admin dengan filter pencarian, status, dan template (opsional paginasi).
      */
-    function get_all_projects_admin(PDO $pdo, string $search = '', string $status = '', string $template = ''): array
-    {
-        $where = [];
+    function get_all_projects_admin(
+        PDO $pdo,
+        string $search = '',
+        string $status = '',
+        string $template = '',
+        int $page = 0,
+        int $per_page = 12
+    ): array {
+        $where = ["p.is_deleted = 0"];
         $params = [];
 
         if ($search !== '') {
@@ -549,9 +718,9 @@ if (!function_exists('get_all_projects_admin')) {
             $params[] = $like;
             $params[] = $like;
         }
-        if ($status === 'published' || $status === 'unpublished') {
+        if ($status === 'published' || $status === 'draft' || $status === 'unpublished') {
             $where[] = "p.project_status = ?";
-            $params[] = $status;
+            $params[] = ($status === 'draft' ? 'unpublished' : $status);
         }
         if ($template === 'yes') {
             $where[] = "p.is_template = 1";
@@ -560,6 +729,40 @@ if (!function_exists('get_all_projects_admin')) {
         }
 
         $where_sql = !empty($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        if ($page > 0) {
+            $count_stmt = $pdo->prepare("
+                SELECT COUNT(*)
+                FROM gm_projects p
+                LEFT JOIN gm_users u ON p.user_id = u.user_id
+                {$where_sql}
+            ");
+            $count_stmt->execute($params);
+            $total_count = (int)$count_stmt->fetchColumn();
+
+            $pagination = paginate_data($total_count, $page, $per_page);
+            $limit      = (int)$pagination['per_page'];
+            $offset     = (int)$pagination['offset'];
+
+            $sql = "
+                SELECT p.*, u.username, u.nickname, u.email,
+                       (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,
+                       (SELECT f2.core_content FROM gm_frames f2 WHERE f2.project_id = p.project_id ORDER BY f2.sort_order ASC, f2.frame_id ASC LIMIT 1) AS first_frame_content
+                FROM gm_projects p
+                LEFT JOIN gm_users u ON p.user_id = u.user_id
+                {$where_sql}
+                ORDER BY p.created_at DESC
+                LIMIT {$limit} OFFSET {$offset}
+            ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+
+            return [
+                'items'      => $stmt->fetchAll(),
+                'pagination' => $pagination,
+            ];
+        }
+
         $sql = "
             SELECT p.*, u.username, u.nickname, u.email,
                    (SELECT COUNT(*) FROM gm_frames f WHERE f.project_id = p.project_id) AS frame_count,

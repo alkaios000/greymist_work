@@ -62,6 +62,66 @@
                 border-color: #0078ff;
                 box-shadow: 0 0 6px rgba(0, 120, 255, 0.4);
             }
+            .gm-ai-plugin-toggle.loading {
+                background: #0078ff !important;
+                color: #ffffff !important;
+                border-color: #0078ff !important;
+                box-shadow: 0 0 10px rgba(0, 120, 255, 0.6) !important;
+                animation: gmAiPulse 1.6s infinite ease-in-out;
+            }
+            @keyframes gmAiPulse {
+                0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 120, 255, 0.6); }
+                50% { transform: scale(1.08); box-shadow: 0 0 0 8px rgba(0, 120, 255, 0); }
+                100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 120, 255, 0); }
+            }
+            .gm-ai-chosen-assets {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 5px;
+                margin-bottom: 6px;
+                max-height: 70px;
+                overflow-y: auto;
+            }
+            .gm-ai-asset-marker {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: #eff6ff;
+                border: 1px solid #bfdbfe;
+                border-radius: 6px;
+                padding: 3px 8px;
+                font-size: 11px;
+                color: #1e40af;
+                font-weight: 500;
+                box-sizing: border-box;
+                animation: gmAiFadeIn 0.2s ease;
+            }
+            .gm-ai-asset-marker .gm-ai-asset-name {
+                max-width: 160px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            .gm-ai-asset-marker .gm-ai-remove-asset-btn {
+                background: none;
+                border: none;
+                color: #60a5fa;
+                cursor: pointer;
+                font-size: 14px;
+                line-height: 1;
+                padding: 0;
+                margin: 0;
+                display: flex;
+                align-items: center;
+            }
+            .gm-ai-asset-marker .gm-ai-remove-asset-btn:hover {
+                color: #1d4ed8;
+            }
+            #gm-ai-prompt-input.gm-ai-input-dragover {
+                border-color: #0078ff !important;
+                background-color: #f0f7ff !important;
+                box-shadow: 0 0 0 2px rgba(0, 120, 255, 0.2) !important;
+            }
             body.gm-frame-hidden .gm-ai-plugin-toggle {
                 transform: translateY(-90px);
             }
@@ -564,12 +624,14 @@
         panel.innerHTML = `
             <div class="gm-ai-header" id="gm-ai-drag-handle" title="Geser untuk memindahkan panel">
                 <div class="gm-ai-header-title" style="display:flex;align-items:center;gap:6px;">
-                    <i class="fas fa-wand-magic-sparkles"></i>
-                    <span>Greymist AI</span>
+                    <span style="font-weight:700;">Greymist AI</span>
+                    <span id="gm-ai-header-loading" style="display:none;align-items:center;margin-left:4px;" title="AI sedang memproses...">
+                        <i class="fa-solid fa-circle-notch fa-spin" style="font-size:11px;color:#0078ff;"></i>
+                    </span>
                     <span id="gm-ai-active-provider-pill" class="gm-ai-provider-pill" style="font-size:9.5px;padding:2px 7px;border-radius:10px;background:#fef3c7;color:#d97706;font-weight:700;cursor:pointer;" title="Klik untuk membuka Pengaturan Provider AI">Groq 70B</span>
                 </div>
                 <div class="gm-ai-header-actions">
-                    <button type="button" class="gm-ai-icon-btn" id="gm-ai-toggle-settings-btn" title="Pengaturan Provider AI (Cloud & Lokal)">
+                    <button type="button" class="gm-ai-icon-btn" id="gm-ai-toggle-settings-btn" title="Pengaturan Provider AI">
                         <i class="fas fa-sliders-h"></i>
                     </button>
                     <button type="button" class="gm-ai-icon-btn" id="gm-ai-minimize-btn" title="Minimize / Expand">
@@ -588,19 +650,19 @@
                 <!-- Panel Pengaturan Provider AI (Expandable Modal) -->
                 <div id="gm-ai-settings-panel" style="display:none;background:#f8fafc;border:1px solid #cbd5e1;border-radius:7px;padding:9px;margin-bottom:8px;box-shadow:0 3px 10px rgba(0,0,0,0.06);">
                     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;padding-bottom:5px;border-bottom:1px solid #e2e8f0;">
-                        <span style="font-size:11px;font-weight:700;color:#1e293b;"><i class="fas fa-sliders-h" style="color:#0078ff;"></i> Pengaturan Provider AI</span>
+                        <span style="font-size:11px;font-weight:700;color:#1e293b;">Pengaturan Provider AI</span>
                         <button type="button" id="gm-ai-close-settings-btn" style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:12px;"><i class="fas fa-xmark"></i></button>
                     </div>
 
-                    <!-- Pilihan Provider -->
+                    <!-- Pilihan Provider (Tanpa Emoticon) -->
                     <div style="margin-bottom:7px;">
                         <label style="display:block;font-size:10px;font-weight:700;color:#475569;margin-bottom:3px;">PILIH MESIN AI:</label>
                         <select id="gm-ai-provider-select" class="gm-ai-field" style="width:100%;font-size:11px;padding:4px 6px;font-weight:600;background:#ffffff;border:1px solid #94a3b8;">
-                            <option value="groq">🚀 Groq Cloud (Gratis & Super Cepat ~300 t/s)</option>
-                            <option value="antigravity">⚡ Antigravity Cloud Bridge (Tanpa API Key)</option>
-                            <option value="openrouter">🌐 OpenRouter Cloud (Free Tier)</option>
-                            <option value="gemini">💎 Google Gemini (API Key Pribadi)</option>
-                            <option value="smart_preset">🛠️ Smart Fallback Lokal (Offline)</option>
+                            <option value="groq">Groq Cloud (Cepat ~300 t/s)</option>
+                            <option value="antigravity">Antigravity Cloud Bridge</option>
+                            <option value="openrouter">OpenRouter Cloud</option>
+                            <option value="gemini">Google Gemini</option>
+                            <option value="smart_preset">Smart Fallback Lokal</option>
                         </select>
                     </div>
 
@@ -630,10 +692,10 @@
                     <!-- Tombol Aksi Settings -->
                     <div style="display:flex;gap:5px;margin-top:7px;">
                         <button type="button" id="gm-ai-test-conn-btn" class="gm-ai-btn-secondary" style="flex:1;font-size:10.5px;padding:5px 6px;" title="Cek respon server cloud">
-                            <i class="fas fa-plug"></i> <span>Tes Koneksi</span>
+                            <span>Tes Koneksi</span>
                         </button>
                         <button type="button" id="gm-ai-save-settings-btn" class="gm-ai-btn-primary" style="flex:1;font-size:10.5px;padding:5px 6px;">
-                            <i class="fas fa-floppy-disk"></i> <span>Simpan</span>
+                            <span>Simpan</span>
                         </button>
                     </div>
 
@@ -641,70 +703,31 @@
                     <div id="gm-ai-test-result" style="display:none;margin-top:6px;font-size:10px;padding:5px 7px;border-radius:4px;line-height:1.35;"></div>
                 </div>
 
-                <!-- Preset Cepat -->
+                <!-- Preset Cepat (Minimalis tanpa emoticon) -->
                 <div class="gm-ai-chip-list">
                     ${presetChipsHtml}
                 </div>
 
-                <!-- Zona Upload Foto / Screenshot Referensi UI & Sound to Design -->
-                <div class="gm-ai-upload-zone" id="gm-ai-upload-zone">
-                    <div class="gm-ai-upload-bar">
-                        <button type="button" class="gm-ai-upload-btn" id="gm-ai-upload-btn" title="Upload foto atau screenshot referensi UI (Bisa pilih multi-foto sekaligus)">
-                            <i class="fa-solid fa-camera"></i> <span>Foto Referensi</span>
-                        </button>
-                        <button type="button" class="gm-ai-sound-btn" id="gm-ai-voice-bar-btn" title="Sound to Design: Bicara langsung untuk membuat desain UI!">
-                            <i class="fa-solid fa-microphone"></i> <span>Sound to Design</span>
-                        </button>
-                        <button type="button" class="gm-ai-sound-btn" id="gm-ai-assets-bar-btn" title="Aset Media: Hubungkan & pilih gambar yang sudah diupload di menu assets!">
-                            <i class="fa-solid fa-images"></i> <span>Aset (<span id="gm-ai-assets-badge-count">0</span>)</span>
-                        </button>
-                        <input type="file" id="gm-ai-img-file" accept="image/png,image/jpeg,image/webp,image/gif" multiple style="display:none;">
-                        <span class="gm-ai-upload-hint"><i class="fa-solid fa-paste"></i> Paste Ctrl+V</span>
-                    </div>
+                <!-- Container Tanda Aset Terpilih (Badge Token Ringkas) -->
+                <div id="gm-ai-chosen-assets" class="gm-ai-chosen-assets" style="display:none;flex-wrap:wrap;gap:5px;margin-bottom:6px;"></div>
 
-                    <!-- Drawer Koleksi Aset Menu Assets -->
-                    <div class="gm-ai-assets-drawer" id="gm-ai-assets-drawer" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:8px;margin-top:6px;box-sizing:border-box;">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-                            <span style="font-size:11px;font-weight:600;color:#334155;"><i class="fa-solid fa-folder-open" style="color:#0078ff;"></i> Aset dari Menu Assets (<span id="gm-ai-assets-list-count">0</span>)</span>
-                            <div style="display:flex;gap:4px;">
-                                <button type="button" id="gm-ai-assets-select-all" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;color:#475569;">Pilih Semua</button>
-                                <button type="button" id="gm-ai-assets-clear-sel" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:4px;padding:2px 6px;font-size:10px;cursor:pointer;color:#475569;">Batal</button>
-                            </div>
-                        </div>
-                        <div id="gm-ai-assets-grid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(70px, 1fr));gap:6px;max-height:120px;overflow-y:auto;padding:2px;">
-                            <!-- Kartu thumbnail aset terisi otomatis -->
-                        </div>
-                        <div style="font-size:10px;color:#64748b;margin-top:6px;line-height:1.35;">
-                            <i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Seluruh gambar dari menu assets otomatis terhubung. Klik gambar di atas jika ingin memprioritaskan aset tertentu.
-                        </div>
-                    </div>
-
-                    <div class="gm-ai-img-preview" id="gm-ai-img-preview" style="display:none;">
-                        <div class="gm-ai-preview-header" id="gm-ai-preview-header">
-                            <span id="gm-ai-preview-count"><i class="fa-solid fa-images"></i> 1 Foto Terpilih</span>
-                            <button type="button" class="gm-ai-clear-all-btn" id="gm-ai-clear-all-btn">Hapus Semua</button>
-                        </div>
-                        <div class="gm-ai-preview-list" id="gm-ai-preview-list"></div>
-                    </div>
-                </div>
-
-                <!-- Prompt Field dengan Mic Sound to Design Bawaan -->
+                <!-- Prompt Field dengan Drag-and-Drop & Mic -->
                 <div class="gm-ai-prompt-wrap">
-                    <textarea id="gm-ai-prompt-input" class="gm-ai-field" rows="2" placeholder="Ketik instruksi atau klik mic 🎙️ untuk bicara..." style="width:100%;box-sizing:border-box;padding-right:36px;resize:vertical;line-height:1.4;"></textarea>
-                    <button type="button" id="gm-ai-prompt-mic-btn" class="gm-ai-mic-btn" title="Sound to Design: Bicara sekarang untuk membuat desain otomatis!">
+                    <textarea id="gm-ai-prompt-input" class="gm-ai-field" rows="2" placeholder="Ketik instruksi desain, atau drag & drop aset gambar ke sini..." style="width:100%;box-sizing:border-box;padding-right:36px;resize:vertical;line-height:1.4;"></textarea>
+                    <button type="button" id="gm-ai-prompt-mic-btn" class="gm-ai-mic-btn" title="Sound to Design">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
                 </div>
 
-                <!-- Model & Target -->
+                <!-- Model & Target (Bersih tanpa emoticon) -->
                 <div class="gm-ai-row">
                     <select id="gm-ai-model-select" class="gm-ai-field" title="Pilih Model Aktif">
                         <option value="openai/gpt-oss-120b">GPT OSS 120B (Groq LPU)</option>
                     </select>
                     <select id="gm-ai-target-mode" class="gm-ai-field" title="Target Injeksi">
                         <option value="core">Ke Frame Aktif</option>
-                        <option value="new_frame">➕ Ke Frame Baru</option>
-                        <option value="selected">Ke Dalam Objek Aktif</option>
+                        <option value="new_frame">Ke Frame Baru</option>
+                        <option value="selected">Ke Objek Terpilih</option>
                     </select>
                 </div>
 
@@ -714,151 +737,177 @@
                         <input type="checkbox" id="gm-ai-save-library" checked style="accent-color:#0078ff;margin:0;">
                         <span>Simpan Komponen</span>
                     </label>
-                    <input type="text" id="gm-ai-comp-name" class="gm-ai-field" placeholder="Nama page/komponen" style="padding:4px 7px;font-size:11px;max-width:135px;">
+                    <input type="text" id="gm-ai-comp-name" class="gm-ai-field" placeholder="Nama komponen" style="padding:4px 7px;font-size:11px;max-width:135px;">
                 </div>
 
                 <!-- Opsi Memori Konteks Proyek (Default: OFF / Mode Kilat) -->
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;background:#f8fafc;padding:5px 8px;border-radius:5px;border:1px solid #e2e8f0;margin-top:4px;">
                     <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#334155;cursor:pointer;user-select:none;margin:0;">
                         <input type="checkbox" id="gm-ai-read-memory" style="accent-color:#0078ff;margin:0;">
-                        <span id="gm-ai-speed-indicator" style="font-weight:600;color:#0284c7;">⚡ Mode Kilat (Memori Off)</span>
+                        <span id="gm-ai-speed-indicator" style="font-weight:600;color:#0284c7;">Mode Kilat (Memori Off)</span>
                     </label>
-                    <span style="font-size:9.5px;color:#64748b;cursor:help;" title="Mode Kilat (Default): Respons super cepat ~3-7s tanpa membaca memori proyek. Centang jika butuh AI membaca riwayat & seluruh halaman lain.">Bantuan <i class="fa-solid fa-circle-question"></i></span>
+                    <span style="font-size:9.5px;color:#64748b;cursor:help;" title="Mode Kilat: Respons cepat ~3-7s tanpa membaca memori proyek. Centang jika butuh AI membaca konteks seluruh halaman.">Bantuan <i class="fa-solid fa-circle-question"></i></span>
                 </div>
 
                 <!-- Status Ringkas -->
                 <div id="gm-ai-status-msg" style="display:none;padding:5px 8px;border:1px solid transparent;border-radius:5px;font-size:10.5px;line-height:1.35;max-height:85px;overflow-y:auto;"></div>
 
-                <!-- Tombol Aksi -->
+                <!-- Tombol Aksi (Minimalis & Ringkas) -->
                 <div style="display:flex;gap:5px;">
                     <button type="button" id="gm-ai-generate-btn" class="gm-ai-btn-primary" style="flex:1;">
-                        <i class="fas fa-bolt"></i> <span>Jalankan AI</span>
+                        <span>Jalankan AI</span>
                     </button>
-                    <button type="button" id="gm-ai-sync-antigravity-btn" class="gm-ai-btn-secondary" title="Sinkronkan komponen dari Antigravity IDE (Database)">
-                        <i class="fas fa-rotate"></i> <span>Sync DB</span>
+                    <button type="button" id="gm-ai-sync-antigravity-btn" class="gm-ai-btn-secondary" title="Sinkronkan komponen dari Database">
+                        <span>Sync DB</span>
                     </button>
                 </div>
             </div>
         `;        document.body.appendChild(panel);
 
-        // Setup listener Upload Multi-Foto Referensi & Clipboard Paste
-        let attachedReferenceImages = [];
-        let pasteCounter = 0;
-        const uploadBtn = document.getElementById("gm-ai-upload-btn");
-        const fileInput = document.getElementById("gm-ai-img-file");
-        const previewBox = document.getElementById("gm-ai-img-preview");
-        const previewCount = document.getElementById("gm-ai-preview-count");
-        const previewList = document.getElementById("gm-ai-preview-list");
-        const clearAllBtn = document.getElementById("gm-ai-clear-all-btn");
+        // Pengelolaan Tanda Aset Terpilih (Token Badge Ringkas untuk AI)
+        let chosenAssetTokens = [];
+        const chosenAssetsContainer = document.getElementById("gm-ai-chosen-assets");
         const promptInputEl = document.getElementById("gm-ai-prompt-input");
 
-        const renderAttachedImages = () => {
-            if (!previewBox || !previewList) return;
-            if (attachedReferenceImages.length === 0) {
-                previewBox.style.display = "none";
-                previewList.innerHTML = "";
-                if (fileInput) fileInput.value = "";
+        const renderChosenAssetTokens = () => {
+            if (!chosenAssetsContainer) return;
+            if (chosenAssetTokens.length === 0) {
+                chosenAssetsContainer.style.display = "none";
+                chosenAssetsContainer.innerHTML = "";
                 return;
             }
-            previewBox.style.display = "flex";
-            if (previewCount) {
-                previewCount.innerHTML = `<i class="fa-solid fa-images"></i> ${attachedReferenceImages.length} Foto Referensi`;
-            }
-            previewList.innerHTML = attachedReferenceImages.map((img, idx) => `
-                <div class="gm-ai-preview-item" data-idx="${idx}">
-                    <img src="${img.dataUrl}" alt="${img.name}">
-                    <div class="gm-ai-preview-info">
-                        <span class="gm-ai-preview-name" title="${img.name}">${img.name}</span>
-                        <span class="gm-ai-preview-size">${img.sizeStr}</span>
-                    </div>
-                    <button type="button" class="gm-ai-remove-img-btn" data-idx="${idx}" title="Hapus foto ini">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
+            chosenAssetsContainer.style.display = "flex";
+            chosenAssetsContainer.innerHTML = chosenAssetTokens.map((item, idx) => `
+                <div class="gm-ai-asset-marker" data-idx="${idx}" title="Aset wajib: ${item.url}" style="display:inline-flex;align-items:center;gap:4px;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;padding:2px 7px;border-radius:12px;font-size:10.5px;font-weight:600;">
+                    <i class="fa-solid fa-image" style="font-size:10px;"></i>
+                    <span style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${item.name || 'Aset ' + (idx + 1)}</span>
+                    <button type="button" class="gm-ai-remove-token-btn" data-idx="${idx}" style="background:none;border:none;cursor:pointer;padding:0 2px;color:#0284c7;font-size:11px;line-height:1;" title="Hapus tanda aset ini">&times;</button>
                 </div>
             `).join("");
         };
 
-        const addImagesFromFiles = async (files, isPasted = false) => {
-            const maxTotal = 6;
-            const validFiles = Array.from(files).filter(f => f && f.type && f.type.startsWith("image/"));
-            if (validFiles.length === 0) return;
+        const addChosenAssetToken = (asset) => {
+            if (!asset || (!asset.url && !asset.path)) return;
+            const rawUrl = asset.url || asset.path;
+            const url = typeof cleanGreymistAssetUrl === "function" ? cleanGreymistAssetUrl(rawUrl) : rawUrl;
+            const existing = chosenAssetTokens.find(a => (a.url === url || a.path === url));
+            if (existing) return;
+            let name = asset.name || url.split("/").pop().split("?")[0];
+            chosenAssetTokens.push({
+                id: asset.id || ("token-" + Date.now() + "-" + Math.random().toString(36).substr(2, 4)),
+                name: name,
+                url: url,
+                path: url,
+                must_use: true
+            });
+            renderChosenAssetTokens();
+            showStatus(statusEl, "info", `Tanda aset "${name}" ditambahkan. AI akan menggunakannya.`);
+        };
 
-            let addedCount = 0;
-            for (const f of validFiles) {
-                if (attachedReferenceImages.length >= maxTotal) {
-                    showStatus(statusEl, "info", `Batas maksimal ${maxTotal} foto referensi tercapai.`);
-                    break;
-                }
-                try {
-                    const imgData = await compressImageFile(f);
-                    if (isPasted) {
-                        pasteCounter++;
-                        imgData.name = `Screenshot-${pasteCounter}.png`;
-                    }
-                    attachedReferenceImages.push(imgData);
-                    addedCount++;
-                } catch (err) {
-                    showStatus(statusEl, "error", err.message || "Gagal mengompresi foto.");
-                }
-            }
-            if (addedCount > 0) {
-                renderAttachedImages();
-                showStatus(statusEl, "info", `📸 ${attachedReferenceImages.length} foto referensi siap digunakan.`);
+        const removeChosenAssetToken = (idx) => {
+            if (idx >= 0 && idx < chosenAssetTokens.length) {
+                chosenAssetTokens.splice(idx, 1);
+                renderChosenAssetTokens();
             }
         };
 
-        if (uploadBtn && fileInput) {
-            uploadBtn.addEventListener("click", () => fileInput.click());
-            fileInput.addEventListener("change", async () => {
-                const files = fileInput.files;
-                if (files && files.length > 0) {
-                    await addImagesFromFiles(files);
-                    fileInput.value = "";
+        if (chosenAssetsContainer) {
+            chosenAssetsContainer.addEventListener("click", (e) => {
+                const btn = e.target.closest(".gm-ai-remove-token-btn");
+                if (btn) {
+                    const idx = parseInt(btn.dataset.idx, 10);
+                    removeChosenAssetToken(idx);
                 }
             });
         }
 
-        if (clearAllBtn) {
-            clearAllBtn.addEventListener("click", () => {
-                attachedReferenceImages = [];
-                renderAttachedImages();
-                if (fileInput) fileInput.value = "";
-            });
-        }
+        // Helper pembersih path URL aset (meringkas ke format uploads/assets/...)
+        const cleanGreymistAssetUrl = (rawUrl) => {
+            if (!rawUrl) return "";
+            let u = String(rawUrl).trim();
+            const uploadsIdx = u.indexOf("uploads/");
+            if (uploadsIdx !== -1) {
+                return u.substring(uploadsIdx);
+            }
+            try {
+                const parsed = new URL(u, window.location.origin);
+                return parsed.pathname.replace(/^\/+/, '');
+            } catch (_) {
+                return u.replace(/^\/+/, '');
+            }
+        };
 
-        if (previewList) {
-            previewList.addEventListener("click", (e) => {
-                const removeBtn = e.target.closest(".gm-ai-remove-img-btn");
-                if (removeBtn) {
-                    const idx = parseInt(removeBtn.dataset.idx, 10);
-                    if (!isNaN(idx) && idx >= 0 && idx < attachedReferenceImages.length) {
-                        attachedReferenceImages.splice(idx, 1);
-                        renderAttachedImages();
+        // Global dragstart capture untuk mendeteksi aset dari Menu Assets (Left Sidebar / Assets Gallery)
+        document.addEventListener("dragstart", (e) => {
+            const card = e.target.closest(".gm-image-uploaded, .gm-image-wrapper, .gm-objectdropable, [data-asset-path], [data-image-path], [data-path]") || e.target;
+            const img = card.querySelector ? card.querySelector("img") : (e.target.tagName === "IMG" ? e.target : null);
+            const titleInput = card.querySelector ? card.querySelector(".gm-image-title") : null;
+            let src = (card && (card.dataset.assetPath || card.dataset.imagePath || card.dataset.path || card.dataset.src)) || 
+                      (img && (img.dataset.path || img.src)) || 
+                      (e.target.tagName === "IMG" ? (e.target.dataset.path || e.target.src) : null);
+            let name = (titleInput && titleInput.value) || 
+                       (card && (card.dataset.assetName || card.dataset.name)) || 
+                       (img && (img.alt || img.title || (img.dataset && img.dataset.name))) || 
+                       (src ? src.split("/").pop().split("?")[0] : "Aset Gambar");
+            if (src) {
+                const cleanSrc = cleanGreymistAssetUrl(src);
+                e.dataTransfer.setData("application/x-greymist-asset", JSON.stringify({ url: cleanSrc, name: name }));
+                e.dataTransfer.setData("text/plain", cleanSrc);
+            }
+        }, true);
+
+        // Handler Drop aset ke Input AI atau Modal AI
+        const handleIncomingAssetDrop = async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (promptInputEl) promptInputEl.classList.remove("gm-ai-input-dragover");
+            panel.classList.remove("gm-ai-drop-active");
+
+            // 1. Aset dari Menu Assets Greymist
+            const gmAssetJson = e.dataTransfer.getData("application/x-greymist-asset");
+            if (gmAssetJson) {
+                try {
+                    const parsed = JSON.parse(gmAssetJson);
+                    if (parsed && (parsed.url || parsed.path)) {
+                        addChosenAssetToken(parsed);
+                        return;
+                    }
+                } catch (_) {}
+            }
+
+            // 2. URL gambar biasa
+            const textData = e.dataTransfer.getData("text/plain");
+            if (textData && (textData.startsWith("http://") || textData.startsWith("https://") || textData.startsWith("uploads/"))) {
+                addChosenAssetToken({ url: textData, name: textData.split("/").pop() });
+                return;
+            }
+
+            // 3. File dari explorer komputer (ditambahkan sebagai token tanda aset)
+            const files = e.dataTransfer?.files;
+            if (files && files.length > 0) {
+                for (const file of files) {
+                    if (file.type && file.type.startsWith("image/")) {
+                        addChosenAssetToken({
+                            name: file.name,
+                            url: URL.createObjectURL(file),
+                            file: file
+                        });
                     }
                 }
-            });
-        }
+            }
+        };
 
-        // Paste clipboard support (Ctrl+V) langsung pada textarea prompt
         if (promptInputEl) {
-            promptInputEl.addEventListener("paste", async (e) => {
-                const items = (e.clipboardData || window.clipboardData)?.items;
-                if (!items) return;
-                const imageFiles = [];
-                for (let i = 0; i < items.length; i++) {
-                    if (items[i].type && items[i].type.startsWith("image/")) {
-                        const blob = items[i].getAsFile();
-                        if (blob) imageFiles.push(blob);
-                    }
-                }
-                if (imageFiles.length > 0) {
-                    e.preventDefault();
-                    await addImagesFromFiles(imageFiles, true);
-                }
+            promptInputEl.addEventListener("dragover", (e) => {
+                e.preventDefault();
+                promptInputEl.classList.add("gm-ai-input-dragover");
             });
+            promptInputEl.addEventListener("dragleave", (e) => {
+                promptInputEl.classList.remove("gm-ai-input-dragover");
+            });
+            promptInputEl.addEventListener("drop", handleIncomingAssetDrop);
         }
 
-        // Drag & Drop support on floating panel
         panel.addEventListener("dragover", (e) => {
             e.preventDefault();
             panel.classList.add("gm-ai-drop-active");
@@ -868,14 +917,11 @@
                 panel.classList.remove("gm-ai-drop-active");
             }
         });
-        panel.addEventListener("drop", async (e) => {
-            e.preventDefault();
-            panel.classList.remove("gm-ai-drop-active");
-            const files = e.dataTransfer?.files;
-            if (files && files.length > 0) {
-                await addImagesFromFiles(files);
-            }
-        });
+        panel.addEventListener("drop", handleIncomingAssetDrop);
+
+        // Expose ke global API Greymist
+        if (!window.GreymistAI) window.GreymistAI = {};
+        window.GreymistAI.addAssetMarker = addChosenAssetToken;
 
         // Pasang juga fitur AI Edit Object pada menu klik kanan (.gm-object-menu)
         if (typeof setupRightClickAiObjectEditor === "function") {
@@ -884,102 +930,8 @@
             window.setupRightClickAiObjectEditor();
         }
 
-        // Setup listener Koleksi Asset dari Menu Assets
-        let loadedUserAssets = [];
-        let selectedUserAssetIds = new Set();
-        const assetsBarBtn = document.getElementById("gm-ai-assets-bar-btn");
-        const assetsDrawer = document.getElementById("gm-ai-assets-drawer");
-        const assetsBadgeCount = document.getElementById("gm-ai-assets-badge-count");
-        const assetsListCount = document.getElementById("gm-ai-assets-list-count");
-        const assetsGrid = document.getElementById("gm-ai-assets-grid");
-        const assetsSelectAllBtn = document.getElementById("gm-ai-assets-select-all");
-        const assetsClearSelBtn = document.getElementById("gm-ai-assets-clear-sel");
-
-        const renderUserAssetsGrid = () => {
-            if (!assetsGrid) return;
-            if (loadedUserAssets.length === 0) {
-                assetsGrid.innerHTML = `<div style="grid-column: 1 / -1; font-size: 11px; color: #94a3b8; text-align: center; padding: 12px 0;">Belum ada gambar yang diupload di Menu Assets.</div>`;
-                return;
-            }
-            assetsGrid.innerHTML = loadedUserAssets.map(ast => {
-                const isSelected = selectedUserAssetIds.has(ast.id);
-                return `
-                    <div class="gm-ai-asset-card" data-asset-id="${ast.id}" title="${ast.name} (${ast.url})" style="position:relative;cursor:pointer;border-radius:5px;overflow:hidden;border:2px solid ${isSelected ? '#0078ff' : '#cbd5e1'};background:#fff;aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:all 0.15s ease;">
-                        <img src="${ast.url}" alt="${ast.name}" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-                        <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:18px;color:#94a3b8;background:#f1f5f9;"><i class="fa-solid fa-image"></i></div>
-                        ${isSelected ? '<div style="position:absolute;top:2px;right:2px;background:#0078ff;color:#fff;border-radius:50%;width:14px;height:14px;font-size:9px;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-check"></i></div>' : ''}
-                        <div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:1px 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:center;">${ast.name}</div>
-                    </div>
-                `;
-            }).join("");
-        };
-
-        const loadUserAssets = async () => {
-            try {
-                const pId = getCurrentProjectId();
-                const resp = await fetch("index.php?action=ai_get_user_assets&project_id=" + encodeURIComponent(pId));
-                if (!resp.ok) {
-                    console.warn("[Greymist AI] Endpoint aset pengguna mengembalikan HTTP status " + resp.status);
-                    return;
-                }
-                const res = await resp.json();
-                if (res && res.success && Array.isArray(res.assets)) {
-                    loadedUserAssets = res.assets;
-                    if (assetsBadgeCount) assetsBadgeCount.textContent = loadedUserAssets.length;
-                    if (assetsListCount) assetsListCount.textContent = loadedUserAssets.length;
-                    renderUserAssetsGrid();
-                }
-            } catch (err) {
-                console.warn("[Greymist AI] Gagal memuat aset pengguna:", err);
-            }
-        };
-
-        if (assetsBarBtn && assetsDrawer) {
-            assetsBarBtn.addEventListener("click", () => {
-                const isShown = assetsDrawer.style.display !== "none";
-                assetsDrawer.style.display = isShown ? "none" : "block";
-                assetsBarBtn.style.background = isShown ? "" : "#e0f2fe";
-                assetsBarBtn.style.borderColor = isShown ? "" : "#38bdf8";
-                assetsBarBtn.style.color = isShown ? "" : "#0284c7";
-                if (!isShown && loadedUserAssets.length === 0) {
-                    loadUserAssets();
-                }
-            });
-        }
-
-        if (assetsGrid) {
-            assetsGrid.addEventListener("click", (e) => {
-                const card = e.target.closest(".gm-ai-asset-card");
-                if (card) {
-                    const id = parseInt(card.dataset.assetId, 10);
-                    if (!isNaN(id)) {
-                        if (selectedUserAssetIds.has(id)) {
-                            selectedUserAssetIds.delete(id);
-                        } else {
-                            selectedUserAssetIds.add(id);
-                        }
-                        renderUserAssetsGrid();
-                    }
-                }
-            });
-        }
-
-        if (assetsSelectAllBtn) {
-            assetsSelectAllBtn.addEventListener("click", () => {
-                loadedUserAssets.forEach(a => selectedUserAssetIds.add(a.id));
-                renderUserAssetsGrid();
-            });
-        }
-
-        if (assetsClearSelBtn) {
-            assetsClearSelBtn.addEventListener("click", () => {
-                selectedUserAssetIds.clear();
-                renderUserAssetsGrid();
-            });
-        }
-
-        // Muat aset pengguna saat panel AI disiapkan
-        loadUserAssets();
+        // CATATAN: AI TIDAK memuat aset secara otomatis dari latar belakang.
+        // AI hanya memproses aset jika user memasukkannya sendiri lewat drag-and-drop ke modal AI.
 
         // Muat & sinkronkan memori AI proyek setelah frame selesai dimuat
         setTimeout(syncProjectAiMemory, 800);
@@ -1147,14 +1099,46 @@
             const projectId = getCurrentProjectId();
             const framesSnapshot = (readMemory || isProjectWide) ? collectAllFramesSnapshot() : [];
 
-            generateBtn.disabled = true;
-            generateBtn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>Proses...</span>`;
+            // Indikator Loading Global (Tetap aktif meskipun modal di-hide/minimize)
+            const menuLoadingIndicator = document.getElementById("gm-ai-menu-loading");
+            const headerLoadingIndicator = document.getElementById("gm-ai-header-loading");
+
+            const startAiLoadingIndicators = () => {
+                if (menuLoadingIndicator) menuLoadingIndicator.style.display = "inline-flex";
+                if (headerLoadingIndicator) headerLoadingIndicator.style.display = "inline-flex";
+                if (toggleBtn) {
+                    toggleBtn.classList.add("loading");
+                    toggleBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+                }
+                generateBtn.disabled = true;
+                generateBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="margin-right:5px;"></i><span>Proses...</span>';
+            };
+
+            const stopAiLoadingIndicators = () => {
+                if (menuLoadingIndicator) menuLoadingIndicator.style.display = "none";
+                if (headerLoadingIndicator) headerLoadingIndicator.style.display = "none";
+                if (toggleBtn) {
+                    toggleBtn.classList.remove("loading");
+                    toggleBtn.innerHTML = '<i class="fas fa-wand-magic-sparkles"></i>';
+                }
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = '<span>Jalankan AI</span>';
+            };
+
+            startAiLoadingIndicators();
+
             if (isProjectWide) {
-                showStatus(statusEl, "info", "🌐 AI mendeteksi perubahan selektif di seluruh halaman (mempertahankan konten yang ada)...");
+                showStatus(statusEl, "info", "AI mendeteksi perubahan selektif di seluruh halaman (mempertahankan konten)...");
             } else if (readMemory) {
-                showStatus(statusEl, "info", "🧠 AI membaca memori proyek & memproses konteks...");
+                showStatus(statusEl, "info", "AI membaca memori proyek & memproses konteks...");
             } else {
-                showStatus(statusEl, "info", "⚡ AI memproses instruksi...");
+                showStatus(statusEl, "info", "AI memproses instruksi desain...");
+            }
+
+            // Jika ada tanda aset terpilih, perkuat instruksi prompt agar AI wajib menggunakannya
+            if (chosenAssetTokens.length > 0) {
+                const markerNames = chosenAssetTokens.map(a => `${a.name} (${a.url})`).join(", ");
+                prompt += `\n\n[TANDA ASET WAJIB DIGUNAKAN]: Pengguna telah menandai aset berikut: ${markerNames}. AI WAJIB menyisipkan dan menampilkan gambar-gambar ini ke dalam komponen yang sesuai (misal di logo, hero/banner, card, avatar, dsb.) dengan tag <img src="URL" alt="..."> atau background-image.`;
             }
 
             const currentActiveProvider = (typeof window.getActiveAiProvider === "function" ? window.getActiveAiProvider() : null) ||
@@ -1188,19 +1172,14 @@
                         data: attachedReferenceImages[0].data,
                         mime_type: attachedReferenceImages[0].mime_type
                     } : null,
-                    user_assets: (typeof loadedUserAssets !== "undefined" && Array.isArray(loadedUserAssets)) ? (
-                        selectedUserAssetIds.size > 0
-                            ? loadedUserAssets.filter(a => selectedUserAssetIds.has(a.id))
-                            : loadedUserAssets
-                    ) : [],
+                    user_assets: (Array.isArray(chosenAssetTokens) && chosenAssetTokens.length > 0) ? chosenAssetTokens : [],
                     user_charts: (typeof window !== "undefined" && Array.isArray(window.gmUserCharts)) ? window.gmUserCharts : []
                 })
             })
                 .then(r => r.json())
                 .then(res => {
                     if (res.status !== "OK") {
-                        generateBtn.disabled = false;
-                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                        stopAiLoadingIndicators();
                         showStatus(statusEl, "error", res.msg || "Gagal memproses instruksi AI.");
                         return;
                     }
@@ -1211,6 +1190,12 @@
                             localStorage.setItem("gm_ai_memory_proj_" + projectId, JSON.stringify(cachedAiMemory));
                         } catch (_) {}
                         updateMemoryBadgeUI(cachedAiMemory);
+                    }
+
+                    // Reset tanda aset terpilih setelah eksekusi berhasil agar tidak terbawa ke prompt selanjutnya
+                    if (chosenAssetTokens.length > 0) {
+                        chosenAssetTokens = [];
+                        renderChosenAssetTokens();
                     }
 
                     // 0. Penerapan otomatis breakpoint responsif jika diarahkan oleh AI
@@ -1260,8 +1245,7 @@
 
                     // Penanganan operasi ganti nama proyek saja
                     if (op === "rename_project") {
-                        generateBtn.disabled = false;
-                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                        stopAiLoadingIndicators();
                         let cleanSum = res.summary || res.msg || "Nama proyek berhasil diubah.";
                         if (cleanSum.includes("<") || cleanSum.includes("<!--")) {
                             cleanSum = cleanSum.replace(/<!--.*?-->/gs, "").replace(/<[^>]+>/g, "").trim();
@@ -1273,8 +1257,7 @@
 
                     // Penanganan operasi penambahan breakpoint saja
                     if (op === "add_breakpoints") {
-                        generateBtn.disabled = false;
-                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                        stopAiLoadingIndicators();
                         showStatus(statusEl, "success", `✓ ${res.summary || res.msg || "Breakpoint responsif berhasil ditambahkan."}`);
                         syncProjectAiMemory();
                         return;
@@ -1309,8 +1292,7 @@
                             }
                         });
 
-                        generateBtn.disabled = false;
-                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                        stopAiLoadingIndicators();
                         showStatus(statusEl, "success", `✓ ${res.msg || `Gaya diperbarui secara konsisten di ${countUpdated} halaman proyek.`}`);
                         syncProjectAiMemory();
                         return;
@@ -1319,43 +1301,37 @@
                     // 1. Jika operasi adalah patch atribut (font, warna, ukuran, dsb.)
                     if (op === "patch_attributes" && res.patch) {
                         applyAttributePatchInPlace(selectedObj || activeCore, res.patch, statusEl, () => {
-                            generateBtn.disabled = false;
-                            generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                            stopAiLoadingIndicators();
                             syncProjectAiMemory();
                         });
                         return;
                     }
 
                     if (op === "explain") {
-                        generateBtn.disabled = false;
-                        generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                        stopAiLoadingIndicators();
                         showStatus(statusEl, "info", res.summary || res.msg || "Frame dianalisis.");
                         renderFrameComponentsList();
                     } else if (op === "create_frames" && Array.isArray(res.created_frames) && res.created_frames.length > 0) {
                         buildCreatedFramesSequentially(res.created_frames, statusEl, totalCreated => {
-                            generateBtn.disabled = false;
-                            generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                            stopAiLoadingIndicators();
                             showStatus(statusEl, "success", `✓ ${totalCreated} Frame Halaman baru berhasil dibuat & dibangun.`);
                             syncProjectAiMemory();
                         });
                     } else if (op === "replace_selected" && selectedObj) {
                         replaceSelectedObjectProgressive(selectedObj, res.html || "", statusEl, () => {
-                            generateBtn.disabled = false;
-                            generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                            stopAiLoadingIndicators();
                             showStatus(statusEl, "success", `✓ Objek aktif berhasil diperbarui.`);
                             syncProjectAiMemory();
                         });
                     } else if (op === "replace_frame") {
                         replaceFrameHtmlProgressive(res.html || "", statusEl, () => {
-                            generateBtn.disabled = false;
-                            generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                            stopAiLoadingIndicators();
                             showStatus(statusEl, "success", `✓ ${res.msg || "Isi frame berhasil diperbarui."}`);
                             syncProjectAiMemory();
                         });
                     } else {
                         injectHtmlIntoCanvasProgressive(res.html || "", targetMode, statusEl, inserted => {
-                            generateBtn.disabled = false;
-                            generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                            stopAiLoadingIndicators();
                             if (res.api_warning) {
                                 showStatus(statusEl, "warning", `⚠️ ${res.api_warning}`);
                             } else if (res.summary && typeof res.summary === "string" && !res.summary.includes("<") && !res.summary.includes("<!--")) {
@@ -1369,8 +1345,7 @@
                 })
                 .catch(err => {
                     console.error("AI Generate Error:", err);
-                    generateBtn.disabled = false;
-                    generateBtn.innerHTML = `<i class="fas fa-bolt"></i> <span>Jalankan AI</span>`;
+                    stopAiLoadingIndicators();
                     showStatus(statusEl, "error", "Gagal menghubungi endpoint AI.");
                 });
         });

@@ -398,74 +398,10 @@ switch ($ai_action) {
             }
         }
 
-        // Muat seluruh aset gambar milik pengguna yang tersimpan di database gm_bg_images
-        $db_assets = get_user_bg_images($pdo, (int)$user_id);
-        foreach ($db_assets as $dba) {
-            $path_dir = rtrim(str_replace('\\', '/', (string)$dba['path']), '/');
-            if (str_ends_with($path_dir, '/' . $dba['image'])) {
-                $full_url = $path_dir;
-            } else {
-                $full_url = $path_dir . '/' . $dba['image'];
-            }
-            $full_url = ltrim($full_url, '/');
-            if (!isset($seen_asset_urls[$full_url])) {
-                $seen_asset_urls[$full_url] = true;
-                $user_assets[] = [
-                    'id'   => (int)$dba['image_id'],
-                    'name' => trim((string)($dba['image_name'] ?: pathinfo($dba['image'], PATHINFO_FILENAME))),
-                    'url'  => $full_url,
-                    'file' => (string)$dba['image'],
-                ];
-            }
-        }
-
-        if ($project_id > 0) {
-            $proj = get_project_by_id($pdo, $project_id);
-            if (!empty($proj['user_id']) && (int)$proj['user_id'] !== (int)$user_id) {
-                $p_assets = get_user_bg_images($pdo, (int)$proj['user_id']);
-                foreach ($p_assets as $pa) {
-                    $path_dir = rtrim(str_replace('\\', '/', (string)$pa['path']), '/');
-                    if (str_ends_with($path_dir, '/' . $pa['image'])) {
-                        $full_url = $path_dir;
-                    } else {
-                        $full_url = $path_dir . '/' . $pa['image'];
-                    }
-                    $full_url = ltrim($full_url, '/');
-                    if (!isset($seen_asset_urls[$full_url])) {
-                        $seen_asset_urls[$full_url] = true;
-                        $user_assets[] = [
-                            'id'   => (int)$pa['image_id'],
-                            'name' => trim((string)($pa['image_name'] ?: pathinfo($pa['image'], PATHINFO_FILENAME))),
-                            'url'  => $full_url,
-                            'file' => (string)$pa['image'],
-                        ];
-                    }
-                }
-            }
-        }
-
-        // Jika aset pengguna masih kosong, sertakan aset yang tersedia di sistem
-        if (empty($user_assets)) {
-            $all_sys_assets = $pdo->query("SELECT image_id, image, image_name, path FROM gm_bg_images ORDER BY created_at DESC LIMIT 30")->fetchAll(PDO::FETCH_ASSOC);
-            foreach ($all_sys_assets as $sa) {
-                $path_dir = rtrim(str_replace('\\', '/', (string)$sa['path']), '/');
-                if (str_ends_with($path_dir, '/' . $sa['image'])) {
-                    $full_url = $path_dir;
-                } else {
-                    $full_url = $path_dir . '/' . $sa['image'];
-                }
-                $full_url = ltrim($full_url, '/');
-                if (!isset($seen_asset_urls[$full_url])) {
-                    $seen_asset_urls[$full_url] = true;
-                    $user_assets[] = [
-                        'id'   => (int)$sa['image_id'],
-                        'name' => trim((string)($sa['image_name'] ?: pathinfo($sa['image'], PATHINFO_FILENAME))),
-                        'url'  => $full_url,
-                        'file' => (string)$sa['image'],
-                    ];
-                }
-            }
-        }
+        // CATATAN KEAMANAN & PRIVASI ASET:
+        // AI TIDAK BOLEH otomatis mengakses seluruh aset gambar di database.
+        // AI HANYA BOLEH menggunakan aset jika pengguna secara manual memilih/men-drag-and-drop aset ke modal/input prompt AI ($data['user_assets']).
+        // Jika $data['user_assets'] kosong, $user_assets tetap berupa array kosong [] sehingga AI tidak sembarangan menyisipkan gambar lokal.
 
         // Ekstrak & hubungkan Chart Pengguna dari Menu Assets
         $user_charts = [];

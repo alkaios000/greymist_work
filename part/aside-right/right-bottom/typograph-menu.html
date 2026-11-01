@@ -98,11 +98,13 @@
                 /* input */
                 .gm-font-input {
                     width: 100%;
-                    padding: 6px 8px;
-                    font-size: 12px;
+                    height: 20px;
+                    padding: 1px 4px; box-sizing: border-box;
+                    font-size: 8px;
+                    font-family: inherit;
 
-                    border-radius: 6px;
-                    border: 1px solid #cfcfcf;
+                    border-radius: 3px;
+                    border: 1px solid #d1d5db;
                     background: #ffffff;
                     color: #222;
 
@@ -115,8 +117,8 @@
                 }
 
                 .gm-font-input:focus {
-                    border-color: #4a90e2;
-                    box-shadow: 0 0 0 1px rgba(74, 144, 226, .3);
+                    border-color: #2563eb;
+                    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
                 }
 
                 /* hint ala MS Word */
@@ -126,7 +128,7 @@
                     right: 8px;
                     top: 50%;
                     transform: translateY(-50%);
-                    font-size: 10px;
+                    font-size: 8.5px;
                     color: #aaa;
                     pointer-events: none;
                 }
@@ -143,7 +145,7 @@
                     max-height: 260px;
 
                     background: #ffffff;
-                    border: 1px solid #cfcfcf;
+                    border: 1px solid #d1d5db;
                     border-radius: 8px;
 
                     box-shadow: 0 12px 30px rgba(0, 0, 0, .15);
@@ -161,7 +163,7 @@
                 }
 
                 .gm-font-group-title {
-                    font-size: 10px;
+                    font-size: 8.5px;
                     font-weight: 600;
                     text-transform: uppercase;
                     letter-spacing: .04em;
@@ -174,9 +176,11 @@
 ================================ */
 
                 .gm-font-item {
-                    padding: 6px 8px;
-                    font-size: 12px;
-                    border-radius: 6px;
+                    height: 18px;
+                    padding: 1px 4px; box-sizing: border-box;
+                    font-size: 8px;
+                    font-family: inherit;
+                    border-radius: 3px;
 
                     cursor: pointer;
                     color: #222;
@@ -202,7 +206,7 @@
 
                 .gm-font-dropdown::-webkit-scrollbar-thumb {
                     background: #ccc;
-                    border-radius: 6px;
+                    border-radius: 3px;
                 }
             </style>
             <script>
@@ -842,7 +846,7 @@
         <div class="gm-menu-row">
             <label>Text Color</label>
 
-            <div class="gm-color-field gm-row-pair">
+            <div class="gm-color-field">
 
                 <!-- Native Color Picker -->
                 <input type="color" class="gm-color-picker" data-style="color" value="#000000">
@@ -858,123 +862,6 @@
                 <span class="gm-color-token gm-add-token">+ variable</span>
             </div>
         </div>
-        <style>
-            /* ===============================
-   COLOR TOKEN – WHITE THEME
-================================ */
-
-            .gm-menu-section {
-                background: #ffffff;
-                color: #111827;
-            }
-
-            .gm-menu-title {
-                font-weight: 600;
-                color: #111827;
-            }
-
-            /* Color field */
-            .gm-color-field {
-                display: flex;
-                gap: 8px;
-            }
-
-            .gm-color-picker {
-                width: 34px;
-                height: 34px;
-                padding: 0;
-                border: 1px solid #d1d5db;
-                background: #fff;
-                cursor: pointer;
-            }
-
-            .gm-color-input {
-                flex: 1;
-                height: 34px;
-                padding: 0 10px;
-                border-radius: 6px;
-                border: 1px solid #d1d5db;
-                font-size: 13px;
-                background: #ffffff;
-                color: #111827;
-            }
-
-            .gm-color-input::placeholder {
-                color: #9ca3af;
-            }
-
-            /* ===============================
-   TOKEN AREA
-================================ */
-
-            .gm-color-variable {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-                margin-top: 6px;
-            }
-
-            .gm-color-token {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                padding: 4px 8px;
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
-                border-radius: 6px;
-                font-size: 12px;
-                color: #111827;
-                cursor: pointer;
-                transition: all .15s ease;
-            }
-
-            .gm-color-token:hover {
-                background: #f3f4f6;
-                border-color: #d1d5db;
-            }
-
-            /* Color dot */
-            .gm-color-token input[type="color"] {
-                width: 18px;
-                height: 18px;
-                padding: 0;
-                border: none;
-                background: none;
-                cursor: pointer;
-            }
-
-            /* Token name */
-            .gm-token-label {
-                white-space: nowrap;
-            }
-
-            /* ===============================
-   ADD TOKEN
-================================ */
-
-            .gm-add-token {
-                background: #ffffff;
-                border: 1px dashed #d1d5db;
-                color: #2563eb;
-                font-weight: 500;
-            }
-
-            .gm-add-token:hover {
-                background: #eff6ff;
-                border-color: #93c5fd;
-            }
-
-            /* ===============================
-   FOCUS STATES
-================================ */
-
-            .gm-color-input:focus,
-            .gm-color-picker:focus-visible {
-                outline: none;
-                border-color: #2563eb;
-                box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
-            }
-        </style>
         <script>
             (function() {
                 /* ===============================
@@ -1722,7 +1609,7 @@
 
         <div class="gm-menu-row gm-row-pair">
             <!-- WORD SPACING -->
-            <div class="gm-menu-row">
+            <div>
                 <label>Word Spacing</label>
                 <input type="text" data-style="word-spacing" placeholder="0px">
                 <script>
@@ -1833,7 +1720,7 @@
             </div>
 
             <!-- TEXT ALIGN -->
-            <div class="gm-menu-row">
+            <div>
                 <label>Text Align</label>
                 <select data-style="text-align">
                     <option value="">default</option>
@@ -1931,36 +1818,18 @@
         <div class="gm-menu-row gm-text-decoration">
             <label>Text Decoration</label>
 
-            <div class="gm-menu-row">
-                <input type="text" data-style="text-decoration" placeholder="underline dotted red">
-            </div>
-            <div class="gm-menu-row">
-                <select class="gm-decoration-preset">
+            <div class="gm-row-pair">
+                <input type="text" data-style="text-decoration" placeholder="underline red, none...">
+                <select class="gm-decoration-preset" style="width: 72px; flex-shrink: 0;">
                     <option value="">preset</option>
                     <option value="none">none</option>
                     <option value="underline">underline</option>
                     <option value="overline">overline</option>
                     <option value="line-through">line-through</option>
-                    <option value="underline dotted">underline dotted</option>
-                    <option value="underline dashed">underline dashed</option>
+                    <option value="underline dotted">dotted</option>
+                    <option value="underline dashed">dashed</option>
                 </select>
             </div>
-            <style>
-                .gm-input-group {
-                    display: flex;
-                    gap: 6px;
-                }
-
-                .gm-input-group input {
-                    flex: 1;
-                }
-
-                .gm-decoration-preset {
-                    width: 90px;
-                    font-size: 12px;
-                    padding: 2px 4px;
-                }
-            </style>
             <script>
                 (function () {
 
@@ -2216,475 +2085,263 @@
         </script>
     </div>
 
-    <!-- FLOW & WRAP -->
+            <!-- FLOW & WRAP -->
     <div class="gm-menu-section">
         <div class="gm-menu-title">Flow & Wrap</div>
 
-        <!-- WHITE SPACE -->
-        <div class="gm-menu-row">
-            <label>White Space</label>
-            <select data-style="white-space">
-                <option value="">default</option>
-                <option value="normal">normal</option>
-                <option value="nowrap">nowrap</option>
-                <option value="pre">pre</option>
-                <option value="pre-wrap">pre-wrap</option>
-                <option value="pre-line">pre-line</option>
-            </select>
-            <script>
-                (function () {
-
-                    const select = document.querySelector('select[data-style="white-space"]');
-                    if (!select) return;
-
-                    const STYLE_PROP = 'whiteSpace';
-
-                    function getActives() {
-                        return document.querySelectorAll('.gm-object.gm-active');
-                    }
-
-                    /* =========================
-                       APPLY (SELECT = INSTANT)
-                    ========================= */
-
-                    select.addEventListener('change', () => {
-                        const value = select.value;
-                        const actives = getActives();
-                        if (!actives.length) return;
-
-                        actives.forEach(obj => {
-                            obj.style[STYLE_PROP] = value;
+        <!-- Row 1: White Space & Word Break -->
+        <div class="gm-menu-row gm-row-pair">
+            <div>
+                <label>White Space</label>
+                <select data-style="white-space">
+                    <option value="">default</option>
+                    <option value="normal">normal</option>
+                    <option value="nowrap">nowrap</option>
+                    <option value="pre">pre</option>
+                    <option value="pre-wrap">pre-wrap</option>
+                    <option value="pre-line">pre-line</option>
+                </select>
+                <script>
+                    (function () {
+                        const select = document.querySelector('select[data-style="white-space"]');
+                        if (!select) return;
+                        const STYLE_PROP = 'whiteSpace';
+                        function getActives() { return document.querySelectorAll('.gm-object.gm-active'); }
+                        select.addEventListener('change', () => {
+                            const value = select.value;
+                            const actives = getActives();
+                            if (!actives.length) return;
+                            actives.forEach(obj => { obj.style[STYLE_PROP] = value; });
+                            sync();
                         });
-
-                        sync();
-                    });
-
-                    /* =========================
-                       SYNC FROM ACTIVE OBJECT
-                    ========================= */
-
-                    function sync() {
-                        const actives = getActives();
-
-                        if (!actives.length) {
-                            select.value = '';
-                            return;
+                        function sync() {
+                            const actives = getActives();
+                            if (!actives.length) { select.value = ''; return; }
+                            let value = null;
+                            let mixed = false;
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const current = inline || computed || '';
+                                if (value === null) value = current;
+                                else if (value !== current) mixed = true;
+                            });
+                            select.value = mixed ? '' : value;
                         }
-
-                        let value = null;
-                        let mixed = false;
-
-                        actives.forEach(obj => {
-                            const inline = obj.style[STYLE_PROP];
-                            const computed = getComputedStyle(obj)[STYLE_PROP];
-                            const current = inline || computed || '';
-
-                            if (value === null) value = current;
-                            else if (value !== current) mixed = true;
+                        window.addEventListener('gm-active-tick', sync);
+                        sync();
+                    })();
+                </script>
+            </div>
+            <div>
+                <label>Word Break</label>
+                <select data-style="word-break">
+                    <option value="">default</option>
+                    <option value="normal">normal</option>
+                    <option value="break-all">break-all</option>
+                    <option value="keep-all">keep-all</option>
+                </select>
+                <script>
+                    (function () {
+                        const select = document.querySelector('select[data-style="word-break"]');
+                        if (!select) return;
+                        const STYLE_PROP = 'wordBreak';
+                        function getActives() { return document.querySelectorAll('.gm-object.gm-active'); }
+                        select.addEventListener('change', () => {
+                            const value = select.value;
+                            const actives = getActives();
+                            if (!actives.length) return;
+                            actives.forEach(obj => { obj.style[STYLE_PROP] = value; });
+                            sync();
                         });
-
-                        select.value = mixed ? '' : value;
-                    }
-
-                    /* =========================
-                       OBSERVE SELECTION CHANGE
-                    ========================= */
-
-                    window.addEventListener('gm-active-tick', sync);
-
-                    sync();
-
-                })();
-            </script>
+                        function sync() {
+                            const actives = getActives();
+                            if (!actives.length) { select.value = ''; return; }
+                            let value = null;
+                            let mixed = false;
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const current = inline || computed || '';
+                                if (value === null) value = current;
+                                else if (value !== current) mixed = true;
+                            });
+                            select.value = mixed ? '' : value;
+                        }
+                        window.addEventListener('gm-active-tick', sync);
+                        sync();
+                    })();
+                </script>
+            </div>
         </div>
 
-        <!-- WORD BREAK -->
-        <div class="gm-menu-row">
-            <label>Word Break</label>
-            <select data-style="word-break">
-                <option value="">default</option>
-                <option value="normal">normal</option>
-                <option value="break-all">break-all</option>
-                <option value="keep-all">keep-all</option>
-            </select>
-            <script>
-                (function () {
-
-                    const select = document.querySelector('select[data-style="word-break"]');
-                    if (!select) return;
-
-                    const STYLE_PROP = 'wordBreak';
-
-                    function getActives() {
-                        return document.querySelectorAll('.gm-object.gm-active');
-                    }
-
-                    /* =========================
-                       APPLY (INSTANT)
-                    ========================= */
-
-                    select.addEventListener('change', () => {
-                        const value = select.value;
-                        const actives = getActives();
-                        if (!actives.length) return;
-
-                        actives.forEach(obj => {
-                            obj.style[STYLE_PROP] = value;
+        <!-- Row 2: Text Overflow & Direction -->
+        <div class="gm-menu-row gm-row-pair">
+            <div>
+                <label>Text Overflow</label>
+                <select data-style="text-overflow">
+                    <option value="">default</option>
+                    <option value="clip">clip</option>
+                    <option value="ellipsis">ellipsis</option>
+                </select>
+                <script>
+                    (function () {
+                        const select = document.querySelector('select[data-style="text-overflow"]');
+                        if (!select) return;
+                        const STYLE_PROP = 'textOverflow';
+                        function getActives() { return document.querySelectorAll('.gm-object.gm-active'); }
+                        select.addEventListener('change', () => {
+                            const value = select.value;
+                            const actives = getActives();
+                            if (!actives.length) return;
+                            actives.forEach(obj => { obj.style[STYLE_PROP] = value; });
+                            sync();
                         });
-
-                        sync();
-                    });
-
-                    /* =========================
-                       SYNC FROM ACTIVE OBJECT
-                    ========================= */
-
-                    function sync() {
-                        const actives = getActives();
-
-                        if (!actives.length) {
-                            select.value = '';
-                            return;
+                        function sync() {
+                            const actives = getActives();
+                            if (!actives.length) { select.value = ''; return; }
+                            let value = null;
+                            let mixed = false;
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const current = inline || computed || '';
+                                if (value === null) value = current;
+                                else if (value !== current) mixed = true;
+                            });
+                            select.value = mixed ? '' : value;
                         }
-
-                        let value = null;
-                        let mixed = false;
-
-                        actives.forEach(obj => {
-                            const inline = obj.style[STYLE_PROP];
-                            const computed = getComputedStyle(obj)[STYLE_PROP];
-                            const current = inline || computed || '';
-
-                            if (value === null) value = current;
-                            else if (value !== current) mixed = true;
+                        window.addEventListener('gm-active-tick', sync);
+                        sync();
+                    })();
+                </script>
+            </div>
+            <div>
+                <label>Direction</label>
+                <select data-style="direction">
+                    <option value="">default</option>
+                    <option value="ltr">ltr</option>
+                    <option value="rtl">rtl</option>
+                </select>
+                <script>
+                    (function () {
+                        const select = document.querySelector('select[data-style="direction"]');
+                        if (!select) return;
+                        const STYLE_PROP = 'direction';
+                        function getActives() { return document.querySelectorAll('.gm-object.gm-active'); }
+                        select.addEventListener('change', () => {
+                            const value = select.value;
+                            const actives = getActives();
+                            if (!actives.length) return;
+                            actives.forEach(obj => { obj.style[STYLE_PROP] = value; });
+                            sync();
                         });
-
-                        select.value = mixed ? '' : value;
-                    }
-
-                    /* =========================
-                       OBSERVE SELECTION CHANGE
-                    ========================= */
-
-                    window.addEventListener('gm-active-tick', sync);
-
-                    sync();
-
-                })();
-            </script>
-
+                        function sync() {
+                            const actives = getActives();
+                            if (!actives.length) { select.value = ''; return; }
+                            let value = null;
+                            let mixed = false;
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const current = inline || computed || '';
+                                if (value === null) value = current;
+                                else if (value !== current) mixed = true;
+                            });
+                            select.value = mixed ? '' : value;
+                        }
+                        window.addEventListener('gm-active-tick', sync);
+                        sync();
+                    })();
+                </script>
+            </div>
         </div>
 
-        <!-- TEXT OVERFLOW -->
-        <div class="gm-menu-row">
-            <label>Text Overflow</label>
-            <select data-style="text-overflow">
-                <option value="">default</option>
-                <option value="clip">clip</option>
-                <option value="ellipsis">ellipsis</option>
-            </select>
-            <script>
-                (function () {
-
-                    const select = document.querySelector('select[data-style="text-overflow"]');
-                    if (!select) return;
-
-                    const STYLE_PROP = 'textOverflow';
-
-                    function getActives() {
-                        return document.querySelectorAll('.gm-object.gm-active');
-                    }
-
-                    /* =========================
-                       APPLY (INSTANT)
-                    ========================= */
-
-                    select.addEventListener('change', () => {
-                        const value = select.value;
-                        const actives = getActives();
-                        if (!actives.length) return;
-
-                        actives.forEach(obj => {
-                            obj.style[STYLE_PROP] = value;
+        <!-- Row 3: Writing Mode & Text Orientation -->
+        <div class="gm-menu-row gm-row-pair">
+            <div>
+                <label>Writing Mode</label>
+                <select data-style="writing-mode">
+                    <option value="">default</option>
+                    <option value="horizontal-tb">horizontal-tb</option>
+                    <option value="vertical-rl">vertical-rl</option>
+                    <option value="vertical-lr">vertical-lr</option>
+                </select>
+                <script>
+                    (function () {
+                        const select = document.querySelector('select[data-style="writing-mode"]');
+                        if (!select) return;
+                        const STYLE_PROP = 'writingMode';
+                        function getActives() { return document.querySelectorAll('.gm-object.gm-active'); }
+                        select.addEventListener('change', () => {
+                            const value = select.value;
+                            const actives = getActives();
+                            if (!actives.length) return;
+                            actives.forEach(obj => { obj.style[STYLE_PROP] = value; });
+                            sync();
                         });
-
-                        sync();
-                    });
-
-                    /* =========================
-                       SYNC FROM ACTIVE OBJECT
-                    ========================= */
-
-                    function sync() {
-                        const actives = getActives();
-
-                        if (!actives.length) {
-                            select.value = '';
-                            return;
+                        function sync() {
+                            const actives = getActives();
+                            if (!actives.length) { select.value = ''; return; }
+                            let value = null;
+                            let mixed = false;
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const current = inline || computed || '';
+                                if (value === null) value = current;
+                                else if (value !== current) mixed = true;
+                            });
+                            select.value = mixed ? '' : value;
                         }
-
-                        let value = null;
-                        let mixed = false;
-
-                        actives.forEach(obj => {
-                            const inline = obj.style[STYLE_PROP];
-                            const computed = getComputedStyle(obj)[STYLE_PROP];
-                            const current = inline || computed || '';
-
-                            if (value === null) value = current;
-                            else if (value !== current) mixed = true;
-                        });
-
-                        select.value = mixed ? '' : value;
-                    }
-
-                    /* =========================
-                       OBSERVE SELECTION CHANGE
-                    ========================= */
-
-                    window.addEventListener('gm-active-tick', sync);
-
-                    sync();
-
-                })();
-            </script>
-        </div>
-    </div>
-
-    <!-- DIRECTION -->
-    <div class="gm-menu-section">
-        <div class="gm-menu-title">Direction</div>
-
-        <!-- TEXT DIRECTION -->
-        <div class="gm-menu-row">
-            <label>Direction</label>
-            <select data-style="direction">
-                <option value="">default</option>
-                <option value="ltr">ltr</option>
-                <option value="rtl">rtl</option>
-            </select>
-            <script>
-                (function () {
-
-                    const select = document.querySelector('select[data-style="direction"]');
-                    if (!select) return;
-
-                    const STYLE_PROP = 'direction';
-
-                    function getActives() {
-                        return document.querySelectorAll('.gm-object.gm-active');
-                    }
-
-                    /* =========================
-                       APPLY (INSTANT)
-                    ========================= */
-
-                    select.addEventListener('change', () => {
-                        const value = select.value;
-                        const actives = getActives();
-                        if (!actives.length) return;
-
-                        actives.forEach(obj => {
-                            obj.style[STYLE_PROP] = value;
-                        });
-
+                        window.addEventListener('gm-active-tick', sync);
                         sync();
-                    });
-
-                    /* =========================
-                       SYNC FROM ACTIVE OBJECT
-                    ========================= */
-
-                    function sync() {
-                        const actives = getActives();
-
-                        if (!actives.length) {
-                            select.value = '';
-                            return;
-                        }
-
-                        let value = null;
-                        let mixed = false;
-
-                        actives.forEach(obj => {
-                            const inline = obj.style[STYLE_PROP];
-                            const computed = getComputedStyle(obj)[STYLE_PROP];
-                            const current = inline || computed || '';
-
-                            if (value === null) value = current;
-                            else if (value !== current) mixed = true;
+                    })();
+                </script>
+            </div>
+            <div>
+                <label>Text Orientation</label>
+                <select data-style="text-orientation">
+                    <option value="">default</option>
+                    <option value="mixed">mixed</option>
+                    <option value="upright">upright</option>
+                    <option value="sideways">sideways</option>
+                </select>
+                <script>
+                    (function () {
+                        const select = document.querySelector('select[data-style="text-orientation"]');
+                        if (!select) return;
+                        const STYLE_PROP = 'textOrientation';
+                        function getActives() { return document.querySelectorAll('.gm-object.gm-active'); }
+                        select.addEventListener('change', () => {
+                            const value = select.value;
+                            const actives = getActives();
+                            if (!actives.length) return;
+                            actives.forEach(obj => { obj.style[STYLE_PROP] = value; });
+                            sync();
                         });
-
-                        select.value = mixed ? '' : value;
-                    }
-
-                    /* =========================
-                       OBSERVE SELECTION CHANGE
-                    ========================= */
-
-                    window.addEventListener('gm-active-tick', sync);
-
-                    sync();
-
-                })();
-            </script>
-
+                        function sync() {
+                            const actives = getActives();
+                            if (!actives.length) { select.value = ''; return; }
+                            let value = null;
+                            let mixed = false;
+                            actives.forEach(obj => {
+                                const inline = obj.style[STYLE_PROP];
+                                const computed = getComputedStyle(obj)[STYLE_PROP];
+                                const current = inline || computed || '';
+                                if (value === null) value = current;
+                                else if (value !== current) mixed = true;
+                            });
+                            select.value = mixed ? '' : value;
+                        }
+                        window.addEventListener('gm-active-tick', sync);
+                        sync();
+                    })();
+                </script>
+            </div>
         </div>
 
-        <!-- WRITING MODE -->
-        <div class="gm-menu-row">
-            <label>Writing Mode</label>
-            <select data-style="writing-mode">
-                <option value="">default</option>
-                <option value="horizontal-tb">horizontal-tb</option>
-                <option value="vertical-rl">vertical-rl</option>
-                <option value="vertical-lr">vertical-lr</option>
-            </select>
-            <script>
-                (function () {
-
-                    const select = document.querySelector('select[data-style="writing-mode"]');
-                    if (!select) return;
-
-                    const STYLE_PROP = 'writingMode';
-
-                    function getActives() {
-                        return document.querySelectorAll('.gm-object.gm-active');
-                    }
-
-                    /* =========================
-                       APPLY (INSTANT)
-                    ========================= */
-
-                    select.addEventListener('change', () => {
-                        const value = select.value;
-                        const actives = getActives();
-                        if (!actives.length) return;
-
-                        actives.forEach(obj => {
-                            obj.style[STYLE_PROP] = value;
-                        });
-
-                        sync();
-                    });
-
-                    /* =========================
-                       SYNC FROM ACTIVE OBJECT
-                    ========================= */
-
-                    function sync() {
-                        const actives = getActives();
-
-                        if (!actives.length) {
-                            select.value = '';
-                            return;
-                        }
-
-                        let value = null;
-                        let mixed = false;
-
-                        actives.forEach(obj => {
-                            const inline = obj.style[STYLE_PROP];
-                            const computed = getComputedStyle(obj)[STYLE_PROP];
-                            const current = inline || computed || '';
-
-                            if (value === null) value = current;
-                            else if (value !== current) mixed = true;
-                        });
-
-                        select.value = mixed ? '' : value;
-                    }
-
-                    /* =========================
-                       OBSERVE SELECTION CHANGE
-                    ========================= */
-
-                    window.addEventListener('gm-active-tick', sync);
-
-                    sync();
-
-                })();
-            </script>
-        </div>
-
-        <!-- TEXT ORIENTATION -->
-        <div class="gm-menu-row">
-            <label>Text Orientation</label>
-            <select data-style="text-orientation">
-                <option value="">default</option>
-                <option value="mixed">mixed</option>
-                <option value="upright">upright</option>
-                <option value="sideways">sideways</option>
-            </select>
-
-            <script>
-                (function () {
-
-                    const select = document.querySelector('select[data-style="text-orientation"]');
-                    if (!select) return;
-
-                    const STYLE_PROP = 'textOrientation';
-
-                    function getActives() {
-                        return document.querySelectorAll('.gm-object.gm-active');
-                    }
-
-                    /* =========================
-                       APPLY (INSTANT)
-                    ========================= */
-
-                    select.addEventListener('change', () => {
-                        const value = select.value;
-                        const actives = getActives();
-                        if (!actives.length) return;
-
-                        actives.forEach(obj => {
-                            obj.style[STYLE_PROP] = value;
-                        });
-
-                        sync();
-                    });
-
-                    /* =========================
-                       SYNC FROM ACTIVE OBJECT
-                    ========================= */
-
-                    function sync() {
-                        const actives = getActives();
-
-                        if (!actives.length) {
-                            select.value = '';
-                            return;
-                        }
-
-                        let value = null;
-                        let mixed = false;
-
-                        actives.forEach(obj => {
-                            const inline = obj.style[STYLE_PROP];
-                            const computed = getComputedStyle(obj)[STYLE_PROP];
-                            const current = inline || computed || '';
-
-                            if (value === null) value = current;
-                            else if (value !== current) mixed = true;
-                        });
-
-                        select.value = mixed ? '' : value;
-                    }
-
-                    /* =========================
-                       OBSERVE SELECTION CHANGE
-                    ========================= */
-
-                    window.addEventListener('gm-active-tick', sync);
-
-                    sync();
-
-                })();
-            </script>
-        </div>
-
-        <!-- BIDI UNICODE -->
+        <!-- Row 4: Unicode BiDi -->
         <div class="gm-menu-row">
             <label>Unicode BiDi</label>
             <select data-style="unicode-bidi">
@@ -2697,67 +2354,33 @@
             </select>
             <script>
                 (function () {
-
                     const select = document.querySelector('select[data-style="unicode-bidi"]');
                     if (!select) return;
-
                     const STYLE_PROP = 'unicodeBidi';
-
-                    function getActives() {
-                        return document.querySelectorAll('.gm-object.gm-active');
-                    }
-
-                    /* =========================
-                       APPLY (INSTANT)
-                    ========================= */
-
+                    function getActives() { return document.querySelectorAll('.gm-object.gm-active'); }
                     select.addEventListener('change', () => {
                         const value = select.value;
                         const actives = getActives();
                         if (!actives.length) return;
-
-                        actives.forEach(obj => {
-                            obj.style[STYLE_PROP] = value;
-                        });
-
+                        actives.forEach(obj => { obj.style[STYLE_PROP] = value; });
                         sync();
                     });
-
-                    /* =========================
-                       SYNC FROM ACTIVE OBJECT
-                    ========================= */
-
                     function sync() {
                         const actives = getActives();
-
-                        if (!actives.length) {
-                            select.value = '';
-                            return;
-                        }
-
+                        if (!actives.length) { select.value = ''; return; }
                         let value = null;
                         let mixed = false;
-
                         actives.forEach(obj => {
                             const inline = obj.style[STYLE_PROP];
                             const computed = getComputedStyle(obj)[STYLE_PROP];
                             const current = inline || computed || '';
-
                             if (value === null) value = current;
                             else if (value !== current) mixed = true;
                         });
-
                         select.value = mixed ? '' : value;
                     }
-
-                    /* =========================
-                       OBSERVE SELECTION CHANGE
-                    ========================= */
-
                     window.addEventListener('gm-active-tick', sync);
-
                     sync();
-
                 })();
             </script>
         </div>

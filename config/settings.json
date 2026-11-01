@@ -1,12 +1,7 @@
 {
     "site_name": "Greymist",
     "site_description": "Platform kreatif untuk desainer, developer, dan kreator",
-    "site_keywords": "design, development, creative, platform, greymist",
-    "maintenance_mode": false,
-    "registration_open": true,
-    "items_per_page": 12,
-    "default_theme": "light",
-    "default_sort": "latest",
-    "email_notifications": true,
-    "admin_email": "admin@greymist.com"
+    "allow_registrations": true,
+    "maintenance_mode": true,
+    "max_projects_user": 10
 }

@@ -11,9 +11,9 @@
 /* SMALL SQUARE COLOR PICKER */
 .gm-border-color,
 .gm-shadow-color {
-    width: 22px !important;
-    height: 22px !important;
-    max-width: 22px !important;
+    width: 18px !important;
+    height: 18px !important;
+    max-width: 18px !important;
     padding: 0 !important;
     border: 0.5px solid #cfcfcf;
     border-radius: 3px;
@@ -38,9 +38,10 @@
 .gm-border-color-input,
 .gm-shadow-color-input {
     flex: 1;
-    height: 24px;
-    padding: 0 6px;
-    font-size: 0.75em;
+    height: 20px;
+    padding: 0 5px;
+    font-size: 8px;
+    font-family: inherit;
     border: 0.5px solid #cfcfcf;
     border-radius: 3px;
 }
@@ -63,9 +64,8 @@
 }
 
 .gm-border-color-token {
-    font-size: 0.7em;
-    /* ±11px */
-    padding: 2px 6px;
+    font-size: 8px;
+    padding: 1px 5px;
     border-radius: 3px;
     background: #f3f3f3;
     border: 0.5px solid #d0d0d0;
@@ -94,7 +94,7 @@
     display: none;
 }
 
-/* ACTIVE STATE (optional, siap dipakai JS nanti) */
+/* ACTIVE STATE */
 .gm-border-color-token.gm-active-color-token {
     background: #e9f2ff;
     border-color: #4d8cff;
@@ -102,9 +102,8 @@
 
 /* COLOR TOKEN VAR */
 .gm-border-color-token-var {
-    width: 15px !important;
+    width: 15px !important; 
     height: 15px !important;
-    max-width: 15px !important;
     padding: 0 !important;
     border: 0.5px solid #cfcfcf;
     border-radius: 3px;
@@ -123,74 +122,8 @@
     border: none;
 }
 
-
-/* box shadow */
-/* ===============================
-   BOX SHADOW PRESET
-   =============================== */
-
-.gm-shadow-preset {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.gm-shadow-preset span {
-    padding: 4px 10px;
-    font-size: 12px;
-    line-height: 1.4;
-    border-radius: 6px;
-    cursor: pointer;
-    user-select: none;
-
-    background: #f4f4f4;
-    border: 1px solid #ddd;
-    color: #333;
-
-    transition:
-        background .15s ease,
-        border-color .15s ease,
-        box-shadow .15s ease,
-        transform .1s ease;
-}
-
-/* hover */
-.gm-shadow-preset span:hover {
-    background: #fff;
-    border-color: #bbb;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, .12);
-}
-
-/* active / selected */
-.gm-shadow-preset span.active {
-    background: #fff;
-    border-color: #000;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, .18);
-}
-
-/* ===============================
-   INSET CHECKBOX (MINIMAL)
-   =============================== */
-
-#gm-shadow-inset {
-    /* vertical-align: middle; */
-    width: fit-content !important;
-    margin-right: 6px;
-    cursor: pointer;
-}
-
-#gm-shadow-inset:hover {
-    box-shadow: none;
-}
-
 .gm-panelstyle-menu {
     width: 100%;
-}
-
-.gm-box-menu > div:hover {
-    outline: 0.1px solid #9AD0FF;
-    color: #9AD0FF;
-    transition: 0.1s ease-in-out;
 }
 
 .gm-content-box-menu {
@@ -198,42 +131,50 @@
     width: 100%;
 }
 
-.gm-box-menu > .gm-clicked {
-    color: #9AD0FF;
-    /* outline: 0.1px solid #9AD0FF; */
-}
-
 .gm-content-box-menu.gm-clicked {
     display: block;
 }
 
 /* ===============================
-   BOX MENU GRID
-   =============================== */
-/* ===============================
-   BOX MENU FLEX
+   BOX SUB-TABS (2 PER ROW PILLS)
    =============================== */
 .gm-box-menu {
     display: flex;
     flex-wrap: wrap;
-    /* gap: 10px; */
+    gap: 3px;
+    padding: 2px 0 4px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-/* item menu */
 .gm-box-menu > div {
-    flex: 0 0 calc(33.333%); /* 3 per baris */
+    flex: 1 1 calc(50% - 3px);
     text-align: center;
-    padding: 2px 0;
-    /* border-radius: 6px; */
-    font-size: 0.9em;
-    /* outline: 0.1px solid #cfcfcf; */
+    padding: 2.5px 3px;
+    border-radius: 3px;
+    font-size: 8.5px;
+    font-weight: 500;
     cursor: pointer;
     user-select: none;
-    background: rgba(255,255,255,0.04);
-    transition:
-        background 0.2s ease,
-        transform 0.15s ease,
-        box-shadow 0.15s ease;
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+    transition: all 0.15s ease;
 }
 
+.gm-box-menu > div:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
 
+.gm-box-menu > .gm-clicked {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #93c5fd;
+    font-weight: 600;
+}

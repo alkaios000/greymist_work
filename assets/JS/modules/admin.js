@@ -30,3 +30,18 @@ window.openAdminResetPasswordModal = function (userId, username) {
     window.GreymistModal.open('adminResetPasswordModal');
 };
 
+
+
+// Update Live Clock pada Header Sticky
+(function () {
+    const clockEl = document.getElementById('headerLiveClock');
+    if (clockEl) {
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            clockEl.textContent = `${h}:${m}`;
+        }
+        setInterval(updateClock, 30000);
+    }
+})();

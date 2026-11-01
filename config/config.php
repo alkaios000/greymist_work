@@ -133,6 +133,7 @@ require_once ROOT_PATH . '/helpers/security_helper.php';
 require_once ROOT_PATH . '/helpers/url_helper.php';
 require_once ROOT_PATH . '/helpers/date_helper.php';
 require_once ROOT_PATH . '/helpers/upload_helper.php';
+require_once ROOT_PATH . '/helpers/pagination_helper.php';
 
 require_once ROOT_PATH . '/middlewares/auth_middleware.php';
 require_once ROOT_PATH . '/middlewares/role_middleware.php';

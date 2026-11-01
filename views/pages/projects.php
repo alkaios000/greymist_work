@@ -32,7 +32,6 @@ require ROOT_PATH . '/views/layouts/header.php';
         </select>
 
         <button type="submit" class="btn btn-soft-blue btn-sm">
-            <i class="fas fa-filter"></i>
             <span>Terapkan</span>
         </button>
     </div>
@@ -46,8 +45,7 @@ require ROOT_PATH . '/views/layouts/header.php';
         <form method="POST" action="<?= e(action_url('new_project')) ?>" style="margin-top: 6px;">
             <?= csrf_field() ?>
             <button type="submit" class="btn btn-primary btn-sm">
-                <i class="fas fa-plus"></i>
-                <span>Buat Proyek Baru</span>
+                <span>+ Buat Proyek Baru</span>
             </button>
         </form>
     </div>
@@ -55,79 +53,95 @@ require ROOT_PATH . '/views/layouts/header.php';
     <div class="projects-grid">
         <?php foreach ($projects as $proj): ?>
             <article class="project-card">
-                <div class="project-thumb">
+                <a href="<?= e(route_url('workspace', ['project_id' => $proj['project_id']])) ?>" class="project-thumb">
                     <div class="project-badges">
                         <?php if ($proj['project_status'] === 'published'): ?>
-                            <span class="badge badge-published"><i class="fas fa-globe"></i> Publik</span>
+                            <span class="badge badge-published">Publik</span>
                         <?php else: ?>
-                            <span class="badge badge-draft"><i class="fas fa-lock"></i> Draf</span>
+                            <span class="badge badge-draft">Draf</span>
                         <?php endif; ?>
 
                         <?php if ((int)$proj['is_template'] === 1): ?>
-                            <span class="badge badge-template"><i class="fas fa-layer-group"></i> Template</span>
+                            <span class="badge badge-template">Template</span>
                         <?php endif; ?>
                     </div>
                     <?php require ROOT_PATH . '/views/layouts/project_thumb_preview.php'; ?>
-                </div>
+                </a>
 
                 <div class="project-body">
-                    <h4 class="project-title" title="<?= e($proj['project_name']) ?>"><?= e($proj['project_name']) ?></h4>
-                    <div class="project-meta">
-                        <span><i class="far fa-calendar-alt"></i> <?= e(format_date($proj['created_at'])) ?></span>
-                        <span><i class="fas fa-border-all"></i> <?= (int)($proj['frame_count'] ?? 0) ?> Frame</span>
+                    <div class="project-title-row">
+                        <a href="<?= e(route_url('workspace', ['project_id' => $proj['project_id']])) ?>" class="project-title-link">
+                            <h4 class="project-title" title="<?= e($proj['project_name']) ?>"><?= e($proj['project_name']) ?></h4>
+                        </a>
+
+                        <div class="project-card-menu">
+                            <button type="button" class="project-menu-btn" title="Opsi Proyek" onclick="toggleProjectMenu(event, this)" aria-label="Menu Opsi">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div class="project-menu-dropdown">
+                                <!-- Buka Workspace -->
+                                <a href="<?= e(route_url('workspace', ['project_id' => $proj['project_id']])) ?>" class="dropdown-item">
+                                    <i class="fas fa-arrow-up-right-from-square"></i>
+                                    <span>Buka di Editor</span>
+                                </a>
+
+                                <!-- Ubah Nama -->
+                                <button type="button" class="dropdown-item"
+                                        onclick="openRenameProjectModal(<?= (int)$proj['project_id'] ?>, '<?= e(addslashes($proj['project_name'])) ?>')">
+                                    <i class="fas fa-pen"></i>
+                                    <span>Ubah Nama</span>
+                                </button>
+
+                                <!-- Toggle Status Publikasi -->
+                                <form method="POST" action="<?= e(action_url('toggle_status')) ?>">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
+                                    <input type="hidden" name="return_page" value="projects">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas <?= $proj['project_status'] === 'published' ? 'fa-eye-slash' : 'fa-globe' ?>"></i>
+                                        <span><?= $proj['project_status'] === 'published' ? 'Jadikan Draf' : 'Publikasikan' ?></span>
+                                    </button>
+                                </form>
+
+                                <!-- Toggle Template -->
+                                <form method="POST" action="<?= e(action_url('toggle_template')) ?>">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
+                                    <input type="hidden" name="return_page" value="projects">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-clone"></i>
+                                        <span><?= (int)$proj['is_template'] === 1 ? 'Batal Jadi Template' : 'Jadikan Template' ?></span>
+                                    </button>
+                                </form>
+
+                                <div class="dropdown-divider"></div>
+
+                                <!-- Hapus ke Sampah -->
+                                <button type="button" class="dropdown-item danger"
+                                        onclick="openConfirmActionModal({
+                                            actionUrl: '<?= e(action_url('delete_project')) ?>',
+                                            projectId: '<?= (int)$proj['project_id'] ?>',
+                                            title: 'Pindahkan ke Tempat Sampah',
+                                            message: 'Apakah Anda yakin ingin memindahkan proyek ini ke Tempat Sampah?',
+                                            confirmText: 'Buang ke Sampah',
+                                            buttonClass: 'btn-danger btn-sm'
+                                        })">
+                                    <i class="fas fa-trash"></i>
+                                    <span>Pindahkan ke Sampah</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="project-actions">
-                    <a href="<?= e(route_url('workspace', ['project_id' => $proj['project_id']])) ?>" class="btn btn-primary btn-sm">
-                        <i class="fas fa-external-link-alt"></i>
-                        <span>Editor</span>
-                    </a>
-
-                    <div class="project-actions-group">
-                        <!-- Toggle Publikasi -->
-                        <form method="POST" action="<?= e(action_url('toggle_status')) ?>" style="display:inline;">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
-                            <input type="hidden" name="return_page" value="projects">
-                            <button type="submit" class="btn-icon" title="<?= $proj['project_status'] === 'published' ? 'Jadikan Draf' : 'Publikasikan Proyek' ?>">
-                                <i class="fas <?= $proj['project_status'] === 'published' ? 'fa-eye-slash' : 'fa-globe' ?>"></i>
-                            </button>
-                        </form>
-
-                        <!-- Toggle Template -->
-                        <form method="POST" action="<?= e(action_url('toggle_template')) ?>" style="display:inline;">
-                            <?= csrf_field() ?>
-                            <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
-                            <input type="hidden" name="return_page" value="projects">
-                            <button type="submit" class="btn-icon" title="<?= (int)$proj['is_template'] === 1 ? 'Hapus dari Template' : 'Jadikan Template' ?>">
-                                <i class="fas fa-clone" style="<?= (int)$proj['is_template'] === 1 ? 'color: var(--btn-blue);' : '' ?>"></i>
-                            </button>
-                        </form>
-
-                        <!-- Ubah Nama -->
-                        <button type="button" class="btn-icon" title="Ubah Nama Proyek"
-                                onclick="openRenameProjectModal(<?= (int)$proj['project_id'] ?>, '<?= e(addslashes($proj['project_name'])) ?>')">
-                            <i class="fas fa-pen"></i>
-                        </button>
-
-                        <!-- Hapus ke Sampah -->
-                        <button type="button" class="btn-icon danger" title="Pindahkan ke Tempat Sampah"
-                                onclick="openConfirmActionModal({
-                                    actionUrl: '<?= e(action_url('delete_project')) ?>',
-                                    projectId: '<?= (int)$proj['project_id'] ?>',
-                                    title: 'Pindahkan ke Tempat Sampah',
-                                    message: 'Apakah Anda yakin ingin memindahkan proyek ini ke Tempat Sampah?',
-                                    confirmText: 'Buang ke Sampah',
-                                    buttonClass: 'btn-danger btn-sm'
-                                })">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                    <div class="project-meta">
+                        <span><?= e(format_date($proj['created_at'])) ?></span>
                     </div>
                 </div>
             </article>
         <?php endforeach; ?>
     </div>
+
+    <?= render_pagination($pagination ?? [], 'proyek') ?>
 <?php endif; ?>
 
 <?php require ROOT_PATH . '/views/layouts/footer.php'; ?>

@@ -39,12 +39,12 @@
     --color-danger: #ef4444;
     --color-danger-bg: #fef2f2;
 
-    /* Ukuran Tata Letak */
-    --sidebar-width: 248px;
-    --header-height: 60px;
-    --radius-sm: 6px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
+    /* Ukuran Tata Letak (Scaled Down ~80% untuk Densitas Enterprise Modern) */
+    --sidebar-width: 204px;
+    --header-height: 48px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
 
     /* Bayangan Halus */
     --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -61,7 +61,7 @@
 }
 
 html {
-    font-size: 16px;
+    font-size: 13.25px; /* Scaled down dari 16px (~82.8%) untuk kerapian visual korporat */
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
 }

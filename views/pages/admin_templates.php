@@ -5,7 +5,7 @@
  */
 
 $page_title    = 'Kelola Template';
-$page_subtitle = 'Daftar proyek yang ditandai sebagai template komunitas';
+$page_subtitle = '';
 $active_page   = 'admin_templates';
 $is_admin_view = true;
 
@@ -19,10 +19,7 @@ require ROOT_PATH . '/views/layouts/header.php';
         <input type="text" name="search" value="<?= e($search ?? '') ?>" placeholder="Cari nama template atau pembuat...">
     </div>
     <div class="filter-controls">
-        <button type="submit" class="btn btn-soft-blue btn-sm">
-            <i class="fas fa-search"></i>
-            <span>Cari</span>
-        </button>
+        <button type="submit" class="btn btn-soft-blue btn-sm">Cari</button>
     </div>
 </form>
 
@@ -39,8 +36,7 @@ require ROOT_PATH . '/views/layouts/header.php';
             <article class="project-card">
                 <div class="project-thumb">
                     <div class="project-badges">
-                        <span class="badge badge-template"><i class="fas fa-layer-group"></i> Template</span>
-                        <span class="badge badge-muted"><?= (int)($proj['frame_count'] ?? 0) ?> Frame</span>
+                        <span class="badge badge-template">Template</span>
                     </div>
                     <?php require ROOT_PATH . '/views/layouts/project_thumb_preview.php'; ?>
                 </div>
@@ -48,25 +44,19 @@ require ROOT_PATH . '/views/layouts/header.php';
                 <div class="project-body">
                     <h4 class="project-title" title="<?= e($proj['project_name']) ?>"><?= e($proj['project_name']) ?></h4>
                     <div class="project-meta">
-                        <span><i class="fas fa-user"></i> @<?= e($proj['username'] ?? 'unknown') ?></span>
+                        <span>@<?= e($proj['username'] ?? 'unknown') ?></span>
                         <span><?= e(format_date($proj['created_at'])) ?></span>
                     </div>
                 </div>
 
                 <div class="project-actions">
-                    <a href="<?= e(route_url('admin_preview_project', ['id' => $proj['project_id']])) ?>" class="btn btn-soft-blue btn-sm">
-                        <i class="fas fa-eye"></i>
-                        <span>Pratinjau</span>
-                    </a>
+                    <a href="<?= e(route_url('admin_preview_project', ['id' => $proj['project_id']])) ?>" class="btn btn-soft-blue btn-sm">Pratinjau</a>
 
                     <div class="project-actions-group">
                         <form method="POST" action="<?= e(action_url('admin_remove_template')) ?>" style="display:inline;">
                             <?= csrf_field() ?>
                             <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
-                            <button type="submit" class="btn btn-outline btn-sm" title="Copot Status Template">
-                                <i class="fas fa-unlink"></i>
-                                <span>Copot</span>
-                            </button>
+                            <button type="submit" class="btn btn-outline btn-sm" title="Copot Status Template">Copot</button>
                         </form>
 
                         <form method="POST" action="<?= e(action_url('admin_delete_project')) ?>" style="display:inline;" onsubmit="return confirm('Hapus proyek template ini secara permanen?');">
@@ -82,6 +72,8 @@ require ROOT_PATH . '/views/layouts/header.php';
             </article>
         <?php endforeach; ?>
     </div>
+
+    <?= render_pagination($pagination ?? [], 'template') ?>
 <?php endif; ?>
 
 <?php require ROOT_PATH . '/views/layouts/footer.php'; ?>

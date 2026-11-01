@@ -143,10 +143,15 @@ if (!function_exists('delete_user_by_id')) {
 
 if (!function_exists('get_all_users_filtered')) {
     /**
-     * Mengambil daftar seluruh pengguna untuk halaman Admin Users dengan filter pencarian dan role.
+     * Mengambil daftar seluruh pengguna untuk halaman Admin Users dengan filter pencarian dan role (opsional paginasi).
      */
-    function get_all_users_filtered(PDO $pdo, string $search = '', string $role = ''): array
-    {
+    function get_all_users_filtered(
+        PDO $pdo,
+        string $search = '',
+        string $role = '',
+        int $page = 0,
+        int $per_page = 10
+    ): array {
         $where_clauses = [];
         $params = [];
 
@@ -165,6 +170,32 @@ if (!function_exists('get_all_users_filtered')) {
         }
 
         $where_sql = !empty($where_clauses) ? 'WHERE ' . implode(' AND ', $where_clauses) : '';
+
+        if ($page > 0) {
+            $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM gm_users u {$where_sql}");
+            $count_stmt->execute($params);
+            $total_count = (int)$count_stmt->fetchColumn();
+
+            $pagination = paginate_data($total_count, $page, $per_page);
+            $limit      = (int)$pagination['per_page'];
+            $offset     = (int)$pagination['offset'];
+
+            $sql = "
+                SELECT u.*,
+                       (SELECT COUNT(*) FROM gm_projects p WHERE p.user_id = u.user_id) AS project_count
+                FROM gm_users u
+                {$where_sql}
+                ORDER BY u.created_at DESC
+                LIMIT {$limit} OFFSET {$offset}
+            ";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($params);
+
+            return [
+                'items'      => $stmt->fetchAll(),
+                'pagination' => $pagination,
+            ];
+        }
 
         $sql = "
             SELECT u.*,

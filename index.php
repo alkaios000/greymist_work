@@ -215,7 +215,10 @@ switch ($page) {
         $search       = trim($_GET['search'] ?? '');
         $status       = trim($_GET['status'] ?? '');
         $sort         = trim($_GET['sort'] ?? 'newest');
-        $projects     = get_user_projects_filtered($pdo, $user_id, $search, $status, $sort);
+        $current_p    = max(1, (int)($_GET['p'] ?? 1));
+        $res          = get_user_projects_filtered($pdo, $user_id, $search, $status, $sort, $current_p, 12);
+        $projects     = $res['items'];
+        $pagination   = $res['pagination'];
         require ROOT_PATH . '/views/pages/projects.php';
         break;
 
@@ -226,7 +229,10 @@ switch ($page) {
         $search             = trim($_GET['search'] ?? '');
         $sort               = trim($_GET['sort'] ?? 'newest');
         $platform_stats     = get_platform_stats($pdo);
-        $published_projects = get_published_projects_filtered($pdo, $search, $sort);
+        $current_p          = max(1, (int)($_GET['p'] ?? 1));
+        $res                = get_published_projects_filtered($pdo, $search, $sort, $current_p, 12);
+        $published_projects = $res['items'];
+        $pagination         = $res['pagination'];
         require ROOT_PATH . '/views/pages/explore.php';
         break;
 
@@ -237,7 +243,10 @@ switch ($page) {
         $search         = trim($_GET['search'] ?? '');
         $sort           = trim($_GET['sort'] ?? 'newest');
         $platform_stats = get_platform_stats($pdo);
-        $templates      = get_templates_filtered($pdo, $search, $sort);
+        $current_p      = max(1, (int)($_GET['p'] ?? 1));
+        $res            = get_templates_filtered($pdo, $search, $sort, $current_p, 12);
+        $templates      = $res['items'];
+        $pagination     = $res['pagination'];
         require ROOT_PATH . '/views/pages/templates.php';
         break;
 
@@ -247,7 +256,10 @@ switch ($page) {
         $current_user     = get_user_by_id($pdo, $user_id);
         $search           = trim($_GET['search'] ?? '');
         $sort             = trim($_GET['sort'] ?? 'newest');
-        $trashed_projects = get_trashed_projects_filtered($pdo, $user_id, $search, $sort);
+        $current_p        = max(1, (int)($_GET['p'] ?? 1));
+        $res              = get_trashed_projects_filtered($pdo, $user_id, $search, $sort, $current_p, 12);
+        $trashed_projects = $res['items'];
+        $pagination       = $res['pagination'];
         require ROOT_PATH . '/views/pages/trash.php';
         break;
 
@@ -271,8 +283,8 @@ switch ($page) {
         require_admin();
         $current_user    = get_user_by_id($pdo, current_user_id());
         $platform_stats  = get_platform_stats($pdo);
-        $recent_users    = get_recent_users_admin($pdo, 5);
-        $recent_projects = get_recent_projects_admin($pdo, 5);
+        $recent_users    = get_recent_users_admin($pdo, 8);
+        $recent_projects = get_recent_projects_admin($pdo, 8);
         require ROOT_PATH . '/views/pages/admin_dashboard.php';
         break;
 
@@ -281,7 +293,10 @@ switch ($page) {
         $current_user = get_user_by_id($pdo, current_user_id());
         $search       = trim($_GET['search'] ?? '');
         $role         = trim($_GET['role'] ?? '');
-        $users_list   = get_all_users_filtered($pdo, $search, $role);
+        $current_p    = max(1, (int)($_GET['p'] ?? 1));
+        $res          = get_all_users_filtered($pdo, $search, $role, $current_p, 10);
+        $users_list   = $res['items'];
+        $pagination   = $res['pagination'];
         require ROOT_PATH . '/views/pages/admin_users.php';
         break;
 
@@ -291,7 +306,10 @@ switch ($page) {
         $search       = trim($_GET['search'] ?? '');
         $status       = trim($_GET['status'] ?? '');
         $template     = trim($_GET['template'] ?? '');
-        $all_projects = get_all_projects_admin($pdo, $search, $status, $template);
+        $current_p    = max(1, (int)($_GET['p'] ?? 1));
+        $res          = get_all_projects_admin($pdo, $search, $status, $template, $current_p, 12);
+        $all_projects = $res['items'];
+        $pagination   = $res['pagination'];
         require ROOT_PATH . '/views/pages/admin_projects.php';
         break;
 
@@ -299,7 +317,10 @@ switch ($page) {
         require_admin();
         $current_user = get_user_by_id($pdo, current_user_id());
         $search       = trim($_GET['search'] ?? '');
-        $templates    = get_templates_filtered($pdo, $search, 'newest');
+        $current_p    = max(1, (int)($_GET['p'] ?? 1));
+        $res          = get_templates_filtered($pdo, $search, 'newest', $current_p, 12);
+        $templates    = $res['items'];
+        $pagination   = $res['pagination'];
         require ROOT_PATH . '/views/pages/admin_templates.php';
         break;
 

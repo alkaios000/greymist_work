@@ -1,29 +1,30 @@
-/* Parent aside */
-.content-menu-3 {
-  width: 250px;
+/* Parent aside (Left Menu - Objects) */
+.gm-content-left-menu.content-menu-3 {
+  width: 100%;
   background-color: rgba(255,255,255,0.95);
-  padding: 8px;
+  padding: 6px;
   box-sizing: border-box;
   border-right: 1px solid rgba(0,0,0,0.1);
   height: 100%;
-  /* display: flex; */
   flex-direction: column;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* NAV KATEGORI */
 
 .gm-nav-btn {
   flex: 1 1 48%;
-  padding: 4px 6px;
-  border-radius: 5px;
+  padding: 2px 4px;
+  border-radius: 3px;
   border: none;
   background-color: rgba(0,0,0,0.05);
   cursor: pointer;
   text-align: center;
-  font-size: 12px;
+  font-size: 9.5px;
   font-weight: 500;
+  height: 20px;
+  line-height: 16px;
   color: #333;
   transition: all 0.2s;
 }
@@ -38,15 +39,13 @@
 .gm-template-container {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 1px;
   overflow-y: scroll;
-  height: 520px;
+  height: calc(100vh - 145px);
 }
 
 .gm-template-group {
-  /* display: none; default hidden */
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  /* gap: 8px; */
   overflow-y: scroll;
 }
 
@@ -60,7 +59,6 @@ abbr {
 }
 .gm-drop-hover {
   outline: 2px dashed #0078ff;
-  /* outline-offset: 3px; */
   transition: outline 0.1s ease;
 }
 
@@ -72,23 +70,28 @@ abbr {
 }
 
 .gm-object-dropable {
-  /* background: #f6f6f6; */
-  /* border: 1px solid #ccc; */
   border-bottom: 0.5px solid lightgray;
-  /* border-radius: 6px; */
-  padding: 10px 10px;
+  padding: 2px 6px;
   cursor: grab;
   user-select: none;
   width: 100%;
+  min-height: 23px;
+  height: 23px;
+  font-size: 10.5px;
   transition: 0.2s ease-in-out;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
+.gm-object-dropable div,
+.gm-object-dropable abbr {
+  font-size: 10.5px;
+  font-weight: 500;
+}
+
 .gm-object-dropable:hover {
   background: #d9ebff;
-  /* padding-left: 2em; */
   transition: 0.2s ease-in-out;
   font-weight: 800;
 }
@@ -96,13 +99,15 @@ abbr {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5em;
+  gap: 0.35em;
 }
 .gm-tag-info, .gm-add-object {
   background: white;
   color: rgb(75, 75, 75);
-  width: 20px;
-  height: 20px;
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  min-height: 15px;
   border-radius: 50%;
   border: 1px solid grey;
   display: flex;
@@ -110,7 +115,8 @@ abbr {
   justify-content: center;
   cursor: pointer;
   transition: 0.2s ease-in-out;
-  font-size: 1em;
+  font-size: 8px;
+  line-height: 1;
 }
 
 .gm-tag-info:hover, .gm-add-object:hover {
@@ -122,7 +128,7 @@ abbr {
 .gm-nav {
   display: flex;
   gap: 5px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 
 .gm-nav-btn.active {
@@ -132,16 +138,16 @@ abbr {
 
 .gm-template-search {
   width: 100%;
-  padding: 6px 8px;
-  margin-bottom: 10px;
+  height: 22px;
+  padding: 1px 6px;
+  font-size: 10.5px;
+  margin-bottom: 6px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 3px;
+  box-sizing: border-box;
 }
 
-
 /* TEMPLATE OBJECT FLEX */
-
-
 .gm-template.object:hover {
   background-color: rgba(0,0,0,0.08);
 }
@@ -156,7 +162,7 @@ abbr {
   font-weight: 500;
   color: #333;
   text-align: center;
-  font-size: 11px;
+  font-size: 10.5px;
 }
 
 /* Tombol preview (mata) */
@@ -169,7 +175,7 @@ abbr {
   color: #fff;
   border-radius: 3px;
   padding: 2px 4px;
-  font-size: 11px;
+  font-size: 10px;
   cursor: pointer;
 }
 
@@ -184,7 +190,7 @@ abbr {
 
 /* Scrollbar minimal */
 .gm-template-container::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 
 .gm-template-container::-webkit-scrollbar-thumb {
@@ -197,14 +203,14 @@ abbr {
 }
 /* MODAL OVERLAY */
 .gm-modal {
-  display: none; /* default hidden */
-  position: fixed; /* selalu di viewport */
+  display: none;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
   background-color: rgba(0,0,0,0.5);
-  z-index: 9999; /* di atas semua */
+  z-index: 9999;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -212,32 +218,28 @@ abbr {
 
 /* Popup info */
 .gm-popup-info {
-  position: absolute; /* mutlak di body */
+  position: absolute;
   background-color: #fff;
-  padding: 6px 10px;
+  padding: 4px 8px;
   border-radius: 4px;
   border: 1px solid rgba(0,0,0,0.2);
-  font-size: 12px;
+  font-size: 11px;
   color: #333;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   display: none;
-  z-index: 99999; /* pastikan di atas semua elemen */
+  z-index: 99999;
   pointer-events: auto;
   white-space: normal;
 }
 
-
-
 .gm-template-search:focus {
   outline: none;
   border-color: #0078d4;
-  box-shadow: 0 0 4px rgba(0,120,212,0.3);
+  box-shadow: 0 0 3px rgba(0,120,212,0.3);
 }
-
 
 /* object define */
 .gm-object {
-  /* transition: all 0.2s ease; animasi smooth saat resize dan warna */
   overflow: visible;
 }
 
@@ -261,18 +263,15 @@ abbr {
   }
 }
 
-
-
 /* handler object */
-
 .gm-handler .gm-handle i {
   color: #006dcc !important;
   opacity: 0.6;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   display: inline-block;
   text-align: center;
-  line-height: 14px;
+  line-height: 12px;
 }
 .gm-size-label {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;

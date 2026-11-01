@@ -1,5 +1,6 @@
   .gm-aside-right {
-    width: 250px;
+    width: 200px;
+    max-width: 200px;
     position: fixed;
     top: 0;
     bottom: 0;
@@ -16,14 +17,16 @@
 
   .gm-top-menu-right {
     width: 100%;
-    height: 90px;
+    height: 72px;
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     flex-direction: column;
     align-items: center;
-    border-bottom: 1px solid rgb(231, 231, 231);
-    padding: 0 1em;
+    border-bottom: none;
+    padding: 3px 0 0 0;
     position: sticky;
+    box-sizing: border-box;
+    background: #ffffff;
   }
 
   .gm-general-menu-cont {
@@ -32,10 +35,16 @@
     background-color: rgb(255, 255, 255);
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(20px, 1fr));
-    /* grid-template-rows: repeat(1, 30px); */
-    /* border-bottom: 1px solid rgb(204, 204, 204); */
     gap: 0.2em;
-    padding-bottom: 0.2em;
+    padding: 0 8px 0.2em 8px;
+    box-sizing: border-box;
+  }
+
+  .gm-corner-menu {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
   }
 
   .gm-grid-menu {
@@ -44,13 +53,13 @@
     justify-content: center;
     aspect-ratio: auto;
     /* width: 30px; */
-    height: 25px;
+    height: 20px;
     box-shadow: 0 0 17px rgb(255, 250, 250);
     border: 0.5px solid rgb(236, 236, 236);
     border-radius: 5px;
     color: rgb(86, 86, 86);
     /* transition: 0.2s ease-in-out; */
-    font-size: 0.8em;
+    font-size: 10px;
     cursor: pointer;
   }
 
@@ -87,7 +96,7 @@
 
   .gm-bottom-menu-right {
     width: 100%;
-    height: calc(100vh - 90px);
+    height: calc(100vh - 72px);
     display: flex;
     overflow-y: auto;
     border-bottom: 1px solid rgb(231, 231, 231);
@@ -232,7 +241,7 @@
   .gm-bg-swatch-wrap {
     position: relative;
     width: 34px;
-    height: 34px;
+    height: 24px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
     overflow: hidden;
@@ -269,7 +278,7 @@
   .gm-bg-hex-input {
     width: 100%;
     box-sizing: border-box;
-    height: 34px;
+    height: 24px;
     padding: 0 10px;
     border-radius: 8px;
     border: 1px solid #d1d5db;
@@ -1340,30 +1349,7 @@
   }
 
 
-  .gm-right-menu {
-    display: flex;
-    font-size: 0.7em;
-    width: 100%;
-    justify-content: space-between;
-    /* overflow-y: auto; */
-    /* height: 100%; */
-  }
-
-  .gm-right-menu p {
-    /* padding: 0.3em; */
-    transition: 0.2s ease;
-    cursor: pointer;
-  }
-
-  .gm-right-menu p:hover {
-    color: #9ad0ff;
-    transition: 0.2s ease;
-  }
-
-
-  .gm-right-menu p.gm-clicked {
-    color: #9ad0ff;
-  }
+  /* .gm-right-menu styles moved to right-bottom-menu.css */
 
   .gm-content-right-menu {
     display: none;

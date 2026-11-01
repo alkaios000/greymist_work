@@ -43,28 +43,35 @@ $is_admin_view = $is_admin_view ?? false;
                 <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Buka Menu">
                     <i class="fas fa-bars"></i>
                 </button>
-                <h1 class="header-title"><?= e($page_title) ?></h1>
-                <?php if ($page_subtitle !== ''): ?>
-                    <span class="header-subtitle"><?= e($page_subtitle) ?></span>
-                <?php endif; ?>
+                <div class="header-breadcrumbs">
+                    <span class="crumb-brand"><?= e($site_settings['site_name'] ?? 'Greymist') ?></span>
+                    <span class="crumb-separator">/</span>
+                    <h1 class="header-title"><?= e($page_title) ?></h1>
+                </div>
             </div>
 
             <div class="header-right">
+                <div class="header-telemetry-badge" title="Status Jaringan & Engine">
+                    <span class="status-indicator-dot"></span>
+                    <span>Operasional</span>
+                </div>
+
+                <div class="header-time-chip" id="headerLiveClock">
+                    <?= date('H:i') ?>
+                </div>
+
                 <?php if (!empty($header_actions_html)): ?>
                     <?= $header_actions_html ?>
                 <?php elseif (!$is_admin_view): ?>
                     <form method="POST" action="<?= e(action_url('new_project')) ?>" style="display:inline;">
                         <?= csrf_field() ?>
                         <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus"></i>
-                            <span>Proyek Baru</span>
+                            <span>+ Proyek Baru</span>
                         </button>
                     </form>
                 <?php else: ?>
-                    <a href="<?= e(route_url('dashboard')) ?>" class="btn btn-soft-blue btn-sm">
-                        <i class="fas fa-desktop"></i>
-                        <span>Area Pengguna</span>
-                    </a>
+                    <a href="<?= e(route_url('projects')) ?>" class="btn btn-outline btn-sm">Workspace</a>
+                    <a href="<?= e(route_url('dashboard')) ?>" class="btn btn-soft-blue btn-sm">Area Pengguna</a>
                 <?php endif; ?>
             </div>
         </header>

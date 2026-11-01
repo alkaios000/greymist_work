@@ -5,7 +5,7 @@
  */
 
 $page_title    = 'Manajemen Pengguna';
-$page_subtitle = 'Kelola akun pengguna, hak akses administrator, dan reset kata sandi';
+$page_subtitle = '';
 $active_page   = 'admin_users';
 $is_admin_view = true;
 
@@ -27,10 +27,7 @@ require ROOT_PATH . '/views/layouts/header.php';
             <option value="admin" <?= ($role ?? '') === 'admin' ? 'selected' : '' ?>>Administrator</option>
             <option value="user" <?= ($role ?? '') === 'user' ? 'selected' : '' ?>>Pengguna Biasa</option>
         </select>
-        <button type="submit" class="btn btn-soft-blue btn-sm">
-            <i class="fas fa-filter"></i>
-            <span>Filter</span>
-        </button>
+        <button type="submit" class="btn btn-soft-blue btn-sm">Filter</button>
     </div>
 </form>
 
@@ -74,7 +71,7 @@ require ROOT_PATH . '/views/layouts/header.php';
                         <td><?= e($u['phone'] ?: '-') ?></td>
                         <td>
                             <?php if ((int)$u['is_admin'] === 1): ?>
-                                <span class="badge badge-blue"><i class="fas fa-shield-alt"></i> Admin</span>
+                                <span class="badge badge-blue">Admin</span>
                             <?php else: ?>
                                 <span class="badge badge-muted">User</span>
                             <?php endif; ?>
@@ -118,11 +115,13 @@ require ROOT_PATH . '/views/layouts/header.php';
     </table>
 </div>
 
+<?= render_pagination($pagination ?? [], 'pengguna') ?>
+
 <!-- Modal Tambah Pengguna Baru -->
 <div class="modal-overlay" id="adminAddUserModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3 class="modal-title"><i class="fas fa-user-plus" style="color: var(--btn-blue); margin-right: 6px;"></i> Tambah Pengguna Baru</h3>
+            <h3 class="modal-title">Tambah Pengguna Baru</h3>
             <button type="button" class="modal-close" data-modal-close="adminAddUserModal"><i class="fas fa-times"></i></button>
         </div>
         <form method="POST" action="<?= e(action_url('admin_add_user')) ?>">
@@ -167,7 +166,7 @@ require ROOT_PATH . '/views/layouts/header.php';
 <div class="modal-overlay" id="adminEditUserModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3 class="modal-title"><i class="fas fa-user-edit" style="color: var(--btn-blue); margin-right: 6px;"></i> Edit Data Pengguna</h3>
+            <h3 class="modal-title">Edit Data Pengguna</h3>
             <button type="button" class="modal-close" data-modal-close="adminEditUserModal"><i class="fas fa-times"></i></button>
         </div>
         <form method="POST" action="<?= e(action_url('admin_update_user')) ?>">
@@ -209,7 +208,7 @@ require ROOT_PATH . '/views/layouts/header.php';
 <div class="modal-overlay" id="adminResetPasswordModal">
     <div class="modal-box">
         <div class="modal-header">
-            <h3 class="modal-title"><i class="fas fa-key" style="color: var(--btn-blue); margin-right: 6px;"></i> Reset Password</h3>
+            <h3 class="modal-title">Reset Password</h3>
             <button type="button" class="modal-close" data-modal-close="adminResetPasswordModal"><i class="fas fa-times"></i></button>
         </div>
         <form method="POST" action="<?= e(action_url('admin_reset_password')) ?>">

@@ -60,6 +60,10 @@
     if (root.classList && root.classList.contains("gm-object")) {
       root.dataset.gmReady = "1";
     }
+
+    if (typeof window.initGmCharts === "function") {
+      setTimeout(() => window.initGmCharts(root), 60);
+    }
   }
   window.initLoadedObjects = initLoadedObjects;
 </script>
@@ -93,6 +97,11 @@
 
     initLoadedObjects(core);
     if (typeof fitAllCores === "function") fitAllCores();
+
+    if (typeof window.initGmCharts === "function") {
+      setTimeout(() => window.initGmCharts(core), 80);
+    }
+    document.dispatchEvent(new CustomEvent("gm-frame-switched", { detail: { frameId: frameId } }));
   }
 
 
@@ -127,6 +136,10 @@
     if (active) {
       activeFrameId = frame.frame_id;
       core.classList.add("actived");
+    }
+
+    if (typeof window.initGmCharts === "function") {
+      setTimeout(() => window.initGmCharts(core), 120);
     }
 
     // Generate initial thumbnail

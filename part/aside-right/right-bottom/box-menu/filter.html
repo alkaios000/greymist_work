@@ -3,69 +3,66 @@
 
     <!-- FILTER SHORTHAND -->
     <div class="gm-menu-row">
-        <label for="gm-filter">Filter</label>
+        <label for="gm-filter">Shorthand</label>
         <input type="text" id="gm-filter" placeholder="blur(4px) brightness(120%)">
     </div>
 
-    <!-- BLUR -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-blur">Blur</label>
-        <input type="text" id="gm-filter-blur" placeholder="px">
+    <!-- 2-COLUMN PAIRS FOR FILTER ATTRIBUTES -->
+    <div class="gm-row-pair gm-menu-row">
+        <div>
+            <label for="gm-filter-blur">Blur</label>
+            <input type="text" id="gm-filter-blur" placeholder="px">
+        </div>
+        <div>
+            <label for="gm-filter-brightness">Brightness</label>
+            <input type="text" id="gm-filter-brightness" placeholder="% | num">
+        </div>
     </div>
 
-    <!-- BRIGHTNESS -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-brightness">Brightness</label>
-        <input type="text" id="gm-filter-brightness" placeholder="% | number">
+    <div class="gm-row-pair gm-menu-row">
+        <div>
+            <label for="gm-filter-contrast">Contrast</label>
+            <input type="text" id="gm-filter-contrast" placeholder="% | num">
+        </div>
+        <div>
+            <label for="gm-filter-grayscale">Grayscale</label>
+            <input type="text" id="gm-filter-grayscale" placeholder="%">
+        </div>
     </div>
 
-    <!-- CONTRAST -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-contrast">Contrast</label>
-        <input type="text" id="gm-filter-contrast" placeholder="% | number">
+    <div class="gm-row-pair gm-menu-row">
+        <div>
+            <label for="gm-filter-invert">Invert</label>
+            <input type="text" id="gm-filter-invert" placeholder="%">
+        </div>
+        <div>
+            <label for="gm-filter-opacity">Opacity</label>
+            <input type="text" id="gm-filter-opacity" placeholder="%">
+        </div>
     </div>
 
-    <!-- GRAYSCALE -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-grayscale">Grayscale</label>
-        <input type="text" id="gm-filter-grayscale" placeholder="%">
+    <div class="gm-row-pair gm-menu-row">
+        <div>
+            <label for="gm-filter-saturate">Saturate</label>
+            <input type="text" id="gm-filter-saturate" placeholder="% | num">
+        </div>
+        <div>
+            <label for="gm-filter-sepia">Sepia</label>
+            <input type="text" id="gm-filter-sepia" placeholder="%">
+        </div>
     </div>
 
-    <!-- INVERT -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-invert">Invert</label>
-        <input type="text" id="gm-filter-invert" placeholder="%">
+    <div class="gm-row-pair gm-menu-row">
+        <div>
+            <label for="gm-filter-hue-rotate">Hue rotate</label>
+            <input type="text" id="gm-filter-hue-rotate" placeholder="deg">
+        </div>
+        <div>
+            <label for="gm-filter-drop-shadow">Drop shadow</label>
+            <input type="text" id="gm-filter-drop-shadow" placeholder="0 4px 10px rgba(0,0,0,.3)">
+        </div>
     </div>
 
-    <!-- OPACITY -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-opacity">Opacity</label>
-        <input type="text" id="gm-filter-opacity" placeholder="%">
-    </div>
-
-    <!-- SATURATE -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-saturate">Saturate</label>
-        <input type="text" id="gm-filter-saturate" placeholder="% | number">
-    </div>
-
-    <!-- SEPIA -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-sepia">Sepia</label>
-        <input type="text" id="gm-filter-sepia" placeholder="%">
-    </div>
-
-    <!-- HUE ROTATE -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-hue-rotate">Hue rotate</label>
-        <input type="text" id="gm-filter-hue-rotate" placeholder="deg">
-    </div>
-
-    <!-- DROP SHADOW -->
-    <div class="gm-menu-row">
-        <label for="gm-filter-drop-shadow">Drop shadow</label>
-        <input type="text" id="gm-filter-drop-shadow" placeholder="0 4px 10px rgba(0,0,0,.3)">
-    </div>
     <script>
         (function () {
             const ACTIVE_SELECTOR = ".gm-object.gm-active";
@@ -177,9 +174,6 @@
             // =========================================
             // OBSERVER / SELECTION CHANGE
             // =========================================
-            
-            
-
             window.addEventListener('gm-active-tick', updateFilterUI);
 
             // init

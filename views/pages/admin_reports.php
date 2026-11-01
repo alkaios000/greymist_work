@@ -5,7 +5,7 @@
  */
 
 $page_title    = 'Laporan & Moderasi';
-$page_subtitle = 'Pantau laporan konten komunitas dan status moderasi proyek';
+$page_subtitle = '';
 $active_page   = 'admin_reports';
 $is_admin_view = true;
 

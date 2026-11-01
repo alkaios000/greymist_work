@@ -32,7 +32,6 @@ require ROOT_PATH . '/views/layouts/header.php';
         <form method="POST" action="<?= e(action_url('upload_profile_picture')) ?>" enctype="multipart/form-data" style="margin-bottom: 8px;">
             <?= csrf_field() ?>
             <label class="btn btn-soft-blue btn-sm" style="width: 100%; cursor: pointer;">
-                <i class="fas fa-camera"></i>
                 <span>Ubah Foto Profil</span>
                 <input type="file" name="profile_picture" accept=".jpg,.jpeg,.png,.gif,.webp" style="display: none;" onchange="this.form.submit()">
             </label>
@@ -42,7 +41,6 @@ require ROOT_PATH . '/views/layouts/header.php';
             <form method="POST" action="<?= e(action_url('delete_profile_picture')) ?>">
                 <?= csrf_field() ?>
                 <button type="submit" class="btn btn-outline btn-sm" style="width: 100%;">
-                    <i class="fas fa-trash-alt"></i>
                     <span>Hapus Foto</span>
                 </button>
             </form>
@@ -63,10 +61,7 @@ require ROOT_PATH . '/views/layouts/header.php';
     <!-- Kolom Kanan: Form Informasi Profil & Keamanan -->
     <div class="profile-sections">
         <section class="panel-card">
-            <h3 style="margin-bottom: 14px; font-size: 1rem;">
-                <i class="fas fa-user-edit" style="color: var(--btn-blue); margin-right: 6px;"></i>
-                Informasi Pribadi
-            </h3>
+            <h3 style="margin-bottom: 14px; font-size: 1rem;">Informasi Pribadi</h3>
             <form method="POST" action="<?= e(action_url('update_profile')) ?>">
                 <?= csrf_field() ?>
                 <div class="form-row">
@@ -92,17 +87,13 @@ require ROOT_PATH . '/views/layouts/header.php';
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-sm">
-                    <i class="fas fa-save"></i>
                     <span>Simpan Perubahan Profil</span>
                 </button>
             </form>
         </section>
 
         <section class="panel-card">
-            <h3 style="margin-bottom: 14px; font-size: 1rem;">
-                <i class="fas fa-key" style="color: var(--btn-blue); margin-right: 6px;"></i>
-                Ubah Password
-            </h3>
+            <h3 style="margin-bottom: 14px; font-size: 1rem;">Ubah Password</h3>
             <form method="POST" action="<?= e(action_url('update_password')) ?>">
                 <?= csrf_field() ?>
                 <div class="form-group">
@@ -120,17 +111,13 @@ require ROOT_PATH . '/views/layouts/header.php';
                     </div>
                 </div>
                 <button type="submit" class="btn btn-soft-blue btn-sm">
-                    <i class="fas fa-lock"></i>
                     <span>Perbarui Password</span>
                 </button>
             </form>
         </section>
 
         <section class="panel-card danger-zone-card">
-            <h3 style="margin-bottom: 6px; font-size: 1rem; color: var(--color-danger);">
-                <i class="fas fa-exclamation-triangle" style="margin-right: 6px;"></i>
-                Zona Berbahaya
-            </h3>
+            <h3 style="margin-bottom: 6px; font-size: 1rem; color: var(--color-danger);">Zona Berbahaya</h3>
             <p style="margin-bottom: 14px; font-size: 0.82rem;">
                 Menghapus akun akan menghapus seluruh proyek, frame, dan komponen kustom Anda secara permanen.
             </p>
@@ -143,7 +130,6 @@ require ROOT_PATH . '/views/layouts/header.php';
                         confirmText: 'Ya, Hapus Akun Saya',
                         buttonClass: 'btn-danger btn-sm'
                     })">
-                <i class="fas fa-user-slash"></i>
                 <span>Hapus Akun Saya</span>
             </button>
         </section>

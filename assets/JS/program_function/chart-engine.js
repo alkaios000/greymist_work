@@ -281,34 +281,37 @@
             } catch (_) {}
         }
 
-        // Kumpulkan semua elemen canvas atau kartu chart
+        // Kumpulkan semua elemen canvas atau kartu chart secara universal
         const targets = new Set();
 
-        // 1. Kartu chart standar
-        root.querySelectorAll('.gm-chart-card, [data-chart-type], [data-chart-lib]').forEach(card => targets.add(card));
+        // 1. Kartu chart standar atau container pembungkus chart
+        root.querySelectorAll('.gm-chart-card, [data-chart-type], [data-chart-lib], .gm-chart-container, .gm-chart-canvas-wrap').forEach(el => {
+            const card = el.closest('.gm-chart-card, [data-chart-type]') || el;
+            targets.add(card);
+        });
 
         // 2. Canvas dengan class chart
-        root.querySelectorAll('canvas.gm-chart-canvas, canvas[data-chart], .gm-chart-canvas-wrap canvas').forEach(canvas => {
-            const card = canvas.closest('.gm-chart-card, [data-chart-type]') || canvas.parentElement;
+        root.querySelectorAll('canvas.gm-chart-canvas, canvas[data-chart]').forEach(canvas => {
+            const card = canvas.closest('.gm-chart-card, [data-chart-type], .gm-chart-container, .gm-chart-canvas-wrap') || canvas.parentElement;
             if (card) targets.add(card);
             else targets.add(canvas);
         });
 
         // 3. Script data konfigurasi chart
         root.querySelectorAll('script[data-gm-chart-config]').forEach(sc => {
-            const card = sc.closest('.gm-chart-card') || sc.parentElement;
+            const card = sc.closest('.gm-chart-card, [data-chart-type], .gm-chart-container, .gm-chart-canvas-wrap') || sc.parentElement;
             if (card) targets.add(card);
         });
 
         for (const el of targets) {
             try {
                 const isCanvas = el.tagName && el.tagName.toLowerCase() === 'canvas';
-                const card = isCanvas ? el.closest('.gm-chart-card') || el.parentElement : el;
+                const card = isCanvas ? (el.closest('.gm-chart-card, [data-chart-type]') || el.parentElement) : el;
                 let canvas = isCanvas ? el : (card.querySelector('.gm-chart-canvas') || card.querySelector('canvas'));
 
                 // Jika tidak ada canvas di dalam wrap, buat otomatis
+                let wrap = card.querySelector('.gm-chart-canvas-wrap') || card.querySelector('.gm-chart-container');
                 if (!canvas) {
-                    let wrap = card.querySelector('.gm-chart-canvas-wrap') || card.querySelector('.gm-chart-container');
                     if (!wrap) {
                         wrap = document.createElement('div');
                         wrap.className = 'gm-object gm-chart-canvas-wrap';
@@ -317,12 +320,12 @@
                     }
                     canvas = document.createElement('canvas');
                     canvas.className = 'gm-object gm-chart-canvas';
-                    canvas.style.cssText = 'display: block; width: 100% !important; height: 100% !important;';
+                    canvas.style.cssText = 'display: block; width: 100%; height: 100%;';
                     wrap.appendChild(canvas);
                 }
 
                 // Perbaiki layout wrapper agar responsif
-                const wrap = canvas.parentElement;
+                if (!wrap && canvas.parentElement) wrap = canvas.parentElement;
                 if (wrap) {
                     if (!wrap.style.position) wrap.style.position = 'relative';
                     if (!wrap.style.width) wrap.style.width = '100%';
@@ -336,8 +339,11 @@
                 canvas.style.width = '100%';
                 canvas.style.height = '100%';
 
-                // Ambil atau buat konfigurasi chart
-                let configScript = card.querySelector('script[data-gm-chart-config]');
+                // Ambil atau cari konfigurasi chart dari berbagai target penempatan
+                let configScript = card.querySelector('script[data-gm-chart-config]') ||
+                                   (card.parentElement ? card.parentElement.querySelector('script[data-gm-chart-config]') : null) ||
+                                   (canvas && canvas.id ? root.querySelector(`script[data-gm-chart-config][data-target="${canvas.id}"]`) : null) ||
+                                   (card.id ? root.querySelector(`script[data-gm-chart-config][data-target="${card.id}"]`) : null);
                 let config = null;
 
                 if (configScript && configScript.textContent.trim()) {
@@ -348,9 +354,12 @@
                     }
                 }
 
-                // Jika belum ada konfigurasi atau data kosong, isi dengan preset dummy data cerdas
-                const cardText = card.textContent || '';
-                const detectedType = card.dataset.chartType || (config && config.type) || null;
+                // Jika belum ada konfigurasi atau dataset kosong, isi dengan preset dummy data cerdas
+                const cardText = (card.textContent || '') + ' ' + (card.id || '') + ' ' + (canvas ? canvas.id || '' : '');
+                const detectedType = card.dataset.chartType ||
+                                     (configScript && (configScript.dataset.chartType || configScript.dataset.type)) ||
+                                     (config && config.type) ||
+                                     null;
 
                 if (!config || !config.data || !Array.isArray(config.data.datasets) || config.data.datasets.length === 0 || !config.data.datasets[0].data || config.data.datasets[0].data.length === 0) {
                     config = getDefaultDummyConfig(detectedType, cardText);
@@ -362,7 +371,9 @@
                     configScript.textContent = JSON.stringify(config);
                 }
 
-                if (config.library === 'apexcharts') {
+                const lib = (config.library || (configScript ? configScript.dataset.library : '') || 'chartjs').toLowerCase();
+
+                if (lib === 'apexcharts') {
                     await window.loadGmCdnScript(config.cdn || 'https://cdn.jsdelivr.net/npm/apexcharts');
                     const apexCont = card.querySelector('.gm-apex-chart-container') || card.querySelector('.gm-chart-canvas-wrap') || wrap;
                     if (apexCont && window.ApexCharts) {
@@ -371,7 +382,7 @@
                         const chart = new window.ApexCharts(apexCont, config.options || {});
                         chart.render();
                     }
-                } else if (config.library === 'echarts') {
+                } else if (lib === 'echarts') {
                     await window.loadGmCdnScript(config.cdn || 'https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js');
                     const echCont = card.querySelector('.gm-chart-canvas-wrap') || wrap;
                     if (echCont && window.echarts) {
@@ -387,12 +398,18 @@
                     if (!config.options) config.options = {};
                     config.options.responsive = true;
                     config.options.maintainAspectRatio = false;
+                    config.options.resizeDelay = 100;
 
-                    canvas._gmChart = new window.Chart(canvas, {
-                        type: config.type || detectedType || 'bar',
-                        data: config.data,
-                        options: config.options
-                    });
+                    try {
+                        canvas._gmChart = new window.Chart(canvas, {
+                            type: config.type || detectedType || 'bar',
+                            data: config.data,
+                            options: config.options
+                        });
+                    } catch (chartErr) {
+                        console.warn('[Greymist Chart Engine] Chart.js render error, fallback to 2D:', chartErr);
+                        renderCanvas2DFallback(canvas, config);
+                    }
                 } else {
                     // Fallback Canvas 2D
                     renderCanvas2DFallback(canvas, config);

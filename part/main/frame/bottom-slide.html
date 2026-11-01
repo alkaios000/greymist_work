@@ -41,7 +41,7 @@
         let isShown = false;
 
         // set posisi awal (aman kalau CSS belum jalan)
-        panel.style.transform = 'translateY(200px)';
+        panel.style.transform = 'translateY(100%)';
         icon.classList.remove('fa-angle-down');
         icon.classList.add('fa-angle-up');
 
@@ -56,7 +56,7 @@
                 icon.classList.add('fa-angle-down');
             } else {
                 // turun lagi
-                panel.style.transform = 'translateY(200px)';
+                panel.style.transform = 'translateY(100%)';
                 icon.classList.remove('fa-angle-down');
                 icon.classList.add('fa-angle-up');
             }

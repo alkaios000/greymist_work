@@ -1,20 +1,24 @@
    .gm-object-attribute {
     width: 100%;
-    height: 200px;
+    height: 160px;
     background-color: white;
     position: absolute;
     bottom: 0;
     z-index: 99999;
-    transform: translateY(200px);
+    transform: translateY(160px);
     transition: 0.3s ease-in-out;
-    /* padding: 5px; */
+  }
+
+  .gm-object-attribute.gm-active-attribute,
+  .gm-object-attribute.gm-show {
+    transform: translateY(0);
   }
 
   #gm-hide-attribute-frame {
-    width: 40px;
-    height: 20px;
+    width: 32px;
+    height: 16px;
     position: absolute;
-    top: -20px;
+    top: -16px;
     right: 0;
     margin-right: 2em;
     border: none;
@@ -24,7 +28,7 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 0.7em;
+    font-size: 9px;
     transition: 0.3s ease-in-out;
   }
 
@@ -35,16 +39,15 @@
 
  .gm-menu-bottom-frame {
      display: flex;
-     font-size: 0.7em;
+     font-size: 0.65em;
      width: 100%;
      background: white;
  }
 
  .gm-menu-bottom-frame div {
-     /* padding: 0.3em; */
      transition: 0.2s ease;
      cursor: pointer;
-     padding: 2px 5px;
+     padding: 2px 6px;
      background: rgb(232, 232, 232);
  }
 
@@ -54,14 +57,13 @@
  }
 
  .gm-menu-bottom-frame>div.gm-clicked {
-     /* color: ; */
      background-color: rgb(255, 255, 255);
-     border-radius: 10px 10px 0 0 !important;
+     border-radius: 6px 6px 0 0 !important;
  }
 
  .gm-content-bottom-menu {
      display: none;
-     font-size: 0.7em;
+     font-size: 0.65em;
      width: 100%;
  }
 
@@ -71,5 +73,5 @@
  }
 
  .gm-menu-bottom-content {
-     padding: 5px;
+     padding: 4px;
  }

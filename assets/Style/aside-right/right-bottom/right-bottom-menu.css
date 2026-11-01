@@ -1,117 +1,389 @@
 /* 
-===============================
-RIGHT BOTTOM MENU (Greymist)
-=============================== 
+==========================================================================
+RIGHT BOTTOM MENU (Greymist Master Inspector Stylesheet)
+Menyediakan tata letak konsisten, rapi, dan efisien ruang untuk seluruh tab:
+- General (Size, Position, Margin, Padding, Opacity)
+- Display (Block, Inline, Flex, Grid)
+- Text / Typography (Font Family, Size, Weight, Alignment, Color)
+- Box (Box sizing, Border, Shadow, Background, Outline, Overflow, Filter)
+========================================================================== 
 */
+
 .gm-panelstyle-menu {
     width: 100%;
     box-sizing: border-box;
     font-family: inherit;
+    font-size: 8.5px;
+    padding: 0;
 }
 
 /*
 ===============================
-SECTION
+1. TOP TABS BAR (FLAT & FIT FULL WIDTH)
+===============================
+*/
+.gm-corner-menu {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.gm-right-menu {
+    display: flex;
+    width: 100%;
+    height: 25px;
+    background: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+    border-left: none;
+    border-right: none;
+    border-radius: 0;
+    padding: 0;
+    margin: 0;
+    gap: 0;
+    box-sizing: border-box;
+}
+
+.gm-right-menu p {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 8.5px;
+    font-weight: 500;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    color: #64748b;
+    border-radius: 0;
+    border-right: 1px solid #e2e8f0;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.gm-right-menu p:last-child {
+    border-right: none;
+}
+
+.gm-right-menu p:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.gm-right-menu p.gm-clicked {
+    background: #ffffff;
+    color: #2563eb;
+    font-weight: 600;
+    box-shadow: inset 0 -2px 0 #2563eb;
+}
+
+.gm-content-right-menu,
+.gm-bottom-menu-right > .gm-content-right-menu {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-sizing: border-box !important;
+    gap: 0 !important;
+}
+
+.gm-content-right-menu.gm-clicked,
+.gm-bottom-menu-right > .gm-content-right-menu.gm-clicked {
+    display: flex !important;
+}
+
+/*
+===============================
+2. SECTIONS & CONTAINERS
 ===============================
 */
 .gm-menu-section {
-    padding: 8px;
-    border-top: 1px solid #d8d8d8;
-    margin-bottom: 6px;
+    padding: 3px 5px;
+    border-top: 1px solid #e2e8f0;
+    margin-bottom: 2px;
+    box-sizing: border-box;
+}
+
+.gm-menu-section:first-child {
+    border-top: none;
 }
 
 /*
 ===============================
-TITLE
+3. SECTION TITLES
 ===============================
 */
 .gm-menu-title {
-    font-size: 1em;
-    /* ±13px stabil */
-    font-weight: 600;
-    color: #555;
-    margin: 2px 0 8px;
-}
-
-/* 
-===============================
-ROW & LABEL
-===============================
-*/
-.gm-menu-row {
-    margin-bottom: 8px;
-}
-.gm-menu-row label {
-    display: block;
-    font-size: 0.9em;
-    /* ±12px */
-    font-weight: 500;
-    color: #333;
-    margin-bottom: 3px;
-}
-
-/* 
-===============================
-INPUT & SELECT
-=============================== 
-*/
-.gm-menu-row input,
-.gm-menu-row select {
-    width: 100%;
-    height: 24px;
-    padding: 3px 6px;
-    font-size: 0.85em;
-    /* ±12px */
-    line-height: 1.2;
-    border: 0.5px solid #d6d6d6;
-    border-radius: 3px;
-    outline: none;
-    box-sizing: border-box;
-    background: #fff;
-    box-shadow: 0 0 1px #eee;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.gm-menu-row input:hover,
-.gm-menu-row select:hover {
-    box-shadow: 0 0 2px rgba(94, 148, 189, 0.8);
-}
-.gm-menu-row input:focus,
-.gm-menu-row select:focus {
-    border-color: #0078ff;
-    box-shadow: 0 0 2px rgba(156, 202, 255, 0.35);
+    font-size: 8.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin: 2px 0 3px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 /*
 ===============================
-TWO COLUMN ROW
+4. ROWS & LABELS
+===============================
+*/
+.gm-menu-row {
+    margin-bottom: 3px;
+    position: relative;
+}
+
+.gm-menu-row label,
+.gm-menu-section label,
+.gm-row-pair label,
+.gm-aside-right label {
+    display: block;
+    font-size: 8.5px;
+    font-weight: 500;
+    color: #475569;
+    margin-bottom: 1px;
+    line-height: 1.15;
+    user-select: none;
+}
+
+/*
+===============================
+5. UNIFIED MICRO INPUTS & SELECTS
+===============================
+*/
+.gm-aside-right input,
+.gm-aside-right select,
+.gm-aside-right textarea,
+.gm-menu-row input,
+.gm-menu-row select,
+.gm-menu-section input,
+.gm-menu-section select,
+.gm-row-pair input,
+.gm-row-pair select,
+.gm-font-input,
+.gm-font-search,
+.gm-display-select,
+.gm-color-input,
+.gm-border-color-input,
+.gm-shadow-color-input {
+    width: 100%;
+    height: 20px;
+    min-height: 20px;
+    max-height: 20px;
+    padding: 1px 4px;
+    font-size: 8px;
+    font-family: inherit;
+    line-height: 1.15;
+    border: 1px solid #d1d5db;
+    border-radius: 3px;
+    outline: none;
+    box-sizing: border-box;
+    background: #ffffff;
+    color: #0f172a;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.gm-aside-right select,
+.gm-menu-row select,
+.gm-menu-section select,
+.gm-display-select {
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: 8px;
+    cursor: pointer;
+}
+
+.gm-aside-right input:hover,
+.gm-aside-right select:hover,
+.gm-menu-row input:hover,
+.gm-menu-row select:hover,
+.gm-menu-section input:hover,
+.gm-menu-section select:hover {
+    border-color: #94a3b8;
+}
+
+.gm-aside-right input:focus,
+.gm-aside-right select:focus,
+.gm-menu-row input:focus,
+.gm-menu-row select:focus,
+.gm-menu-section input:focus,
+.gm-menu-section select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+}
+
+.gm-aside-right input::placeholder {
+    color: #94a3b8;
+    font-size: 7.5px;
+}
+
+/*
+===============================
+6. TWO & MULTI-COLUMN ROWS
 ===============================
 */
 .gm-row-pair {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
-}
-.gm-row-pair>div {
-    flex: 1;
+    margin-bottom: 3px;
 }
 
-/* 
+.gm-row-pair > div,
+.gm-row-pair > .gm-menu-row {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0 !important;
+}
+
+/*
 ===============================
-DISABLED STATE
-=============================== 
+7. COLOR FIELDS & SWATCHES
+===============================
+*/
+.gm-color-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.gm-color-picker,
+.gm-border-color,
+.gm-shadow-color {
+    width: 16px !important;
+    height: 16px !important;
+    min-width: 16px !important;
+    max-width: 16px !important;
+    padding: 0 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 3px !important;
+    cursor: pointer;
+    background: transparent;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.gm-color-variable {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-top: 3px;
+}
+
+.gm-color-token,
+.gm-border-color-token {
+    font-size: 8px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    line-height: 14px;
+    user-select: none;
+    transition: all 0.15s ease;
+}
+
+.gm-color-token:hover,
+.gm-border-color-token:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+/*
+===============================
+8. SCROLLBARS IN RIGHT SIDEBAR
+===============================
+*/
+.gm-bottom-menu-right::-webkit-scrollbar {
+    width: 4px;
+}
+
+.gm-bottom-menu-right::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.gm-bottom-menu-right::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/*
+===============================
+9. DISABLED STATE
+===============================
 */
 .gm-menu-row input:disabled,
-.gm-menu-row select:disabled {
-    background: #f5f5f5;
-    color: #999;
+.gm-menu-row select:disabled,
+.gm-menu-section input:disabled,
+.gm-menu-section select:disabled {
+    background: #f8fafc;
+    color: #94a3b8;
+    border-color: #e2e8f0;
     cursor: not-allowed;
 }
 
-/* 
+
+/*
 ===============================
-LAST ITEM CLEANUP
-=============================== 
+10. BOX SUB-MENU & SUB-PANELS
+===============================
 */
-/* .gm-menu-section .gm-menu-row:last-child {
-    margin-bottom: 0;
-} */
+.gm-content-box-menu {
+    display: none;
+    width: 100%;
+}
+
+.gm-content-box-menu.gm-clicked {
+    display: block !important;
+}
+
+.gm-box-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    padding: 2px 0 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.gm-box-menu > div {
+    flex: 1 1 calc(50% - 3px);
+    text-align: center;
+    padding: 2.5px 3px;
+    border-radius: 3px;
+    font-size: 8.5px;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    background: #f8fafc;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
+    transition: all 0.15s ease;
+}
+
+.gm-box-menu > div:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+    border-color: #cbd5e1;
+}
+
+.gm-box-menu > .gm-clicked {
+    background: #eff6ff;
+    color: #2563eb;
+    border-color: #93c5fd;
+    font-weight: 600;
+}

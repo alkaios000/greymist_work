@@ -5,7 +5,7 @@
  */
 
 $page_title    = 'Pengaturan Sistem';
-$page_subtitle = 'Konfigurasi informasi situs, kuota pengguna, dan mode pemeliharaan';
+$page_subtitle = '';
 $active_page   = 'admin_settings';
 $is_admin_view = true;
 
@@ -14,10 +14,7 @@ require ROOT_PATH . '/views/layouts/header.php';
 
 <div class="admin-two-col">
     <section class="panel-card">
-        <h3 style="font-size: 1rem; margin-bottom: 14px;">
-            <i class="fas fa-sliders-h" style="color: var(--btn-blue); margin-right: 6px;"></i>
-            Konfigurasi Umum Platform
-        </h3>
+        <h3 style="font-size: 1rem; margin-bottom: 14px; font-weight: 600;">Konfigurasi Umum Platform</h3>
 
         <form method="POST" action="<?= e(action_url('admin_save_settings')) ?>">
             <?= csrf_field() ?>
@@ -52,18 +49,12 @@ require ROOT_PATH . '/views/layouts/header.php';
                 <input type="checkbox" name="maintenance_mode" value="1" <?= !empty($site_settings['maintenance_mode']) ? 'checked' : '' ?>>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-sm">
-                <i class="fas fa-save"></i>
-                <span>Simpan Pengaturan</span>
-            </button>
+            <button type="submit" class="btn btn-primary btn-sm">Simpan Pengaturan</button>
         </form>
     </section>
 
     <section class="panel-card">
-        <h3 style="font-size: 1rem; margin-bottom: 14px;">
-            <i class="fas fa-server" style="color: var(--btn-blue); margin-right: 6px;"></i>
-            Informasi Lingkungan Server
-        </h3>
+        <h3 style="font-size: 1rem; margin-bottom: 14px; font-weight: 600;">Informasi Lingkungan Server</h3>
 
         <div class="switch-row">
             <span style="font-size: 0.85rem; color: var(--text-secondary);">Versi PHP</span>
@@ -84,10 +75,7 @@ require ROOT_PATH . '/views/layouts/header.php';
 
         <form method="POST" action="<?= e(action_url('admin_clear_cache')) ?>" style="margin-top: 16px;">
             <?= csrf_field() ?>
-            <button type="submit" class="btn btn-soft-blue btn-sm">
-                <i class="fas fa-broom"></i>
-                <span>Segarkan Cache Sesi</span>
-            </button>
+            <button type="submit" class="btn btn-soft-blue btn-sm">Segarkan Cache Sesi</button>
         </form>
     </section>
 </div>

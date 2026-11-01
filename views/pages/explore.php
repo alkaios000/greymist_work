@@ -12,27 +12,38 @@ require ROOT_PATH . '/views/layouts/header.php';
 ?>
 
 <!-- Ringkasan Statistik Komunitas -->
-<section class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon"><i class="fas fa-globe"></i></div>
-        <div class="stat-info">
-            <div class="stat-value"><?= (int)($platform_stats['published_count'] ?? 0) ?></div>
-            <div class="stat-label">Proyek Publik</div>
+<section class="compact-metric-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+    <div class="metric-card">
+        <div class="metric-info">
+            <span class="metric-label">Komunitas</span>
+            <div class="metric-value">
+                <span><?= number_format((int)($platform_stats['published_count'] ?? 0)) ?></span>
+                <span class="metric-sub">Proyek</span>
+            </div>
         </div>
+        <span class="metric-pill">Publik Siap Dipelajari</span>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon green"><i class="fas fa-user-check"></i></div>
-        <div class="stat-info">
-            <div class="stat-value"><?= (int)($platform_stats['total_creators'] ?? 0) ?></div>
-            <div class="stat-label">Kreator Aktif</div>
+
+    <div class="metric-card">
+        <div class="metric-info">
+            <span class="metric-label">Kontributor</span>
+            <div class="metric-value">
+                <span><?= number_format((int)($platform_stats['total_creators'] ?? 0)) ?></span>
+                <span class="metric-sub">Kreator</span>
+            </div>
         </div>
+        <span class="metric-pill active">Aktif</span>
     </div>
-    <div class="stat-card">
-        <div class="stat-icon amber"><i class="fas fa-layer-group"></i></div>
-        <div class="stat-info">
-            <div class="stat-value"><?= (int)($platform_stats['template_count'] ?? 0) ?></div>
-            <div class="stat-label">Template Tersedia</div>
+
+    <div class="metric-card">
+        <div class="metric-info">
+            <span class="metric-label">Aset Bersama</span>
+            <div class="metric-value">
+                <span><?= number_format((int)($platform_stats['template_count'] ?? 0)) ?></span>
+                <span class="metric-sub">Template</span>
+            </div>
         </div>
+        <span class="metric-pill">Preset Koleksi</span>
     </div>
 </section>
 
@@ -50,7 +61,6 @@ require ROOT_PATH . '/views/layouts/header.php';
             <option value="name" <?= ($sort ?? '') === 'name' ? 'selected' : '' ?>>Nama Proyek (A-Z)</option>
         </select>
         <button type="submit" class="btn btn-soft-blue btn-sm">
-            <i class="fas fa-search"></i>
             <span>Cari</span>
         </button>
     </div>
@@ -58,7 +68,6 @@ require ROOT_PATH . '/views/layouts/header.php';
 
 <?php if (empty($published_projects)): ?>
     <div class="empty-state">
-        <div class="empty-state-icon"><i class="fas fa-compass"></i></div>
         <h3>Belum Ada Karya Publik</h3>
         <p>Belum ada proyek publik yang sesuai dengan pencarian Anda.</p>
     </div>
@@ -72,9 +81,9 @@ require ROOT_PATH . '/views/layouts/header.php';
             <article class="project-card">
                 <div class="project-thumb">
                     <div class="project-badges">
-                        <span class="badge badge-published"><i class="fas fa-globe"></i> Publik</span>
+                        <span class="badge badge-published">Publik</span>
                         <?php if ((int)$proj['is_template'] === 1): ?>
-                            <span class="badge badge-template"><i class="fas fa-layer-group"></i> Template</span>
+                            <span class="badge badge-template">Template</span>
                         <?php endif; ?>
                     </div>
                     <?php require ROOT_PATH . '/views/layouts/project_thumb_preview.php'; ?>
@@ -87,19 +96,17 @@ require ROOT_PATH . '/views/layouts/header.php';
                             <span class="author-chip-avatar"><?= e($author_init) ?></span>
                             <span><?= e($author_name) ?></span>
                         </span>
-                        <span><i class="fas fa-border-all"></i> <?= (int)($proj['frame_count'] ?? 0) ?> Frame</span>
                     </div>
                 </div>
 
                 <div class="project-actions">
                     <span style="font-size: 0.74rem; color: var(--text-muted);">
-                        <i class="far fa-clock"></i> <?= e(format_date($proj['created_at'])) ?>
+                        <?= e(format_date($proj['created_at'])) ?>
                     </span>
 
                     <div class="project-actions-group">
                         <?php if ((int)$proj['user_id'] === current_user_id()): ?>
                             <a href="<?= e(route_url('workspace', ['project_id' => $proj['project_id']])) ?>" class="btn btn-soft-blue btn-sm">
-                                <i class="fas fa-external-link-alt"></i>
                                 <span>Buka</span>
                             </a>
                         <?php endif; ?>
@@ -108,8 +115,7 @@ require ROOT_PATH . '/views/layouts/header.php';
                             <?= csrf_field() ?>
                             <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
                             <button type="submit" class="btn btn-primary btn-sm">
-                                <i class="fas fa-copy"></i>
-                                <span>Gunakan Karya</span>
+                                <span>Gunakan</span>
                             </button>
                         </form>
                     </div>
@@ -117,6 +123,8 @@ require ROOT_PATH . '/views/layouts/header.php';
             </article>
         <?php endforeach; ?>
     </div>
+
+    <?= render_pagination($pagination ?? [], 'karya') ?>
 <?php endif; ?>
 
 <?php require ROOT_PATH . '/views/layouts/footer.php'; ?>

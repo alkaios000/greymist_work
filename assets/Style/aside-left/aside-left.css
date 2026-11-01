@@ -1,6 +1,6 @@
   /* Aside kiri dan kanan */
   .gm-aside-left {
-      width: 250px;
+      width: 200px;
       position: fixed;
       top: 0;
       bottom: 0;
@@ -16,7 +16,7 @@
   }
 
   .gm-aside-left {
-      max-width: 250px;
+      max-width: 200px;
       left: 0;
   }
 
@@ -31,12 +31,12 @@
 
   .gm-top-menu-left {
       width: 100%;
-      max-width: 250px;
-      height: 90px;
+      max-width: 200px;
+      height: 72px;
       display: flex;
       flex-direction: column;
       border-bottom: 1px solid rgb(231, 231, 231);
-      padding: 0 1em;
+      padding: 0 0.65em;
       overflow-x: visible;
       position: sticky;
   }
@@ -47,7 +47,8 @@
       align-items: center;
       /* background-color: #f0f2f6; */
       border-radius: 5px;
-      /* padding: 0.3em; */
+      padding: 2px 4px;
+      margin: 0;
       /* box-shadow: 0px 6px 12px -2px rgba(214, 214, 214, 0.25); */
       transition: 0.2s ease;
       position: relative;
@@ -65,11 +66,12 @@
   }
 
   .gm-main-menu .fa-angle-down {
-      font-size: 0.7em;
+      font-size: 10px;
+      font-weight: 600;
   }
 
   .gm-corner-menu {
-      height: 30px;
+      height: 24px;
       width: 100%;
       /* border-bottom: 1px solid rgb(231, 231, 231); */
       /* padding-left: 1em; */
@@ -80,7 +82,7 @@
 
   .gm-bottom-menu-left {
       width: 100%;
-      height: calc(100vh - 90px);
+      height: calc(100vh - 72px);
       display: flex;
       border-bottom: 1px solid rgb(231, 231, 231);
       overflow-y: auto;
@@ -100,19 +102,26 @@
       display: flex;
       align-items: center;
       width: 100%;
-      font-size: 0.7em;
+      font-size: 10px;
+      font-weight: 600;
       justify-content: space-between;
   }
 
   .gm-project-name {
-      /* font-size: 0.7em; */
-      /* padding: 0.3em; */
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 2px 4px;
+      margin: 0;
       width: 90%;
   }
 
   .gm-edit-project-name {
       cursor: pointer;
-      /* padding: 0.3em; */
+      padding: 2px 4px;
+      margin: 0;
   }
 
   .gm-edit-project-name:hover {
@@ -135,13 +144,15 @@
 
   .gm-left-menu {
       display: flex;
-      font-size: 0.7em;
+      font-size: 10px;
+      font-weight: 600;
       width: 100%;
       justify-content: space-between;
   }
 
   .gm-left-menu p {
-      /* padding: 0.3em; */
+      padding: 2px 4px;
+      margin: 0;
       transition: 0.2s ease;
       cursor: pointer;
   }
@@ -158,7 +169,8 @@
 
   .gm-content-left-menu {
       display: none;
-      font-size: 0.7em;
+      font-size: 10px;
+      font-weight: 600;
       width: 100%;
   }
 
@@ -441,7 +453,7 @@
       align-items: center;
       border-radius: 5px;
       background-color: #f0f2f6;
-      padding: 0 1em;
+      padding: 0 0.65em;
   }
 
   #gm-modalCode {
@@ -464,7 +476,8 @@
   .gm-copy-notif {
       margin-top: 10px;
       color: #9ad0ff;
-      font-size: 0.7em;
+      font-size: 10px;
+      font-weight: 600;
       opacity: 0;
       transition: opacity 0.3s ease;
   }

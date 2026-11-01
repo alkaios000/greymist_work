@@ -35,5 +35,47 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 260);
         }, 5000);
     });
+
+    // Menutup dropdown menu proyek saat klik di luar
+    document.addEventListener('click', function (e) {
+        if (!e.target.closest('.project-card-menu')) {
+            document.querySelectorAll('.project-card-menu.open').forEach(function (menu) {
+                menu.classList.remove('open');
+            });
+        }
+    });
+
+    // Menutup dropdown menu proyek saat tekan tombol Escape
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.project-card-menu.open').forEach(function (menu) {
+                menu.classList.remove('open');
+            });
+        }
+    });
 });
+
+/**
+ * Toggle menu dropdown titik 3 pada kartu proyek
+ */
+function toggleProjectMenu(event, btn) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const cardMenu = btn.closest('.project-card-menu');
+    if (!cardMenu) return;
+
+    const wasOpen = cardMenu.classList.contains('open');
+
+    // Tutup semua menu lain yang sedang terbuka
+    document.querySelectorAll('.project-card-menu.open').forEach(function (menu) {
+        menu.classList.remove('open');
+    });
+
+    if (!wasOpen) {
+        cardMenu.classList.add('open');
+    }
+}
+window.toggleProjectMenu = toggleProjectMenu;
 

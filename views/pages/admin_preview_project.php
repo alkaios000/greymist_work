@@ -5,7 +5,7 @@
  */
 
 $page_title    = 'Pratinjau: ' . ($preview_project['project_name'] ?? 'Proyek');
-$page_subtitle = 'Oleh @' . ($preview_project['username'] ?? 'unknown');
+$page_subtitle = '';
 $active_page   = 'admin_projects';
 $is_admin_view = true;
 
@@ -18,25 +18,18 @@ $current_frame      = $preview_frames[$active_frame_index] ?? ($preview_frames[0
 <div class="admin-preview-shell">
     <div class="admin-preview-toolbar">
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-            <a href="<?= e(route_url('admin_projects')) ?>" class="btn btn-outline btn-sm">
-                <i class="fas fa-arrow-left"></i>
-                <span>Kembali</span>
-            </a>
+            <a href="<?= e(route_url('admin_projects')) ?>" class="btn btn-outline btn-sm">Kembali</a>
 
             <?php foreach ($preview_frames as $idx => $fr): ?>
                 <a href="<?= e(route_url('admin_preview_project', ['id' => $preview_project['project_id'], 'frame_idx' => $idx])) ?>"
                    class="btn <?= $idx === $active_frame_index ? 'btn-primary' : 'btn-soft-blue' ?> btn-sm">
-                    <i class="fas fa-border-all"></i>
                     <span><?= e($fr['frame_name'] ?: ('Frame ' . ($idx + 1))) ?></span>
                 </a>
             <?php endforeach; ?>
         </div>
 
         <div style="display: flex; align-items: center; gap: 8px;">
-            <a href="<?= e(route_url('workspace', ['project_id' => $preview_project['project_id']])) ?>" class="btn btn-primary btn-sm">
-                <i class="fas fa-external-link-alt"></i>
-                <span>Buka di Workspace</span>
-            </a>
+            <a href="<?= e(route_url('workspace', ['project_id' => $preview_project['project_id']])) ?>" class="btn btn-primary btn-sm">Buka di Workspace</a>
         </div>
     </div>
 

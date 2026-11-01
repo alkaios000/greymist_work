@@ -25,7 +25,6 @@ require ROOT_PATH . '/views/layouts/header.php';
             <option value="name" <?= ($sort ?? '') === 'name' ? 'selected' : '' ?>>Nama Proyek (A-Z)</option>
         </select>
         <button type="submit" class="btn btn-soft-blue btn-sm">
-            <i class="fas fa-search"></i>
             <span>Cari</span>
         </button>
     </div>
@@ -33,7 +32,6 @@ require ROOT_PATH . '/views/layouts/header.php';
 
 <?php if (empty($trashed_projects)): ?>
     <div class="empty-state">
-        <div class="empty-state-icon"><i class="fas fa-trash-restore"></i></div>
         <h3>Tempat Sampah Kosong</h3>
         <p>Tidak ada proyek yang berada di dalam Tempat Sampah saat ini.</p>
     </div>
@@ -43,7 +41,7 @@ require ROOT_PATH . '/views/layouts/header.php';
             <article class="project-card">
                 <div class="project-thumb">
                     <div class="project-badges">
-                        <span class="badge badge-danger"><i class="fas fa-trash-alt"></i> Di Sampah</span>
+                        <span class="badge badge-danger">Di Sampah</span>
                     </div>
                     <?php require ROOT_PATH . '/views/layouts/project_thumb_preview.php'; ?>
                 </div>
@@ -51,8 +49,7 @@ require ROOT_PATH . '/views/layouts/header.php';
                 <div class="project-body">
                     <h4 class="project-title" title="<?= e($proj['project_name']) ?>"><?= e($proj['project_name']) ?></h4>
                     <div class="project-meta">
-                        <span><i class="far fa-calendar-alt"></i> <?= e(format_date($proj['created_at'])) ?></span>
-                        <span><i class="fas fa-border-all"></i> <?= (int)($proj['frame_count'] ?? 0) ?> Frame</span>
+                        <span><?= e(format_date($proj['created_at'])) ?></span>
                     </div>
                 </div>
 
@@ -61,7 +58,6 @@ require ROOT_PATH . '/views/layouts/header.php';
                         <?= csrf_field() ?>
                         <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
                         <button type="submit" class="btn btn-soft-blue btn-sm">
-                            <i class="fas fa-undo"></i>
                             <span>Pulihkan</span>
                         </button>
                     </form>
@@ -75,13 +71,14 @@ require ROOT_PATH . '/views/layouts/header.php';
                                 confirmText: 'Hapus Permanen',
                                 buttonClass: 'btn-danger btn-sm'
                             })">
-                        <i class="fas fa-times-circle"></i>
-                        <span>Hapus Permanen</span>
+                        <span>Hapus</span>
                     </button>
                 </div>
             </article>
         <?php endforeach; ?>
     </div>
+
+    <?= render_pagination($pagination ?? [], 'proyek') ?>
 <?php endif; ?>
 
 <?php require ROOT_PATH . '/views/layouts/footer.php'; ?>

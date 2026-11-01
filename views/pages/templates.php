@@ -25,7 +25,6 @@ require ROOT_PATH . '/views/layouts/header.php';
             <option value="name" <?= ($sort ?? '') === 'name' ? 'selected' : '' ?>>Nama Template (A-Z)</option>
         </select>
         <button type="submit" class="btn btn-soft-blue btn-sm">
-            <i class="fas fa-filter"></i>
             <span>Filter</span>
         </button>
     </div>
@@ -33,11 +32,9 @@ require ROOT_PATH . '/views/layouts/header.php';
 
 <?php if (empty($templates)): ?>
     <div class="empty-state">
-        <div class="empty-state-icon"><i class="fas fa-layer-group"></i></div>
         <h3>Belum Ada Template Tersedia</h3>
         <p>Anda dapat menandai proyek Anda sendiri sebagai template dari halaman Proyek Saya.</p>
         <a href="<?= e(route_url('projects')) ?>" class="btn btn-soft-blue btn-sm" style="margin-top: 6px;">
-            <i class="fas fa-folder"></i>
             <span>Buka Proyek Saya</span>
         </a>
     </div>
@@ -51,8 +48,7 @@ require ROOT_PATH . '/views/layouts/header.php';
             <article class="project-card">
                 <div class="project-thumb">
                     <div class="project-badges">
-                        <span class="badge badge-template"><i class="fas fa-layer-group"></i> Template</span>
-                        <span class="badge badge-muted"><?= (int)($proj['frame_count'] ?? 0) ?> Frame</span>
+                        <span class="badge badge-template">Template</span>
                     </div>
                     <?php require ROOT_PATH . '/views/layouts/project_thumb_preview.php'; ?>
                 </div>
@@ -71,25 +67,25 @@ require ROOT_PATH . '/views/layouts/header.php';
                 <div class="project-actions">
                     <?php if ((int)$proj['user_id'] === current_user_id()): ?>
                         <a href="<?= e(route_url('workspace', ['project_id' => $proj['project_id']])) ?>" class="btn btn-soft-blue btn-sm">
-                            <i class="fas fa-edit"></i>
-                            <span>Edit Asli</span>
+                            <span>Edit</span>
                         </a>
                     <?php else: ?>
-                        <span style="font-size: 0.75rem; color: var(--text-muted);">Siap digunakan</span>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">Siap pakai</span>
                     <?php endif; ?>
 
                     <form method="POST" action="<?= e(action_url('clone_template')) ?>" style="display:inline;">
                         <?= csrf_field() ?>
                         <input type="hidden" name="project_id" value="<?= (int)$proj['project_id'] ?>">
                         <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="fas fa-magic"></i>
-                            <span>Gunakan Template</span>
+                            <span>Gunakan</span>
                         </button>
                     </form>
                 </div>
             </article>
         <?php endforeach; ?>
     </div>
+
+    <?= render_pagination($pagination ?? [], 'template') ?>
 <?php endif; ?>
 
 <?php require ROOT_PATH . '/views/layouts/footer.php'; ?>

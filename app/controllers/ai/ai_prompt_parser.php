@@ -51,12 +51,14 @@ if (!function_exists('get_greymist_system_instruction')) {
                 . "   Jika pengguna meminta mengubah/menambah/menghapus atribut (warna, font, ukuran, border, animasi, text) pada komponen yang sudah ada, kembalikan HANYA format JSON:\n"
                 . "   <!--GM_OP:PATCH_ATTRIBUTES-->\n"
                 . "   {\"target\":\"self\",\"target_all\":true,\"stagger\":0.15,\"classes_to_add\":[\"gm-anim-base\",\"gm-anim-slide-up\"],\"classes_to_remove\":[\"gm-anim-fade-in\"],\"attributes\":{\"data-gm-anim\":\"gm-anim-slide-up\",\"data-gm-anim-dur\":\"0.8\",\"data-gm-anim-del\":\"0\",\"data-gm-anim-loop\":\"1\"},\"styles\":{\"--gm-anim-duration\":\"0.8s\",\"--gm-anim-delay\":\"0s\"},\"summary\":\"Ringkasan perubahan.\"}\n"
-                . "10. ATURAN INTEGRASI ASSET GAMBAR (MENU ASSETS):\n"
-                . "   - Greymist terhubung ke Menu Assets sistem tempat pengguna menyimpan file gambar/foto proyek.\n"
-                . "   - Jika konteks memuat '=== DAFTAR ASSET GAMBAR TERSEDIA DARI MENU ASSETS PENGGUNA ===':\n"
-                . "     * PRIORITASKAN MEMILIH & MENGGUNAKAN GAMBAR DARI DAFTAR ASSET TERSEBUT daripada membuat URL dummy fiktif!\n"
-                . "     * Cocokkan nama aset dengan elemen: aset logo/brand -> logo Navbar/Header, aset banner/hero -> hero section / background, aset produk/item -> card produk, aset avatar/orang/profil -> foto tim / testimoni.\n"
+                . "10. ATURAN INTEGRASI ASSET GAMBAR (MENU ASSETS - EKSPLISIT USER):\n"
+                . "   - AI HANYA BOLEH menggunakan file gambar dari Menu Assets JIKA pengguna secara spesifik memasukkan/menandai aset tersebut (melalui drag-and-drop ke modal prompt AI).\n"
+                . "   - JIKA konteks memuat '=== DAFTAR ASSET GAMBAR PILIHAN PENGGUNA (DRAGGED & DROPPED) ===':\n"
+                . "     * AI WAJIB menggunakan gambar dari daftar aset yang dipilih pengguna tersebut untuk elemen yang sesuai (misal logo, hero banner, background, avatar tim, kartu produk, dsb).\n"
                 . "     * WAJIB class 'gm-object', atribut src persis path asset (contoh: uploads/assets/nama_file.png), dan atribut alt deskriptif.\n"
+                . "   - JIKA KONTEKS TIDAK MEMUAT DAFTAR ASSET GAMBAR (pengguna TIDAK melakukan drag-and-drop aset):\n"
+                . "     * DILARANG mengakses atau menebak aset gambar dari database atau filesystem secara sepihak!\n"
+                . "     * Jangan menyisipkan gambar lokal acak. Jika prompt meminta gambar umum/placeholder, gunakan ilustrasi SVG bersih atau placeholder standar, atau pertahankan gambar yang sudah ada pada frame tanpa mengubahnya jika tidak diminta.\n"
                 . "11. ATURAN PEMBUATAN CHART / GRAFIK INTERAKTIF (MENU ASSETS & CDN):\n"
                 . "   - Jika pengguna meminta grafik/chart (batang/bar, garis/line, donat/doughnut, pie, area, radar, statistik penjualan, dll):\n"
                 . "     * Hasilkan komponen chart Greymist berbasis Chart.js atau ApexCharts:\n"
@@ -325,11 +327,11 @@ if (!function_exists('build_greymist_context_input')) {
         $context_input .= "TARGET_MODE: " . $target_mode . "\n";
         $context_input .= "CURRENT_FRAME_HTML (Frame yang sedang dibuka pengguna):\n" . ($current_frame_html !== '' ? $current_frame_html : "(Frame masih kosong)") . "\n\n";
 
-        // Blok Daftar Asset Gambar dari Menu Assets Pengguna
+        // Blok Daftar Asset Gambar dari Menu Assets Pengguna (hanya jika ada yang dipilih/di-drag-drop)
         if (!empty($user_assets) && is_array($user_assets)) {
-            $context_input .= "=== DAFTAR ASSET GAMBAR TERSEDIA DARI MENU ASSETS PENGGUNA ===\n"
-                . "Pengguna memiliki " . count($user_assets) . " aset gambar yang sudah diunggah di Menu Assets Greymist.\n"
-                . "Ketika membuat komponen yang membutuhkan gambar (logo, hero banner, background, avatar tim, kartu produk, galeri), PRIORITASKAN MEMILIH GAMBAR DARI DAFTAR BERIKUT:\n";
+            $context_input .= "=== DAFTAR ASSET GAMBAR PILIHAN PENGGUNA (DRAGGED & DROPPED) ===\n"
+                . "Pengguna secara spesifik memilih dan menandai " . count($user_assets) . " aset gambar untuk digunakan pada instruksi ini:\n"
+                . "AI WAJIB MENYISIPKAN DAN MEMILIH GAMBAR DARI DAFTAR BERIKUT:\n";
             foreach ($user_assets as $idx => $ast) {
                 $a_name = !empty($ast['name']) ? $ast['name'] : (!empty($ast['image_name']) ? $ast['image_name'] : ('Asset ' . ($idx + 1)));
                 $a_url = !empty($ast['url']) ? $ast['url'] : ((!empty($ast['path']) ? rtrim($ast['path'], '/') . '/' : 'uploads/assets/') . ($ast['image'] ?? $ast['file'] ?? ''));
