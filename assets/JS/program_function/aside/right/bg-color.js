@@ -621,17 +621,116 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isShown) {
             dropdown.style.display = "none";
         } else {
-            const rect = colorButton.getBoundingClientRect();
-            dropdown.style.position = "fixed";
-            dropdown.style.left = `${Math.min(rect.left - 120, window.innerWidth - 315)}px`;
-            dropdown.style.top = `${rect.bottom + 8}px`;
+            if (!dropdown.dataset.hasMoved) {
+                const rect = colorButton.getBoundingClientRect();
+                dropdown.style.position = "fixed";
+                dropdown.style.left = `${Math.min(rect.left - 100, window.innerWidth - 250)}px`;
+                dropdown.style.top = `${rect.bottom + 6}px`;
+                dropdown.style.right = "auto";
+                dropdown.style.bottom = "auto";
+            }
             dropdown.style.display = "block";
             window.gmBgColorEngine.syncWithActiveObject();
         }
     });
 
+    // Make Background Dropdown Draggable
+    function makeDropdownDraggable(modalEl, handleEl) {
+        if (!modalEl || !handleEl) return;
+
+        let isDragging = false;
+        let hasMoved = false;
+        let startX = 0, startY = 0;
+        let initialLeft = 0, initialTop = 0;
+
+        const onPointerDown = (e) => {
+            if (e.target.closest("#closeBgDropdownBtn") || e.target.closest("button") || e.target.closest("input")) {
+                return;
+            }
+
+            isDragging = true;
+            hasMoved = false;
+            startX = e.clientX;
+            startY = e.clientY;
+
+            const rect = modalEl.getBoundingClientRect();
+            initialLeft = rect.left;
+            initialTop = rect.top;
+
+            if (handleEl.setPointerCapture) {
+                try { handleEl.setPointerCapture(e.pointerId); } catch(err) {}
+            }
+            document.body.style.userSelect = "none";
+        };
+
+        const onPointerMove = (e) => {
+            if (!isDragging) return;
+
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+
+            if (!hasMoved && Math.hypot(deltaX, deltaY) > 3) {
+                hasMoved = true;
+                window.isDraggingBgDropdown = true;
+                modalEl.dataset.hasMoved = "true";
+            }
+
+            if (hasMoved) {
+                let newLeft = initialLeft + deltaX;
+                let newTop = initialTop + deltaY;
+
+                const modalWidth = modalEl.offsetWidth || 235;
+                const minLeft = 10;
+                const maxLeft = Math.max(10, window.innerWidth - modalWidth - 10);
+                const minTop = 10;
+                const maxTop = Math.max(10, window.innerHeight - 50);
+
+                newLeft = Math.max(minLeft, Math.min(newLeft, maxLeft));
+                newTop = Math.max(minTop, Math.min(newTop, maxTop));
+
+                modalEl.style.left = `${newLeft}px`;
+                modalEl.style.top = `${newTop}px`;
+                modalEl.style.right = "auto";
+                modalEl.style.bottom = "auto";
+                modalEl.style.margin = "0";
+            }
+        };
+
+        const onPointerUp = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            if (handleEl.releasePointerCapture) {
+                try { handleEl.releasePointerCapture(e.pointerId); } catch(err) {}
+            }
+            document.body.style.userSelect = "";
+            setTimeout(() => {
+                window.isDraggingBgDropdown = false;
+            }, 60);
+        };
+
+        handleEl.addEventListener("pointerdown", onPointerDown);
+        handleEl.addEventListener("pointermove", onPointerMove);
+        handleEl.addEventListener("pointerup", onPointerUp);
+        handleEl.addEventListener("pointercancel", onPointerUp);
+    }
+
+    const bgDragHeader = document.getElementById("gmBgDragHeader") || dropdown.querySelector(".gm-bg-header");
+    if (bgDragHeader) {
+        makeDropdownDraggable(dropdown, bgDragHeader);
+    }
+
+    // Tombol close dropdown background
+    const closeBgBtn = document.getElementById("closeBgDropdownBtn");
+    if (closeBgBtn) {
+        closeBgBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            dropdown.style.display = "none";
+        });
+    }
+
     // Tutup saat klik di luar
     document.addEventListener("click", (e) => {
+        if (window.isDraggingBgDropdown) return;
         if (!dropdown.contains(e.target) && !colorButton.contains(e.target)) {
             // Cek apakah klik pada popup token editor atau gradient modal
             if (e.target.closest(".gm-token-editor-popup") || e.target.closest(".gm-token-popup") || e.target.closest("#gmGradientModal")) {
@@ -933,7 +1032,7 @@ function initGradientStudio() {
             let newTop = initialTop + deltaY;
 
             // Batas layar agar modal tetap mudah diakses
-            const modalWidth = modalEl.offsetWidth || 840;
+            const modalWidth = modalEl.offsetWidth || 520;
             const minLeft = 10;
             const maxLeft = Math.max(10, window.innerWidth - modalWidth - 10);
             const minTop = 10;
@@ -1633,8 +1732,8 @@ function initGradientStudio() {
                 modal.style.display = 'block';
                 modal.classList.add('active');
 
-                const w = modal.offsetWidth || 840;
-                const h = modal.offsetHeight || 580;
+                const w = modal.offsetWidth || 520;
+                const h = modal.offsetHeight || 380;
                 const left = Math.max(10, Math.round((window.innerWidth - w) / 2));
                 const top = Math.max(10, Math.round((window.innerHeight - h) / 2));
 
@@ -1648,8 +1747,8 @@ function initGradientStudio() {
             } else {
                 const rect = modal.getBoundingClientRect();
                 if (rect.left < 0 || rect.left > window.innerWidth - 100 || rect.top < 0 || rect.top > window.innerHeight - 80) {
-                    const w = modal.offsetWidth || 840;
-                    const h = modal.offsetHeight || 580;
+                    const w = modal.offsetWidth || 520;
+                    const h = modal.offsetHeight || 380;
                     const left = Math.max(10, Math.round((window.innerWidth - w) / 2));
                     const top = Math.max(10, Math.round((window.innerHeight - h) / 2));
                     modal.style.left = `${left}px`;
