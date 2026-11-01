@@ -15,15 +15,30 @@
                     if (contents[i]) contents[i].classList.remove("gm-clicked");
                 }
             });
+            localStorage.setItem("gm_active_box_menu_index", index);
         }
 
         menus.forEach((menu, index) => {
             menu.addEventListener("click", () => activateMenu(index));
         });
 
-        // Cek jika sudah ada yang aktif, jika belum aktifkan index 0
-        const activeIdx = Array.from(menus).findIndex(m => m.classList.contains("gm-clicked"));
-        activateMenu(activeIdx >= 0 ? activeIdx : 0);
+        // Set default menu aktif dari localStorage atau default 0
+        let savedIndex = parseInt(localStorage.getItem("gm_active_box_menu_index"));
+        if (isNaN(savedIndex) || savedIndex < 0 || savedIndex >= menus.length) {
+            savedIndex = 0;
+        }
+        activateMenu(savedIndex);
+
+        window.gm_syncBoxMenu = function () {
+            let activeIdx = Array.from(menus).findIndex(m => m.classList.contains("gm-clicked"));
+            if (activeIdx < 0) {
+                activeIdx = parseInt(localStorage.getItem("gm_active_box_menu_index"));
+                if (isNaN(activeIdx) || activeIdx < 0 || activeIdx >= menus.length) {
+                    activeIdx = 0;
+                }
+            }
+            activateMenu(activeIdx);
+        };
     }
 
     if (document.readyState === "loading") {

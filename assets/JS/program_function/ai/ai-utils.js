@@ -106,36 +106,44 @@
         const projectId = getCurrentProjectId();
         if (!projectId) return;
 
-        // Coba pulihkan dari localStorage terlebih dahulu agar instan saat baru dimuat
-        try {
-            const localRaw = localStorage.getItem("gm_ai_memory_proj_" + projectId);
-            if (localRaw) {
-                cachedAiMemory = JSON.parse(localRaw);
-                updateMemoryBadgeUI(cachedAiMemory);
-            }
-        } catch (_) {}
-
-        const snapshot = collectAllFramesSnapshot();
-
-        fetch("index.php?action=ai_get_memory&project_id=" + encodeURIComponent(projectId), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                project_id: projectId,
-                frames_snapshot: snapshot
-            })
-        })
-            .then(r => r.json())
-            .then(res => {
-                if (res && res.status === "OK" && res.ai_memory) {
-                    cachedAiMemory = res.ai_memory;
-                    try {
-                        localStorage.setItem("gm_ai_memory_proj_" + projectId, JSON.stringify(cachedAiMemory));
-                    } catch (_) {}
+        const executeSync = () => {
+            // Coba pulihkan dari localStorage terlebih dahulu agar instan saat baru dimuat
+            try {
+                const localRaw = localStorage.getItem("gm_ai_memory_proj_" + projectId);
+                if (localRaw) {
+                    cachedAiMemory = JSON.parse(localRaw);
                     updateMemoryBadgeUI(cachedAiMemory);
                 }
+            } catch (_) {}
+
+            const snapshot = collectAllFramesSnapshot();
+
+            fetch("index.php?action=ai_get_memory&project_id=" + encodeURIComponent(projectId), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    project_id: projectId,
+                    frames_snapshot: snapshot
+                })
             })
-            .catch(() => {});
+                .then(r => r.json())
+                .then(res => {
+                    if (res && res.status === "OK" && res.ai_memory) {
+                        cachedAiMemory = res.ai_memory;
+                        try {
+                            localStorage.setItem("gm_ai_memory_proj_" + projectId, JSON.stringify(cachedAiMemory));
+                        } catch (_) {}
+                        updateMemoryBadgeUI(cachedAiMemory);
+                    }
+                })
+                .catch(() => {});
+        };
+
+        if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(executeSync, { timeout: 2000 });
+        } else {
+            executeSync();
+        }
     }
 
     function updateMemoryBadgeUI(memory) {

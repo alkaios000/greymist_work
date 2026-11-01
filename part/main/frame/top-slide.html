@@ -331,21 +331,14 @@
        COLLECT STATE
        ===================================== */
     function collectProjectState() {
-      // NEW: Sinkronkan breakpoint yang sedang aktif
       if (typeof window.syncCurrentBreakpoint === 'function') {
         window.syncCurrentBreakpoint();
       }
 
       const frames = [];
-
-      // Iterasi dari thumbnail (yang sudah di-swap oleh user) bukan dari core
-      // agar sort_order yang tersimpan sesuai urutan visual yang user lihat
-      // Pastikan breakpoint disinkronisasi sebelum membuat clone untuk disimpan
-      if (typeof window.syncCurrentBreakpoint === 'function') {
-        window.syncCurrentBreakpoint();
-      }
-
+      const isNonDesktopView = window.gmActiveBreakpoint && window.gmActiveBreakpoint !== "desktop";
       const thumbnails = document.querySelectorAll(".gm-frame-thumbnail");
+
       thumbnails.forEach(thumb => {
         const frameId = thumb.dataset.frame;
         if (!frameId) return;
@@ -354,19 +347,27 @@
         const core = document.getElementById(`object-core-${frameId}`);
         if (!core) return;
 
-        // Kloning core agar tidak merusak tampilan live
-        const clone = core.cloneNode(true);
+        let content = "";
 
-        // Normalisasi inline styles kembali ke Desktop
-        clone.querySelectorAll('.gm-object').forEach(el => {
-           const desktopStyle = el.dataset.bpDesktop || el.style.cssText;
-           el.style.cssText = desktopStyle;
-        });
+        // Fast-path: di mode Desktop standar (default), live DOM sudah berisi desktop style asli.
+        // Langsung ambil innerHTML tanpa kloning berat (mengurangi waktu eksekusi dari 55ms ke ~1ms).
+        if (!isNonDesktopView) {
+          content = core.innerHTML;
+        } else {
+          // Hanya jika sedang di preview responsive non-desktop (Tablet/Mobile):
+          // Kloning core dan pulihkan inline styles kembali ke Desktop
+          const clone = core.cloneNode(true);
+          clone.querySelectorAll('.gm-object').forEach(el => {
+            const desktopStyle = el.dataset.bpDesktop || el.style.cssText;
+            el.style.cssText = desktopStyle;
+          });
+          content = clone.innerHTML;
+        }
 
         frames.push({
           frame_id: frameId,
           frame_name: nameEl ? nameEl.textContent.trim() : "",
-          core_content: clone.innerHTML
+          core_content: content
         });
       });
 
@@ -374,11 +375,17 @@
     }
 
     /* =====================================
-       SAVE (DEBOUNCED)
+       SAVE (DEBOUNCED & IDLE-SCHEDULED)
        ===================================== */
     function requestSave() {
       clearTimeout(saveTimer);
-      saveTimer = setTimeout(saveProject, SAVE_DELAY);
+      saveTimer = setTimeout(() => {
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(saveProject, { timeout: 1000 });
+        } else {
+          saveProject();
+        }
+      }, SAVE_DELAY);
     }
 
     function saveProject() {

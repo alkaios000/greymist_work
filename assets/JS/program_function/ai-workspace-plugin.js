@@ -671,16 +671,20 @@
                     </div>
 
                     <!-- Input API Key -->
-                    <div id="gm-ai-key-input-row" style="margin-bottom:7px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
-                            <label id="gm-ai-key-label" style="font-size:10px;font-weight:700;color:#475569;">API KEY:</label>
-                            <span id="gm-ai-key-status" style="font-size:9.5px;color:#16a34a;font-weight:600;"></span>
+                    <form autocomplete="off" onsubmit="return false;" style="margin:0;padding:0;">
+                        <!-- Hidden username field to satisfy accessibility & Chromium form guidelines -->
+                        <input type="text" name="username" autocomplete="username" style="display:none;" aria-hidden="true" tabindex="-1">
+                        <div id="gm-ai-key-input-row" style="margin-bottom:7px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">
+                                <label id="gm-ai-key-label" style="font-size:10px;font-weight:700;color:#475569;">API KEY:</label>
+                                <span id="gm-ai-key-status" style="font-size:9.5px;color:#16a34a;font-weight:600;"></span>
+                            </div>
+                            <div style="display:flex;gap:4px;">
+                                <input type="password" id="gm-ai-api-key-input" name="gm-ai-api-key" autocomplete="new-password" class="gm-ai-field" placeholder="Masukkan API Key..." style="flex:1;padding:4px 7px;font-size:11px;background:#ffffff;">
+                                <button type="button" id="gm-ai-toggle-show-key-btn" class="gm-ai-btn-secondary" style="padding:0 7px;background:#ffffff;" title="Lihat/Sembunyikan"><i class="fas fa-eye"></i></button>
+                            </div>
                         </div>
-                        <div style="display:flex;gap:4px;">
-                            <input type="password" id="gm-ai-api-key-input" class="gm-ai-field" placeholder="Masukkan API Key..." style="flex:1;padding:4px 7px;font-size:11px;background:#ffffff;">
-                            <button type="button" id="gm-ai-toggle-show-key-btn" class="gm-ai-btn-secondary" style="padding:0 7px;background:#ffffff;" title="Lihat/Sembunyikan"><i class="fas fa-eye"></i></button>
-                        </div>
-                    </div>
+                    </form>
 
                     <!-- Pilihan Model -->
                     <div id="gm-ai-settings-model-row" style="margin-bottom:7px;">

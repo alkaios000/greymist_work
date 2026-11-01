@@ -16,6 +16,29 @@
                 }
             });
             localStorage.setItem("gm_active_right_menu_index", index);
+
+            // Selalu reset scroll position agar tab baru tidak tertinggal scroll dari tab sebelumnya
+            const container = document.querySelector(".gm-bottom-menu-right");
+            if (container) {
+                container.scrollTop = 0;
+            }
+
+            // Jika tab Box (index 3) diaktifkan, pastikan sub-tab pertama aktif dan terlihat
+            if (index === 3) {
+                if (typeof window.gm_syncBoxMenu === "function") {
+                    window.gm_syncBoxMenu();
+                } else {
+                    const boxTabs = document.querySelectorAll(".gm-box-menu > div");
+                    const boxPanels = document.querySelectorAll(".gm-content-box-menu");
+                    if (boxTabs.length && boxPanels.length) {
+                        const hasActive = Array.from(boxTabs).some(t => t.classList.contains("gm-clicked"));
+                        if (!hasActive) {
+                            boxTabs[0].classList.add("gm-clicked");
+                            boxPanels[0].classList.add("gm-clicked");
+                        }
+                    }
+                }
+            }
         }
 
         menus.forEach((menu, index) => {

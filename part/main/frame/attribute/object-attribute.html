@@ -8,14 +8,25 @@
 
 <script>
     // ==========================================
-    // CENTRALIZED ACTIVE OBJECT POLLING
+    // CENTRALIZED ACTIVE OBJECT POLLING (CHANGE-AWARE)
     // ==========================================
     (function() {
-        let globalLastActive = null;
+        let lastActiveObj = null;
+        let lastActiveCount = -1;
+        let lastStyle = "";
+
         function centralActiveWatch() {
-            // We just trigger an event 60 times a second.
-            // The individual listeners will check if the active object changed.
-            window.dispatchEvent(new CustomEvent('gm-active-tick'));
+            // Hanya dispatch gm-active-tick jika active object, jumlah seleksi, atau style inline-nya benar-benar berubah
+            const active = document.querySelector('.gm-object.gm-active');
+            const count = document.querySelectorAll('.gm-object.gm-active').length;
+            const currentStyle = active ? (active.getAttribute('style') || "") : "";
+
+            if (active !== lastActiveObj || count !== lastActiveCount || currentStyle !== lastStyle) {
+                lastActiveObj = active;
+                lastActiveCount = count;
+                lastStyle = currentStyle;
+                window.dispatchEvent(new CustomEvent('gm-active-tick'));
+            }
             requestAnimationFrame(centralActiveWatch);
         }
         if (document.readyState === 'loading') {

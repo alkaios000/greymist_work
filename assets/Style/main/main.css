@@ -18,7 +18,8 @@
   justify-content: center;
   overflow: hidden;
   /* background: #f0f0f0; */
-  transform: scale(80%);
+  transform: scale(0.8);
+  transform-origin: 0 0;
 }
 
 .gm-object-core {
@@ -34,7 +35,16 @@
   /* transform-origin: top left; scale dari kiri atas */
   overflow: auto;
   transform: scale(90%);
+  will-change: transform;
+}
+
+.gm-object-core.gm-smooth-transition {
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), left 0.25s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.gm-is-dragging *,
+body.gm-is-zooming * {
+  user-select: none !important;
 }
 
 .gm-interaction-toggle {
